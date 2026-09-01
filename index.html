@@ -159,7 +159,28 @@
 
 
   /* ---------------- Deadlock ---------------- */
-  #vDeadlock{padding:var(--pad);background:rgba(14,10,7,.93);display:flex;flex-direction:column;gap:.6em}
+  #vDeadlock{position:fixed;left:0;right:0;top:0;height:100%;z-index:4;
+    padding:var(--pad);padding-top:calc(var(--pad) * .6);
+    background:rgba(14,10,7,.96);backdrop-filter:blur(20px);
+    display:flex;flex-direction:column;gap:.5em;
+    transform:translateY(-100%);transition:transform .34s cubic-bezier(.2,.8,.2,1);
+    box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  #vDeadlock.open{transform:translateY(0)}
+  #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:5;
+    width:clamp(90px,14vw,190px);height:clamp(14px,2.6vh,26px);
+    display:grid;place-items:end center;cursor:pointer}
+  #grip::after{content:"";width:100%;height:clamp(3px,.6vh,6px);border-radius:99px;
+    background:rgba(255,255,255,.26);transition:background .2s,width .2s}
+  #grip:hover::after{background:#E8B872;width:110%}
+  body.sheet #grip{top:auto;bottom:0;align-items:start}
+  #dlClose{margin-left:auto;font-size:var(--meta);color:var(--ink-dim);opacity:.6}
+  #streak{position:fixed;left:var(--pad);top:var(--pad);z-index:2;display:none;
+    align-items:center;gap:.5em;padding:.35em .85em;border-radius:999px;
+    font-size:var(--meta);background:rgba(232,184,114,.18);color:#F0CB93;
+    border:1px solid rgba(232,184,114,.3)}
+  #streak.on{display:flex}
+  #streak b{color:#fff;font-weight:700}
+  body[data-view="discord"] #streak{display:none}
   #dlHead{display:flex;align-items:baseline;gap:.9em;flex:none;flex-wrap:wrap}
   #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#E8B872}
   #dlForm{font-size:var(--meta);color:var(--ink-dim)}
@@ -280,15 +301,18 @@
 </section>
 
 
-<section class="view" id="vDeadlock">
+<section id="vDeadlock">
   <div id="dlHead">
     <h2>Deadlock</h2>
     <span id="dlForm"></span>
     <span id="dlStreak"></span>
+    <span id="dlClose">Dra upp för att stänga</span>
   </div>
   <div id="dlBody"><div id="dlMsg">Hämtar…</div></div>
 </section>
 
+<div id="grip" title="Deadlock"></div>
+<div id="streak"></div>
 <div id="toasts"></div>
 
 <button id="gear" title="Inställningar">
@@ -642,18 +666,23 @@ function notifyJoins(){
 /* ---------------- Deadlock ---------------- */
 var DL='https://api.deadlock-api.com',dlHeroes=null,dlLastMatch=null,dlFirst=true;
 function dlAccountId(v){
-  var n=String(v||'').replace(/\D/g,'');
+  var t=String(v||'').trim();
+  /* STEAM_0:Y:Z  ->  Z*2 + Y */
+  var m=/STEAM_[0-5]:([01]):(\d+)/i.exec(t);
+  if(m)return String(BigInt(m[2])*2n+BigInt(m[1]));
+  /* [U:1:Z] -> Z */
+  var u=/\[?U:1:(\d+)\]?/i.exec(t);
+  if(u)return String(BigInt(u[1]));
+  var n=t.replace(/\D/g,'').replace(/^0+/,'');
   if(!n)return '';
-  /* SteamID64 -> account_id. BigInt krävs: talet är för stort för vanlig JS-precision. */
+  /* SteamID64 -> account_id. BigInt krävs, talet är för stort för vanlig JS-precision. */
   if(n.length>=17){
     try{return (BigInt(n)-76561197960265728n).toString();}
     catch(e){return String(Number(n)-76561197960265728);}
   }
   return n;
 }
-/* Direktanrop först. Blockerar webbläsaren dem går resten via en öppen proxy. */
-var dlViaProxy=false;
-function dlProxyUrl(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}
+
 async function dlFetch(path){
   var url=/^https?:/.test(path)?path:DL+path;
   if(!dlViaProxy){
@@ -762,8 +791,11 @@ async function dlPoll(){
     var streak=0,w=dlWon(recent[0]);
     for(var i=0;i<recent.length&&dlWon(recent[i])===w;i++)streak++;
     el('dlStreak').textContent=streak+(w?' vinster i rad':' förluster i rad');
+    var pill=el('streak');
+    if(w&&streak>=2){pill.innerHTML='<b>'+streak+'</b> vinster i rad';pill.classList.add('on');}
+    else pill.classList.remove('on');
     var body=el('dlBody');body.innerHTML='';
-    recent.slice(0,12).forEach(function(m){
+    recent.slice(0,10).forEach(function(m){
       var h=heroes[m.hero_id]||{name:'Hjälte '+m.hero_id,img:''};
       var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss');
       if(h.img){var im=document.createElement('img');im.src=h.img;im.alt='';c.appendChild(im);}
@@ -788,7 +820,7 @@ async function dlPoll(){
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
   }catch(e){
-    dlMsg('Kunde inte hämta Deadlock-data. ('+e.message+')');
+    dlMsg('Kunde inte hämta Deadlock-data för account-ID '+CFG.dl+'. ('+e.message+')');
   }
 }
 function dlWon(m){
@@ -798,9 +830,36 @@ function dlWon(m){
   return !!m.won;
 }
 
+
+/* ---------------- Deadlock-luckan ---------------- */
+var sheetOpen=false,gStart=null,sheetTimer=null;
+function openSheet(on){
+  sheetOpen=!!on;
+  el('vDeadlock').classList.toggle('open',sheetOpen);
+  document.body.classList.toggle('sheet',sheetOpen);
+  clearTimeout(sheetTimer);
+  if(sheetOpen){
+    dlPoll();
+    if(CFG.back>0)sheetTimer=setTimeout(function(){openSheet(false);},CFG.back*1000);
+  }
+}
+el('grip').addEventListener('pointerdown',function(e){e.stopPropagation();openSheet(!sheetOpen);});
+document.addEventListener('pointerdown',function(e){
+  if(e.target.closest('#gear, #setup, #foot'))return;
+  gStart={x:e.clientX,y:e.clientY,t:Date.now()};
+},true);
+document.addEventListener('pointerup',function(e){
+  if(!gStart)return;
+  var dy=e.clientY-gStart.y,dx=e.clientX-gStart.x,start=gStart;gStart=null;
+  if(Math.abs(dy)<50||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
+  if(!CFG.dl)return;
+  if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.3){openSheet(true);}
+  else if(dy<0&&sheetOpen){openSheet(false);}
+},true);
+
 /* ---------------- vyväxling ---------------- */
 var backTimer=null;
-function views(){var v=['spotify','discord'];if(CFG.dl)v.push('deadlock');return v;}
+function views(){return ['spotify','discord'];}
 function nextView(){
   var v=views(),i=v.indexOf(document.body.dataset.view);
   return v[(i+1)%v.length];
@@ -809,16 +868,15 @@ function show(v){
   document.body.dataset.view=v;
   el('vSpotify').classList.toggle('on',v==='spotify');
   el('vDiscord').classList.toggle('on',v==='discord');
-  el('vDeadlock').classList.toggle('on',v==='deadlock');
   el('voice').style.display=v==='spotify'?'':'none';
   clearTimeout(backTimer);
   if(v==='discord')dcPoll();
-  if(v==='deadlock')dlPoll();
   if(v!=='spotify'&&CFG.back>0)
     backTimer=setTimeout(function(){show('spotify');},CFG.back*1000);
 }
 document.addEventListener('pointerdown',function(e){
-  if(e.target.closest('#gear, #setup, #foot'))return;
+  if(e.target.closest('#gear, #setup, #foot, #grip'))return;
+  if(sheetOpen){openSheet(false);return;}
   show(nextView());
 });
 document.addEventListener('keydown',function(e){
