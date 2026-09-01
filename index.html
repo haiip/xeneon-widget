@@ -47,7 +47,13 @@
   .view.on{opacity:1;pointer-events:auto}
 
   /* ---------------- Spotify ---------------- */
-  #vSpotify{display:flex;flex-direction:column;padding:var(--pad)}
+  #vSpotify{display:flex;flex-direction:row;align-items:stretch;gap:var(--pad);padding:var(--pad)}
+  #artWrap{height:100%;aspect-ratio:1;flex:none}
+  #art{width:100%;height:100%;border-radius:12px;object-fit:cover;
+       background:rgba(255,255,255,.06);box-shadow:0 20px 60px rgba(0,0,0,.5);
+       transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+  body.beat #art{transform:scale(1.012)}
+  #main{flex:1;min-width:0;display:flex;flex-direction:column}
   #head{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.12em}
   #title{font-size:var(--title);font-weight:800;letter-spacing:-.03em;line-height:1;
          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -80,11 +86,12 @@
   #btnPlay svg{width:40%;height:40%}
 
   #volRow{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2vh,22px);
-          width:min(58%,760px)}
+          width:min(62%,820px)}
   #vol{display:none;align-items:center;gap:clamp(10px,2vh,22px);width:100%}
   #vol.on{display:flex}
-  #volBar{flex:1;height:clamp(10px,2vh,20px);border-radius:99px;background:rgba(255,255,255,.2);
-          touch-action:none;position:relative}
+  #vol .round{width:clamp(40px,9vh,92px);height:clamp(40px,9vh,92px);background:rgba(255,255,255,.1);opacity:.9}
+  #volBar{flex:1;height:clamp(14px,3vh,30px);border-radius:99px;background:rgba(255,255,255,.2);
+          touch-action:none;position:relative;cursor:pointer}
   #volFill{height:100%;width:50%;border-radius:99px;background:var(--accent);transition:width .1s}
   #volFill::after{content:"";position:absolute;top:50%;left:calc(var(--vp,50%) - .5em);
           width:1em;height:1em;border-radius:50%;background:#fff;transform:translateY(-50%);
@@ -196,6 +203,8 @@
 
 <img id="art" alt="" crossorigin="anonymous" style="display:none">
 <section class="view on" id="vSpotify">
+  <div id="artWrap"><img id="artView" alt=""></div>
+  <div id="main">
   <div id="head">
     <div id="title">Ansluter…</div>
     <div id="artist"></div>
@@ -226,6 +235,7 @@
       <div id="next"><img id="nextArt" alt=""><span id="nextTxt"></span></div>
       <span id="device"></span>
     </div>
+  </div>
   </div>
   <div id="idle">
     <div id="clock">--:--</div>
@@ -389,11 +399,13 @@ async function poll(){
     el('artist').textContent=(d.item.artists||[]).map(function(a){return a.name;}).join(', ');
     el('album').textContent=d.item.album?d.item.album.name:'';
     var imgs=(d.item.album&&d.item.album.images)||[];
-    if(imgs.length){el('art').src=imgs[0].url;el('bg').style.backgroundImage='url("'+imgs[0].url+'")';}
+    if(imgs.length){el('art').src=imgs[0].url;el('artView').src=imgs[0].url;
+      el('bg').style.backgroundImage='url("'+imgs[0].url+'")';}
   }
 }
 function idle(on){
   el('idle').classList.toggle('on',on);
+  el('artWrap').style.visibility=on?'hidden':'visible';
   el('head').style.visibility=on?'hidden':'visible';
   el('foot').style.visibility=on?'hidden':'visible';
   if(on){state.id=null;el('played').style.width='0';document.body.classList.add('paused');}
@@ -463,19 +475,33 @@ function pushVol(delay){
 function nudgeVol(step){setVolUI(vol+step);volTouched=Date.now();pushVol();}
 function volFromX(bar,x){
   var r=bar.getBoundingClientRect();
+  if(!r.width)return;
   setVolUI((x-r.left)/r.width*100);volTouched=Date.now();pushVol(260);
 }
 el('volDown').addEventListener('click',function(e){e.stopPropagation();nudgeVol(-5);});
 el('volUp').addEventListener('click',function(e){e.stopPropagation();nudgeVol(5);});
-var volBar=el('volBar'),volDrag=false;
+
+/* Reglaget tar emot både tryck och drag. iCUE äter ibland horisontella drag
+   (det är samma gest som byter sida på panelen), så tryck ska räcka. */
+var volBar=el('volBar'),volDrag=false,lastVolAt=0;
+function volEvent(e,x){
+  e.stopPropagation();
+  if(Date.now()-lastVolAt<60)return;   /* samma tryck kan komma som flera händelser */
+  lastVolAt=Date.now();
+  volFromX(volBar,x);
+}
 volBar.addEventListener('pointerdown',function(e){
-  e.stopPropagation();e.preventDefault();volDrag=true;
-  try{this.setPointerCapture(e.pointerId);}catch(err){}
-  volFromX(this,e.clientX);
+  volDrag=true;try{this.setPointerCapture(e.pointerId);}catch(err){}
+  volEvent(e,e.clientX);
 });
-volBar.addEventListener('pointermove',function(e){if(volDrag){e.stopPropagation();volFromX(this,e.clientX);}});
+volBar.addEventListener('pointermove',function(e){if(volDrag)volEvent(e,e.clientX);});
 volBar.addEventListener('pointerup',function(e){volDrag=false;e.stopPropagation();});
 volBar.addEventListener('pointercancel',function(){volDrag=false;});
+volBar.addEventListener('touchstart',function(e){
+  if(e.touches&&e.touches.length)volEvent(e,e.touches[0].clientX);},{passive:true});
+volBar.addEventListener('touchmove',function(e){
+  if(e.touches&&e.touches.length)volEvent(e,e.touches[0].clientX);},{passive:true});
+volBar.addEventListener('click',function(e){volEvent(e,e.clientX);});
 
 /* spola i låten */
 el('track').addEventListener('pointerdown',async function(e){
