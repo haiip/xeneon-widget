@@ -644,13 +644,29 @@ var DL='https://api.deadlock-api.com',dlHeroes=null,dlLastMatch=null,dlFirst=tru
 function dlAccountId(v){
   var n=String(v||'').replace(/\D/g,'');
   if(!n)return '';
-  /* SteamID64 -> account_id */
-  if(n.length>=17)return String(Number(n)-76561197960265728);
+  /* SteamID64 -> account_id. BigInt krävs: talet är för stort för vanlig JS-precision. */
+  if(n.length>=17){
+    try{return (BigInt(n)-76561197960265728n).toString();}
+    catch(e){return String(Number(n)-76561197960265728);}
+  }
   return n;
 }
+/* Direktanrop först. Blockerar webbläsaren dem går resten via en öppen proxy. */
+var dlViaProxy=false;
+function dlProxyUrl(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}
+async function dlFetch(path){
+  var url=DL+path;
+  if(!dlViaProxy){
+    try{
+      var r=await fetch(url,{cache:'no-store'});
+      if(r.ok||r.status<500)return r;
+    }catch(e){dlViaProxy=true;}
+  }
+  return fetch(dlProxyUrl(url),{cache:'no-store'});
+}
 async function dlJson(path){
-  var r=await fetch(DL+path,{cache:'no-store'});
-  if(!r.ok)throw new Error(r.status+' '+path);
+  var r=await dlFetch(path);
+  if(!r.ok)throw new Error('HTTP '+r.status);
   return r.json();
 }
 async function dlLoadHeroes(){
@@ -668,15 +684,63 @@ async function dlLoadHeroes(){
   });
   return dlHeroes;
 }
+
+/* Provar flera varianter av historik-anropet och kommer ihåg vilken som gav träff. */
+var dlPath=null;
+function dlCandidates(id){return [
+  '/v1/players/'+id+'/match-history',
+  '/v1/players/'+id+'/match-history?only_stored_history=false',
+  '/v1/players/'+id+'/match-history?force_refetch=true',
+  '/v1/players/'+id+'/matches'
+];}
+function dlRows(j){
+  if(Array.isArray(j))return j;
+  if(j&&Array.isArray(j.matches))return j.matches;
+  if(j&&Array.isArray(j.data))return j.data;
+  return [];
+}
+async function dlHistory(id){
+  var paths=dlPath?[dlPath].concat(dlCandidates(id)):dlCandidates(id);
+  var lastErr=null;
+  for(var i=0;i<paths.length;i++){
+    try{
+      var j=await dlJson(paths[i]);
+      var rows=dlRows(j);
+      if(rows.length){dlPath=paths[i];return {arr:rows,path:paths[i]};}
+    }catch(e){lastErr=e;}
+  }
+  if(lastErr&&!dlPath)throw lastErr;
+  return {arr:[],path:null};
+}
+async function dlProbe(raw){
+  var ids=[],conv=dlAccountId(raw),plain=String(raw||'').replace(/\D/g,'');
+  if(conv)ids.push(conv);
+  if(plain&&plain!==conv)ids.push(plain);
+  var out=[];
+  for(var a=0;a<ids.length;a++){
+    var cands=dlCandidates(ids[a]);
+    for(var i=0;i<cands.length;i++){
+      var label=cands[i].replace('/v1/players/'+ids[a],'ID '+ids[a]+' →');
+      try{
+        var r=await dlFetch(cands[i]);
+        if(!r.ok){out.push(label+': HTTP '+r.status+(dlViaProxy?' (proxy)':''));continue;}
+        var rows=dlRows(await r.json());
+        out.push(label+': '+rows.length+' matcher'+(dlViaProxy?' (proxy)':''));
+        if(rows.length){dlPath=cands[i];CFG.dl=ids[a];}
+      }catch(e){out.push(label+': '+e.message);}
+    }
+  }
+  return out;
+}
 function dlMsg(t){el('dlBody').innerHTML='';
   var d=document.createElement('div');d.id='dlMsg';d.textContent=t;el('dlBody').appendChild(d);}
 async function dlPoll(){
   if(!CFG.dl){dlMsg('Inget Steam-ID inlagt. Öppna inställningarna uppe till vänster.');return;}
   try{
     var heroes=await dlLoadHeroes();
-    var hist=await dlJson('/v1/players/'+CFG.dl+'/match-history');
-    var arr=Array.isArray(hist)?hist:(hist&&hist.matches)||[];
-    if(!arr.length){dlMsg('Hittar inga matcher för det kontot ännu.');return;}
+    var got=await dlHistory(CFG.dl);
+    var arr=got.arr;
+    if(!arr.length){dlMsg('API:et svarar men har inga matcher för account-ID '+CFG.dl+'. Kolla ID:t i inställningarna.');return;}
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
     var recent=arr.slice(0,20);
     var wins=recent.filter(dlWon).length;
@@ -786,14 +850,14 @@ el('btnTest').addEventListener('click',async function(){
   }catch(e){s.textContent='Kunde inte nå Discord.';s.className='warn';}
 });
 el('btnDlTest').addEventListener('click',async function(){
-  var id=dlAccountId(el('inDl').value),st=el('dlState');
-  if(!id){st.textContent='Fyll i ditt Steam-ID först.';st.className='warn';return;}
-  st.textContent='Testar… (account-ID '+id+')';st.className='';
-  try{
-    var h=await dlJson('/v1/players/'+id+'/match-history');
-    var arr=Array.isArray(h)?h:(h&&h.matches)||[];
-    st.textContent='Hittade '+arr.length+' matcher.';st.className='ok';
-  }catch(e){st.textContent='Gick inte att hämta: '+e.message;st.className='warn';}
+  var st=el('dlState'),raw=el('inDl').value;
+  if(!String(raw).replace(/\D/g,'')){st.textContent='Fyll i ditt Steam-ID först.';st.className='warn';return;}
+  st.textContent='Testar alla varianter…';st.className='';
+  var rows=await dlProbe(raw);
+  st.innerHTML=rows.map(esc).join('<br>');
+  st.className=rows.join(' ').indexOf(': 0 matcher')<rows.join(' ').length&&/[1-9]\d* matcher/.test(rows.join(' '))?'ok':'warn';
+  if(dlPath){ls('xe_dl',CFG.dl);el('inDl').value=CFG.dl;
+    st.innerHTML+='<br><b>Använder: '+esc(dlPath)+'</b>';}
 });
 el('btnMake').addEventListener('click',function(){
   CFG.cid=el('inCid').value.trim();ls('xe_cid',CFG.cid);
