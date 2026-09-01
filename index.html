@@ -157,6 +157,29 @@
   .empty{font-size:var(--meta);color:var(--ink-dim);opacity:.5}
   #dcMsg{font-size:var(--meta);color:var(--ink-dim);align-self:center;margin:auto}
 
+
+  /* ---------------- Deadlock ---------------- */
+  #vDeadlock{padding:var(--pad);background:rgba(14,10,7,.93);display:flex;flex-direction:column;gap:.6em}
+  #dlHead{display:flex;align-items:baseline;gap:.9em;flex:none;flex-wrap:wrap}
+  #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#E8B872}
+  #dlForm{font-size:var(--meta);color:var(--ink-dim)}
+  #dlForm b{color:var(--ink)}
+  #dlStreak{font-size:var(--meta);padding:.15em .7em;border-radius:99px;
+            background:rgba(232,184,114,.16);color:#E8B872}
+  #dlBody{flex:1;min-height:0;display:flex;gap:clamp(8px,1.2vw,18px);overflow-x:auto}
+  #dlBody::-webkit-scrollbar{height:4px}
+  #dlBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
+  .match{flex:none;width:clamp(120px,13vw,200px);border-radius:12px;padding:.7em .8em;
+         display:flex;flex-direction:column;gap:.35em;
+         background:rgba(255,255,255,.05);border-top:3px solid rgba(255,255,255,.25)}
+  .match.win{border-top-color:#5FD08A;background:rgba(95,208,138,.1)}
+  .match.loss{border-top-color:#E0685F;background:rgba(224,104,95,.1)}
+  .match img{width:100%;height:clamp(40px,11vh,110px);object-fit:contain;object-position:center}
+  .match .hero{font-size:var(--meta);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .match .kda{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .match .sub{font-size:var(--meta);color:var(--ink-dim);opacity:.6}
+  #dlMsg{font-size:var(--meta);color:var(--ink-dim);margin:auto;text-align:center;max-width:60ch;line-height:1.5}
+
   /* aviseringar */
   #toasts{position:fixed;right:var(--pad);bottom:var(--pad);z-index:6;display:flex;
           flex-direction:column-reverse;gap:.5em;pointer-events:none;max-width:44%}
@@ -256,6 +279,16 @@
   <div id="dcBody"><div id="dcMsg">Hämtar…</div></div>
 </section>
 
+
+<section class="view" id="vDeadlock">
+  <div id="dlHead">
+    <h2>Deadlock</h2>
+    <span id="dlForm"></span>
+    <span id="dlStreak"></span>
+  </div>
+  <div id="dlBody"><div id="dlMsg">Hämtar…</div></div>
+</section>
+
 <div id="toasts"></div>
 
 <button id="gear" title="Inställningar">
@@ -289,8 +322,18 @@
     <p id="dcState"></p>
   </div>
 
+
   <div class="step">
-    <h3>3. Tillbaka till musiken automatiskt</h3>
+    <h3>3. Deadlock</h3>
+    <p>Klistra in ditt SteamID64 (siffrorna i din profillänk) eller ditt account-ID, så visas dina senaste matcher. Lämna tomt för att hoppa över Deadlock-vyn.</p>
+    <div class="field">
+      <input id="inDl" placeholder="SteamID64 eller account-ID" inputmode="numeric" autocomplete="off">
+      <button class="btn ghost" id="btnDlTest">Testa</button>
+    </div>
+    <p id="dlState"></p>
+  </div>
+  <div class="step">
+    <h3>4. Tillbaka till musiken automatiskt</h3>
     <p>Sekunder innan Discord-vyn växlar tillbaka av sig själv. 0 stänger av.</p>
     <div class="field">
       <input id="inBack" placeholder="0" inputmode="numeric" style="max-width:120px;min-width:120px">
@@ -298,7 +341,7 @@
   </div>
 
   <div class="step">
-    <h3>4. Klistra in i iCUE</h3>
+    <h3>5. Klistra in i iCUE</h3>
     <p>Lägg till en iFrame-widget och klistra in hela kodraden nedan.</p>
     <div class="field">
       <button class="btn" id="btnMake">Skapa kod</button>
@@ -319,7 +362,7 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorag
   catch(e){if(v===undefined)return mem[k]||null;mem[k]=v;return v;}}
 var qs=new URLSearchParams(location.search);
 var CFG={cid:qs.get('cid')||ls('xe_cid')||'', rt:qs.get('rt')||ls('xe_rt')||'',
-  guild:qs.get('guild')||ls('xe_guild')||'', back:parseInt(qs.get('back')||ls('xe_back')||'0',10)||0};
+  guild:qs.get('guild')||ls('xe_guild')||'', dl:qs.get('dl')||ls('xe_dl')||'', back:parseInt(qs.get('back')||ls('xe_back')||'0',10)||0};
 var REDIRECT=location.origin+location.pathname;
 var SCOPES='user-read-playback-state user-modify-playback-state user-read-currently-playing';
 var el=function(id){return document.getElementById(id);};
@@ -595,26 +638,114 @@ function notifyJoins(){
   firstDc=false;seenVoice=now;
 }
 
+
+/* ---------------- Deadlock ---------------- */
+var DL='https://api.deadlock-api.com',dlHeroes=null,dlLastMatch=null,dlFirst=true;
+function dlAccountId(v){
+  var n=String(v||'').replace(/\D/g,'');
+  if(!n)return '';
+  /* SteamID64 -> account_id */
+  if(n.length>=17)return String(Number(n)-76561197960265728);
+  return n;
+}
+async function dlJson(path){
+  var r=await fetch(DL+path,{cache:'no-store'});
+  if(!r.ok)throw new Error(r.status+' '+path);
+  return r.json();
+}
+async function dlLoadHeroes(){
+  if(dlHeroes)return dlHeroes;
+  var list=await dlJson('/v1/assets/heroes');
+  dlHeroes={};
+  (list||[]).forEach(function(h){
+    var img='';
+    var imgs=h.images||{};
+    ['icon_hero_card','minimap_image','icon_image_small','selection_image','portrait'].forEach(function(k){
+      if(!img&&typeof imgs[k]==='string')img=imgs[k];
+    });
+    if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
+    dlHeroes[h.id]={name:h.name||('Hero '+h.id),img:img};
+  });
+  return dlHeroes;
+}
+function dlMsg(t){el('dlBody').innerHTML='';
+  var d=document.createElement('div');d.id='dlMsg';d.textContent=t;el('dlBody').appendChild(d);}
+async function dlPoll(){
+  if(!CFG.dl){dlMsg('Inget Steam-ID inlagt. Öppna inställningarna uppe till vänster.');return;}
+  try{
+    var heroes=await dlLoadHeroes();
+    var hist=await dlJson('/v1/players/'+CFG.dl+'/match-history');
+    var arr=Array.isArray(hist)?hist:(hist&&hist.matches)||[];
+    if(!arr.length){dlMsg('Hittar inga matcher för det kontot ännu.');return;}
+    arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
+    var recent=arr.slice(0,20);
+    var wins=recent.filter(dlWon).length;
+    el('dlForm').innerHTML='Senaste 20: <b>'+wins+'V '+(recent.length-wins)+'F</b> · '+
+      Math.round(wins/recent.length*100)+'% vinst';
+    var streak=0,w=dlWon(recent[0]);
+    for(var i=0;i<recent.length&&dlWon(recent[i])===w;i++)streak++;
+    el('dlStreak').textContent=streak+(w?' vinster i rad':' förluster i rad');
+    var body=el('dlBody');body.innerHTML='';
+    recent.slice(0,12).forEach(function(m){
+      var h=heroes[m.hero_id]||{name:'Hjälte '+m.hero_id,img:''};
+      var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss');
+      if(h.img){var im=document.createElement('img');im.src=h.img;im.alt='';c.appendChild(im);}
+      var n=document.createElement('div');n.className='hero';n.textContent=h.name;c.appendChild(n);
+      var k=document.createElement('div');k.className='kda';
+      k.textContent=(m.player_kills|0)+' / '+(m.player_deaths|0)+' / '+(m.player_assists|0);
+      c.appendChild(k);
+      var sub=document.createElement('div');sub.className='sub';
+      var parts=[];
+      if(m.net_worth)parts.push(Math.round(m.net_worth/1000)+'k själar');
+      if(m.match_duration_s)parts.push(Math.round(m.match_duration_s/60)+' min');
+      sub.textContent=parts.join(' · ');c.appendChild(sub);
+      body.appendChild(c);
+    });
+    /* avisering när en ny match dykt upp */
+    var top=recent[0];
+    if(!dlFirst&&top&&top.match_id!==dlLastMatch){
+      var hh=heroes[top.hero_id]||{name:'okänd hjälte'};
+      toast((dlWon(top)?'Vinst':'Förlust')+' med '+hh.name+' · '+
+        (top.player_kills|0)+'/'+(top.player_deaths|0)+'/'+(top.player_assists|0),hh.img);
+    }
+    if(top)dlLastMatch=top.match_id;
+    dlFirst=false;
+  }catch(e){
+    dlMsg('Kunde inte hämta Deadlock-data. ('+e.message+')');
+  }
+}
+function dlWon(m){
+  if(!m)return false;
+  if(typeof m.match_result==='number'&&typeof m.player_team==='number')
+    return m.match_result===m.player_team;
+  return !!m.won;
+}
+
 /* ---------------- vyväxling ---------------- */
 var backTimer=null;
+function views(){var v=['spotify','discord'];if(CFG.dl)v.push('deadlock');return v;}
+function nextView(){
+  var v=views(),i=v.indexOf(document.body.dataset.view);
+  return v[(i+1)%v.length];
+}
 function show(v){
   document.body.dataset.view=v;
   el('vSpotify').classList.toggle('on',v==='spotify');
   el('vDiscord').classList.toggle('on',v==='discord');
+  el('vDeadlock').classList.toggle('on',v==='deadlock');
   el('voice').style.display=v==='spotify'?'':'none';
   clearTimeout(backTimer);
-  if(v==='discord'){
-    dcPoll();
-    if(CFG.back>0)backTimer=setTimeout(function(){show('spotify');},CFG.back*1000);
-  }
+  if(v==='discord')dcPoll();
+  if(v==='deadlock')dlPoll();
+  if(v!=='spotify'&&CFG.back>0)
+    backTimer=setTimeout(function(){show('spotify');},CFG.back*1000);
 }
 document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot'))return;
-  show(document.body.dataset.view==='spotify'?'discord':'spotify');
+  show(nextView());
 });
 document.addEventListener('keydown',function(e){
-  if(e.key===' '||e.key==='Enter'){e.preventDefault();
-    show(document.body.dataset.view==='spotify'?'discord':'spotify');}
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();show(nextView());}
 });
 function stop(e){e.stopPropagation();}
 el('btnPlay').addEventListener('click',async function(e){stop(e);
@@ -636,7 +767,7 @@ function note(t,cls){var n=el('authState');n.textContent=t;n.className=cls||'';}
 function openSetup(){
   el('setup').classList.add('on');
   el('redir').textContent=REDIRECT;
-  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';
+  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;
   if(CFG.rt)note('Spotify är redan ansluten.','ok');
 }
 el('gear').addEventListener('click',function(e){e.stopPropagation();openSetup();});
@@ -654,14 +785,26 @@ el('btnTest').addEventListener('click',async function(){
     s.textContent='Ansluten till '+j.name+' — '+(j.presence_count||0)+' online.';s.className='ok';
   }catch(e){s.textContent='Kunde inte nå Discord.';s.className='warn';}
 });
+el('btnDlTest').addEventListener('click',async function(){
+  var id=dlAccountId(el('inDl').value),st=el('dlState');
+  if(!id){st.textContent='Fyll i ditt Steam-ID först.';st.className='warn';return;}
+  st.textContent='Testar… (account-ID '+id+')';st.className='';
+  try{
+    var h=await dlJson('/v1/players/'+id+'/match-history');
+    var arr=Array.isArray(h)?h:(h&&h.matches)||[];
+    st.textContent='Hittade '+arr.length+' matcher.';st.className='ok';
+  }catch(e){st.textContent='Gick inte att hämta: '+e.message;st.className='warn';}
+});
 el('btnMake').addEventListener('click',function(){
   CFG.cid=el('inCid').value.trim();ls('xe_cid',CFG.cid);
   CFG.guild=el('inGuild').value.trim();ls('xe_guild',CFG.guild);
   CFG.back=parseInt(el('inBack').value,10)||0;ls('xe_back',String(CFG.back));
+  CFG.dl=dlAccountId(el('inDl').value);ls('xe_dl',CFG.dl);
   if(!CFG.rt){el('out').textContent='Logga in på Spotify i steg 1 först.';return;}
   var p=new URLSearchParams({cid:CFG.cid,rt:CFG.rt});
   if(CFG.guild)p.set('guild',CFG.guild);
   if(CFG.back)p.set('back',String(CFG.back));
+  if(CFG.dl)p.set('dl',CFG.dl);
   el('out').textContent='<iframe src="'+REDIRECT+'?'+p.toString()+'" width="100%" height="100%" frameborder="0"></iframe>';
 });
 el('btnCopy').addEventListener('click',function(){
@@ -678,6 +821,7 @@ el('btnCopy').addEventListener('click',function(){
   setInterval(tick,250);
   setInterval(dcPoll,15000);
   setInterval(queuePoll,15000);
+  if(CFG.dl){dlPoll();setInterval(dlPoll,120000);}
 })();
 })();
 </script>
