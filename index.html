@@ -6,12 +6,13 @@
 <title>Xeneon Edge — Spotify / Discord</title>
 <style>
   :root{
-    --ink:#F4F1EC; --ink-dim:#B9BEC9; --base:#14161C;
-    --accent:#7BE0A0; --discord:#5865F2;
-    --pad: clamp(18px, 4.5vh, 46px);
-    --title: clamp(30px, 11vh, 124px);
-    --artist: clamp(16px, 5vh, 56px);
-    --meta: clamp(12px, 2.9vh, 30px);
+    --ink:#F7F5F1; --ink-dim:#C6CBD4; --base:#161922;
+    --accent:#7BE0A0; --g1:#2C4A46; --g2:#12151C;
+    --discord:#5865F2;
+    --pad: clamp(16px, 4vh, 44px);
+    --title: clamp(28px, 12vh, 132px);
+    --artist: clamp(15px, 4.6vh, 50px);
+    --meta: clamp(11px, 2.7vh, 28px);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden}
@@ -20,135 +21,150 @@
     -webkit-font-smoothing:antialiased;user-select:none}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
+  /* --- bakgrund: mjuk färgtoning ur omslaget + drivande omslagsbild --- */
+  #grad{position:fixed;inset:0;z-index:0;
+        background:linear-gradient(155deg, var(--g1) 0%, var(--g2) 78%);
+        transition:background 1.2s ease}
   #bg{position:fixed;inset:-16%;z-index:0;background-size:cover;background-position:center;
-      filter:blur(58px) saturate(1.75) brightness(.72);transform:scale(1.15);
-      transition:background-image .6s ease;animation:drift 34s ease-in-out infinite alternate}
+      filter:blur(70px) saturate(1.7) brightness(.85);opacity:.5;
+      transition:background-image .8s ease;animation:drift 36s ease-in-out infinite alternate}
   @keyframes drift{
-    from{transform:scale(1.14) translate(-2.5%,-1.5%) rotate(-1.2deg)}
-    to  {transform:scale(1.3) translate(2.5%,1.5%) rotate(1.2deg)}
+    from{transform:scale(1.15) translate(-3%,-2%) rotate(-1.5deg)}
+    to  {transform:scale(1.32) translate(3%,2%) rotate(1.5deg)}
   }
-  #bg::after{content:"";position:absolute;inset:0;
-      background:radial-gradient(120% 90% at 20% 50%, rgba(0,0,0,.05), rgba(0,0,0,.52))}
-  #glow{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;
+  #glow{position:fixed;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;
       background:
-        radial-gradient(38% 120% at 22% 40%, var(--accent), transparent 70%),
-        radial-gradient(32% 110% at 78% 70%, var(--accent), transparent 72%);
-      mix-blend-mode:screen;filter:blur(40px);
-      animation:breathe 17s ease-in-out infinite alternate}
+        radial-gradient(40% 130% at 20% 35%, var(--accent), transparent 70%),
+        radial-gradient(34% 120% at 80% 75%, var(--accent), transparent 72%);
+      filter:blur(50px);animation:breathe 19s ease-in-out infinite alternate}
   @keyframes breathe{
-    from{opacity:.34;transform:translateX(-3%) scale(1)}
-    to  {opacity:.62;transform:translateX(3%) scale(1.12)}
+    from{opacity:.22;transform:translateX(-3%) scale(1)}
+    to  {opacity:.46;transform:translateX(3%) scale(1.14)}
   }
   body.paused #bg,body.paused #glow{animation-play-state:paused}
 
   .view{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity .3s ease}
   .view.on{opacity:1;pointer-events:auto}
 
-  /* ---- Spotify ---- */
-  #vSpotify{display:flex;align-items:center;gap:var(--pad);padding:var(--pad)}
-  #artWrap{height:100%;aspect-ratio:1;flex:none;position:relative}
-  #art{width:100%;height:100%;border-radius:10px;object-fit:cover;background:#22252E;
-       box-shadow:0 24px 70px rgba(0,0,0,.6);transition:transform .9s cubic-bezier(.2,.7,.2,1)}
-  body.beat #art{transform:scale(1.012)}
-  #np{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;
-      align-items:center;text-align:center;gap:.3em}
-  #title{font-size:var(--title);font-weight:700;letter-spacing:-.028em;line-height:1.02;
-         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-         text-shadow:0 4px 40px rgba(0,0,0,.45);max-width:100%}
-  #artist{font-size:var(--artist);color:var(--ink-dim);white-space:nowrap;overflow:hidden;
-          text-overflow:ellipsis;max-width:100%;text-shadow:0 2px 24px rgba(0,0,0,.4)}
-  #album{font-size:var(--meta);color:var(--ink-dim);opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-  #transport{display:flex;align-items:center;justify-content:center;gap:clamp(12px,2.4vh,30px);margin-top:.45em}
-  .round{border-radius:50%;display:grid;place-items:center;opacity:.82;flex:none;
-       width:clamp(52px,13vh,140px);height:clamp(52px,13vh,140px);
-       background:rgba(255,255,255,.07);
-       transition:opacity .15s,background .15s,transform .1s}
-  .round:hover,.round:focus-visible{opacity:1;background:rgba(255,255,255,.16)}
-  .round:active{transform:scale(.93)}
-  .round svg{width:46%;height:46%;fill:currentColor}
-  #btnPlay{width:clamp(64px,17vh,180px);height:clamp(64px,17vh,180px);
-       background:rgba(255,255,255,.15);opacity:1}
-  #btnPlay svg{width:42%;height:42%}
-  #time{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;margin-left:.6em}
-  #device{font-size:var(--meta);color:var(--accent);opacity:.85;
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:18ch}
+  /* ---------------- Spotify ---------------- */
+  #vSpotify{display:flex;flex-direction:column;padding:var(--pad)}
+  #head{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.12em}
+  #title{font-size:var(--title);font-weight:800;letter-spacing:-.03em;line-height:1;
+         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #artist{font-size:var(--artist);font-weight:600;color:var(--ink);opacity:.92;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #album{font-size:var(--meta);color:var(--ink-dim);opacity:.75;
+         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  #extra{display:flex;align-items:center;justify-content:center;
-         gap:clamp(16px,3vh,40px);margin-top:.5em;min-width:0;width:100%}
-  #next{display:none;align-items:center;gap:.6em;min-width:0;max-width:44%}
+  #foot{flex:none;display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.4vh,16px)}
+  #progress{width:100%;display:flex;align-items:center;gap:.8em}
+  #progress span{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;
+                 opacity:.85;min-width:5ch}
+  #progress span.r{text-align:right}
+  #track{flex:1;height:clamp(4px,.9vh,8px);border-radius:99px;background:rgba(255,255,255,.22);
+         touch-action:none;position:relative}
+  #played{height:100%;width:0;border-radius:99px;background:var(--ink);transition:width .25s linear}
+
+  #controls{display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vh,52px)}
+  .round{border-radius:50%;display:grid;place-items:center;flex:none;opacity:.9;
+       width:clamp(44px,11vh,110px);height:clamp(44px,11vh,110px);
+       transition:opacity .15s,background .15s,transform .1s}
+  .round:hover,.round:focus-visible{opacity:1;background:rgba(255,255,255,.12)}
+  .round:active{transform:scale(.92)}
+  .round svg{width:52%;height:52%;fill:currentColor}
+  .small{width:clamp(34px,7.5vh,76px);height:clamp(34px,7.5vh,76px);opacity:.6}
+  .small.active{opacity:1;color:var(--accent)}
+  #btnPlay{width:clamp(56px,15vh,152px);height:clamp(56px,15vh,152px);
+       background:var(--ink);color:#111;opacity:1}
+  #btnPlay:hover{background:#fff}
+  #btnPlay svg{width:40%;height:40%}
+
+  #volRow{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2vh,22px);
+          width:min(58%,760px)}
+  #vol{display:none;align-items:center;gap:clamp(10px,2vh,22px);width:100%}
+  #vol.on{display:flex}
+  #volBar{flex:1;height:clamp(10px,2vh,20px);border-radius:99px;background:rgba(255,255,255,.2);
+          touch-action:none;position:relative}
+  #volFill{height:100%;width:50%;border-radius:99px;background:var(--accent);transition:width .1s}
+  #volFill::after{content:"";position:absolute;top:50%;left:calc(var(--vp,50%) - .5em);
+          width:1em;height:1em;border-radius:50%;background:#fff;transform:translateY(-50%);
+          box-shadow:0 2px 10px rgba(0,0,0,.45)}
+  #volNum{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;
+          min-width:4.5ch;text-align:right}
+
+  #meta2{display:flex;align-items:center;justify-content:center;gap:clamp(14px,3vh,34px);
+         width:100%;min-height:1.2em}
+  #next{display:none;align-items:center;gap:.55em;min-width:0;max-width:52%}
   #next.on{display:flex}
-  #nextArt{width:clamp(28px,5.5vh,60px);height:clamp(28px,5.5vh,60px);border-radius:6px;
-           object-fit:cover;background:#22252E;flex:none}
+  #nextArt{width:clamp(24px,4.6vh,50px);height:clamp(24px,4.6vh,50px);border-radius:5px;
+           object-fit:cover;background:rgba(255,255,255,.1);flex:none}
   #nextTxt{font-size:var(--meta);color:var(--ink-dim);white-space:nowrap;overflow:hidden;
            text-overflow:ellipsis;min-width:0}
   #nextTxt b{color:var(--ink);font-weight:600}
-  #nextTxt i{font-style:normal;opacity:.55;margin-right:.5em}
-
-  #vol{display:none;align-items:center;gap:.6em;flex:none;
-       padding:.3em .5em;border-radius:999px;background:rgba(10,11,16,.35)}
-  #vol.on{display:flex}
-  #vol .round{width:clamp(44px,9vh,92px);height:clamp(44px,9vh,92px);background:rgba(255,255,255,.09)}
-  #volBar{width:clamp(90px,16vh,220px);height:clamp(8px,1.4vh,14px);border-radius:99px;
-          background:rgba(255,255,255,.18);padding:0;touch-action:none}
-  #volFill{height:100%;width:50%;border-radius:99px;background:var(--accent);transition:width .12s}
-  #volNum{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;
-          min-width:4ch;text-align:right}
-
-  /* röstkanal-remsa i musikvyn */
-  #voice{position:fixed;right:var(--pad);bottom:calc(var(--pad) * .75);z-index:2;
-         display:none;align-items:center;gap:.7em;padding:.5em .85em;border-radius:999px;
-         background:rgba(12,13,18,.55);backdrop-filter:blur(14px);
-         border:1px solid rgba(255,255,255,.08)}
-  #voice.on{display:flex}
-  #voiceName{font-size:var(--meta);color:var(--ink-dim);white-space:nowrap;max-width:22ch;
-             overflow:hidden;text-overflow:ellipsis}
-  #voiceName b{color:var(--ink);font-weight:600}
-  .faces{display:flex}
-  .faces img{width:clamp(22px,3.4vh,34px);height:clamp(22px,3.4vh,34px);border-radius:50%;
-             margin-left:-.42em;border:2px solid rgba(12,13,18,.9);background:#2a2d36}
-  .faces img:first-child{margin-left:0}
-  .more{font-size:var(--meta);color:var(--ink-dim);margin-left:.4em}
-
-  #bar{position:fixed;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.1);z-index:3}
-  #barFill{height:100%;width:0;background:var(--accent);transition:width .25s linear}
-  body[data-view="discord"] #bar{opacity:0}
+  #nextTxt i{font-style:normal;opacity:.55;margin-right:.45em}
+  #device{font-size:var(--meta);color:var(--accent);opacity:.85;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:20ch}
 
   #idle{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center}
   #idle.on{display:flex}
-  #clock{font-size:clamp(54px,25vh,180px);font-weight:200;letter-spacing:-.04em;
+  #clock{font-size:clamp(54px,30vh,220px);font-weight:200;letter-spacing:-.04em;
          font-variant-numeric:tabular-nums;line-height:1}
   #idleMsg{font-size:var(--meta);color:var(--ink-dim);margin-top:.4em}
 
-  /* ---- Discord ---- */
+  /* röstremsa */
+  #voice{position:fixed;right:var(--pad);top:var(--pad);z-index:2;display:none;
+         align-items:center;gap:.7em;padding:.45em .8em;border-radius:999px;
+         background:rgba(10,11,16,.4);backdrop-filter:blur(14px);
+         border:1px solid rgba(255,255,255,.1)}
+  #voice.on{display:flex}
+  #voiceName{font-size:var(--meta);color:var(--ink-dim);white-space:nowrap;max-width:26ch;
+             overflow:hidden;text-overflow:ellipsis}
+  #voiceName b{color:var(--ink);font-weight:600}
+  .faces{display:flex}
+  .faces img{width:clamp(22px,4vh,42px);height:clamp(22px,4vh,42px);border-radius:50%;
+             margin-left:-.42em;border:2px solid rgba(10,11,16,.85);background:#2a2d36}
+  .faces img:first-child{margin-left:0}
+
+  /* ---------------- Discord ---------------- */
   #vDiscord{padding:var(--pad);background:rgba(9,10,14,.9);display:flex;flex-direction:column;gap:.7em}
   #dcHead{display:flex;align-items:baseline;gap:.7em;flex:none}
-  #dcHead h2{font-size:clamp(20px,4.6vh,44px);font-weight:700;letter-spacing:-.03em}
+  #dcHead h2{font-size:clamp(20px,6vh,60px);font-weight:700;letter-spacing:-.03em}
   #dcCount{font-size:var(--meta);color:var(--ink-dim)}
   #dcDot{display:inline-block;width:.4em;height:.4em;border-radius:50%;background:var(--discord);
          margin-right:.45em;vertical-align:.1em}
   #dcBody{flex:1;min-height:0;display:flex;gap:clamp(12px,1.6vw,26px);overflow-x:auto;overflow-y:hidden}
   #dcBody::-webkit-scrollbar{height:4px}
   #dcBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
-  .chan{flex:none;width:clamp(190px,17vw,270px);border-radius:12px;padding:.85em 1em;
-        background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);
+  .chan{flex:none;width:clamp(190px,20vw,320px);border-radius:14px;padding:.85em 1em;
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
         display:flex;flex-direction:column;gap:.5em;overflow:hidden}
-  .chan.live{border-color:rgba(88,101,242,.55);background:rgba(88,101,242,.11)}
+  .chan.live{border-color:rgba(88,101,242,.55);background:rgba(88,101,242,.12)}
   .chan h4{font-size:var(--meta);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chan h4 span{color:var(--ink-dim);margin-right:.35em}
   .who{display:flex;flex-direction:column;gap:.42em;overflow:hidden}
   .who div{display:flex;align-items:center;gap:.5em;font-size:var(--meta);
            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .who img{width:clamp(20px,2.9vh,28px);height:clamp(20px,2.9vh,28px);border-radius:50%;
+  .who img{width:clamp(20px,3.4vh,34px);height:clamp(20px,3.4vh,34px);border-radius:50%;
            flex:none;background:#2a2d36}
   .who .muted{opacity:.45}
   .empty{font-size:var(--meta);color:var(--ink-dim);opacity:.5}
   #dcMsg{font-size:var(--meta);color:var(--ink-dim);align-self:center;margin:auto}
 
-  /* ---- kugghjul + setup ---- */
-  #gear{position:fixed;top:9px;right:11px;z-index:5;width:32px;height:32px;border-radius:50%;
-        display:grid;place-items:center;opacity:.15;transition:opacity .2s}
+  /* aviseringar */
+  #toasts{position:fixed;right:var(--pad);bottom:var(--pad);z-index:6;display:flex;
+          flex-direction:column-reverse;gap:.5em;pointer-events:none;max-width:44%}
+  .toast{display:flex;align-items:center;gap:.65em;padding:.55em .9em;border-radius:999px;
+         background:rgba(88,101,242,.92);color:#fff;font-size:var(--meta);
+         box-shadow:0 10px 34px rgba(0,0,0,.5);animation:pop .3s ease}
+  .toast img{width:clamp(22px,4vh,40px);height:clamp(22px,4vh,40px);border-radius:50%;flex:none}
+  .toast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* kugghjul + setup */
+  #gear{position:fixed;top:8px;left:10px;z-index:5;width:30px;height:30px;border-radius:50%;
+        display:grid;place-items:center;opacity:.13;transition:opacity .2s}
   #gear:hover,#gear:focus-visible{opacity:.85;background:rgba(255,255,255,.1)}
-  #gear svg{width:16px;height:16px;fill:currentColor}
+  #gear svg{width:15px;height:15px;fill:currentColor}
   #setup{position:fixed;inset:0;z-index:9;display:none;overflow:auto;background:#101218;padding:clamp(20px,4vh,52px)}
   #setup.on{display:block}
   .wrap{max-width:70ch;margin:0 auto}
@@ -174,30 +190,41 @@
 </head>
 <body data-view="spotify">
 
+<div id="grad"></div>
 <div id="bg"></div>
 <div id="glow"></div>
 
+<img id="art" alt="" crossorigin="anonymous" style="display:none">
 <section class="view on" id="vSpotify">
-  <div id="artWrap"><img id="art" alt="" crossorigin="anonymous"></div>
-  <div id="np">
+  <div id="head">
     <div id="title">Ansluter…</div>
     <div id="artist"></div>
     <div id="album"></div>
-    <div id="transport">
-      <button class="round" id="btnPrev" title="Föregående"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zm3 7 9-7v14z"/></svg></button>
-      <button class="round" id="btnPlay" title="Spela eller pausa"><svg viewBox="0 0 24 24"><path id="playPath" d="M7 4l13 8-13 8z"/></svg></button>
-      <button class="round" id="btnNext" title="Nästa"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM6 5l9 7-9 7z"/></svg></button>
-      <span id="time"></span>
-      <span id="device"></span>
+  </div>
+  <div id="foot">
+    <div id="progress">
+      <span id="tCur">0:00</span>
+      <div id="track"><div id="played"></div></div>
+      <span id="tTot" class="r">0:00</span>
     </div>
-    <div id="extra">
-      <div id="next"><img id="nextArt" alt=""><span id="nextTxt"></span></div>
+    <div id="controls">
+      <button class="round small" id="btnShuffle" title="Blanda"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.2l-2.3 3-1.3-1.7L13.6 6H17V3zM3 6h4.3l7 9H17v-3l4 4-4 4v-3h-3.6l-7-9H3V6zm0 12h3.4l2.3-3 1.3 1.7L7.9 21H3v-3z"/></svg></button>
+      <button class="round" id="btnPrev" title="Föregående"><svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zm3.4 7L20 5v14z"/></svg></button>
+      <button class="round" id="btnPlay" title="Spela eller pausa"><svg viewBox="0 0 24 24"><path id="playPath" d="M7 4l13 8-13 8z"/></svg></button>
+      <button class="round" id="btnNext" title="Nästa"><svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM14.6 12L4 19V5z"/></svg></button>
+      <button class="round small" id="btnRepeat" title="Upprepa"><svg viewBox="0 0 24 24"><path id="repPath" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+    </div>
+    <div id="volRow">
       <div id="vol">
-        <button class="round" id="volDown" title="Sänk volymen"><svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zm12 1h7v3h-7z"/></svg></button>
+        <button class="round small" id="volDown" title="Sänk volymen"><svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zm12 1h7v3h-7z"/></svg></button>
         <div id="volBar"><div id="volFill"></div></div>
-        <button class="round" id="volUp" title="Höj volymen"><svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zm14-1h3v3h3v3h-3v3h-3v-3h-3v-3h3z"/></svg></button>
+        <button class="round small" id="volUp" title="Höj volymen"><svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zm14-1h3v3h3v3h-3v3h-3v-3h-3v-3h3z"/></svg></button>
         <span id="volNum"></span>
       </div>
+    </div>
+    <div id="meta2">
+      <div id="next"><img id="nextArt" alt=""><span id="nextTxt"></span></div>
+      <span id="device"></span>
     </div>
   </div>
   <div id="idle">
@@ -219,7 +246,7 @@
   <div id="dcBody"><div id="dcMsg">Hämtar…</div></div>
 </section>
 
-<div id="bar"><div id="barFill"></div></div>
+<div id="toasts"></div>
 
 <button id="gear" title="Inställningar">
   <svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7zm7.4-2.2.1-1.3-.1-1.3 2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-2.2-1.3L14.5 3h-5l-.4 2.5a7.6 7.6 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5-.1 1.3.1 1.3-2 1.5 2 3.4 2.3-1c.7.6 1.4 1 2.2 1.3l.4 2.5h5l.4-2.5c.8-.3 1.5-.7 2.2-1.3l2.3 1 2-3.4z"/></svg>
@@ -228,7 +255,7 @@
 <div id="setup">
  <div class="wrap">
   <h1>Xeneon Edge — Spotify och Discord</h1>
-  <p>Gör det här en gång i en vanlig webbläsare. Resultatet blir en adress som du klistrar in i iCUE. Allt sparas lokalt hos dig.</p>
+  <p>Gör det här en gång i en vanlig webbläsare. Resultatet blir en kodrad som du klistrar in i iCUE. Allt sparas lokalt hos dig.</p>
 
   <div class="step">
     <h3>1. Spotify</h3>
@@ -244,7 +271,7 @@
 
   <div class="step">
     <h3>2. Discord</h3>
-    <p>Serverinställningar → Engagemang → aktivera serverwidget. Kopiera sedan server-ID:t (Utvecklarläge på, högerklick på servern → Kopiera server-ID).</p>
+    <p>Serverinställningar → Engagemang → aktivera serverwidget. Kopiera sedan server-ID:t.</p>
     <div class="field">
       <input id="inGuild" placeholder="Discord server-ID" inputmode="numeric" autocomplete="off">
       <button class="btn ghost" id="btnTest">Testa</button>
@@ -262,7 +289,7 @@
 
   <div class="step">
     <h3>4. Klistra in i iCUE</h3>
-    <p>Lägg till en iFrame-widget och klistra in hela kodraden nedan — iCUE vill ha HTML, inte bara en adress.</p>
+    <p>Lägg till en iFrame-widget och klistra in hela kodraden nedan.</p>
     <div class="field">
       <button class="btn" id="btnMake">Skapa kod</button>
       <button class="btn ghost" id="btnCopy">Kopiera</button>
@@ -286,20 +313,21 @@ var CFG={cid:qs.get('cid')||ls('xe_cid')||'', rt:qs.get('rt')||ls('xe_rt')||'',
 var REDIRECT=location.origin+location.pathname;
 var SCOPES='user-read-playback-state user-modify-playback-state user-read-currently-playing';
 var el=function(id){return document.getElementById(id);};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
-/* ---------------- Spotify ---------------- */
+/* ---------------- auth ---------------- */
 function rand(n){var a=new Uint8Array(n);crypto.getRandomValues(a);
   return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2);}).join('');}
 function b64url(buf){var s='',b=new Uint8Array(buf);
   for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);
   return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 async function challenge(v){return b64url(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));}
-
 async function login(){
   var cid=el('inCid').value.trim();
   if(!cid){note('Fyll i Client ID först.','warn');return;}
-  ls('xe_cid',cid); CFG.cid=cid;
-  var v=rand(48); ls('xe_verifier',v);
+  ls('xe_cid',cid);CFG.cid=cid;
+  var v=rand(48);ls('xe_verifier',v);
   location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({
     client_id:cid,response_type:'code',redirect_uri:REDIRECT,
     code_challenge_method:'S256',code_challenge:await challenge(v),scope:SCOPES});
@@ -330,24 +358,28 @@ async function token(){
   return tok.v;
 }
 async function api(path,method){
-  var t=await token(); if(!t)return null;
+  var t=await token();if(!t)return null;
   var r=await fetch('https://api.spotify.com/v1'+path,{method:method||'GET',headers:{Authorization:'Bearer '+t}});
   if(r.status===401){tok=null;return null;}
   if(r.status===204||r.status===202)return {empty:true};
   if(!r.ok)return {err:r.status};
-  var txt=await r.text(); return txt?JSON.parse(txt):{empty:true};
+  var txt=await r.text();return txt?JSON.parse(txt):{empty:true};
 }
 
-var state={id:null,playing:false,pos:0,dur:0,at:0};
+/* ---------------- uppspelning ---------------- */
+var state={id:null,playing:false,pos:0,dur:0,at:0,shuffle:false,repeat:'off'};
 async function poll(){
   var d=await api('/me/player');
   if(!d||d.empty||!d.item){idle(true);return;}
   idle(false);
   state.playing=!!d.is_playing;
-  state.pos=d.progress_ms||0; state.dur=d.item.duration_ms||0; state.at=Date.now();
+  state.pos=d.progress_ms||0;state.dur=d.item.duration_ms||0;state.at=Date.now();
   document.body.classList.toggle('paused',!state.playing);
-  el('playPath').setAttribute('d',state.playing?'M7 5h4v14H7zm6 0h4v14h-4z':'M7 4l13 8-13 8z');
+  el('playPath').setAttribute('d',state.playing?'M7 5h3.6v14H7zm6.4 0H17v14h-3.6z':'M7 4l13 8-13 8z');
   el('device').textContent=d.device?d.device.name:'';
+  state.shuffle=!!d.shuffle_state; state.repeat=d.repeat_state||'off';
+  el('btnShuffle').classList.toggle('active',state.shuffle);
+  el('btnRepeat').classList.toggle('active',state.repeat!=='off');
   if(d.device&&typeof d.device.volume_percent==='number'&&Date.now()-volTouched>2500)
     setVolUI(d.device.volume_percent);
   if(d.item.id!==state.id){
@@ -360,163 +392,181 @@ async function poll(){
     if(imgs.length){el('art').src=imgs[0].url;el('bg').style.backgroundImage='url("'+imgs[0].url+'")';}
   }
 }
-async function queuePoll(){
-  var q=await api('/me/player/queue');
-  var box=el('next');
-  if(!q||q.err||!q.queue||!q.queue.length){box.classList.remove('on');return;}
-  var t=q.queue[0];
-  var imgs=(t.album&&t.album.images)||(t.images)||[];
-  el('nextArt').src=imgs.length?imgs[imgs.length-1].url:'';
-  el('nextTxt').innerHTML='<i>Nästa</i><b>'+esc(t.name||'')+'</b>'+
-    ((t.artists&&t.artists.length)?' — '+esc(t.artists.map(function(a){return a.name;}).join(', ')):'');
-  box.classList.add('on');
-}
-function esc(s){return String(s).replace(/[&<>"]/g,function(c){
-  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-
-var vol=50, volTouched=0, volTimer=null;
-function setVolUI(v){
-  vol=Math.max(0,Math.min(100,Math.round(v)));
-  el('volFill').style.width=vol+'%';
-  el('volNum').textContent=vol+'%';
-  el('vol').classList.add('on');
-}
-function nudgeVol(step){
-  setVolUI(vol+step); volTouched=Date.now();
-  clearTimeout(volTimer);
-  volTimer=setTimeout(async function(){
-    var r=await api('/me/player/volume?volume_percent='+vol,'PUT');
-    if(r&&r.err===403)el('vol').classList.remove('on');
-  },350);
-}
-el('volDown').addEventListener('click',function(e){e.stopPropagation();nudgeVol(-5);});
-el('volUp').addEventListener('click',function(e){e.stopPropagation();nudgeVol(5);});
-function volFromEvent(bar,x){
-  var r=bar.getBoundingClientRect();
-  setVolUI((x-r.left)/r.width*100); volTouched=Date.now();
-  clearTimeout(volTimer);
-  volTimer=setTimeout(function(){api('/me/player/volume?volume_percent='+vol,'PUT');},300);
-}
-el('volBar').addEventListener('pointerdown',function(e){
-  e.stopPropagation(); e.preventDefault();
-  this.setPointerCapture(e.pointerId);
-  volFromEvent(this,e.clientX);
-});
-el('volBar').addEventListener('pointermove',function(e){
-  if(!this.hasPointerCapture||!this.hasPointerCapture(e.pointerId))return;
-  volFromEvent(this,e.clientX);
-});
-
 function idle(on){
   el('idle').classList.toggle('on',on);
-  if(on){el('next').classList.remove('on');}
-  el('artWrap').style.visibility=on?'hidden':'visible';
-  el('np').style.visibility=on?'hidden':'visible';
-  if(on){state.id=null;el('barFill').style.width='0';document.body.classList.add('paused');}
+  el('head').style.visibility=on?'hidden':'visible';
+  el('foot').style.visibility=on?'hidden':'visible';
+  if(on){state.id=null;el('played').style.width='0';document.body.classList.add('paused');}
 }
 function ms(x){var s=Math.floor(x/1000);return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);}
-var pulse=0;
 function tick(){
   var now=new Date();
   el('clock').textContent=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
   if(!state.dur)return;
   var p=state.pos+(state.playing?Date.now()-state.at:0);
   if(p>state.dur)p=state.dur;
-  el('barFill').style.width=(p/state.dur*100)+'%';
-  el('time').textContent=ms(p)+' / '+ms(state.dur);
-  if(state.playing&&++pulse%8===0)
-    document.body.classList.toggle('beat');
+  el('played').style.width=(p/state.dur*100)+'%';
+  el('tCur').textContent=ms(p); el('tTot').textContent=ms(state.dur);
 }
+
+/* omslagets färger driver bakgrunden */
 el('art').addEventListener('load',function(){
   try{
-    var c=document.createElement('canvas');c.width=c.height=12;
-    var x=c.getContext('2d');x.drawImage(el('art'),0,0,12,12);
-    var d=x.getImageData(0,0,12,12).data,best=[123,224,160],sat=-1;
+    var c=document.createElement('canvas');c.width=c.height=14;
+    var x=c.getContext('2d');x.drawImage(el('art'),0,0,14,14);
+    var d=x.getImageData(0,0,14,14).data,best=[123,224,160],sat=-1,sum=[0,0,0],n=0;
     for(var i=0;i<d.length;i+=4){
       var r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+      sum[0]+=r;sum[1]+=g;sum[2]+=b;n++;
       var s=(mx-mn)*(mx>40&&mx<246?1:.25);
       if(s>sat){sat=s;best=[r,g,b];}
     }
     var lum=best[0]*.299+best[1]*.587+best[2]*.114;
-    if(lum<90){var k=110/Math.max(lum,1);best=best.map(function(v){return Math.min(255,Math.round(v*k));});}
-    document.documentElement.style.setProperty('--accent','rgb('+best.join(',')+')');
+    if(lum<90){var k=115/Math.max(lum,1);best=best.map(function(v){return Math.min(255,Math.round(v*k));});}
+    var avg=sum.map(function(v){return Math.round(v/n);});
+    var g1=avg.map(function(v,i){return Math.min(255,Math.round(v*.6+best[i]*.28));});
+    var g2=avg.map(function(v){return Math.round(v*.22+14);});
+    var root=document.documentElement.style;
+    root.setProperty('--accent','rgb('+best.join(',')+')');
+    root.setProperty('--g1','rgb('+g1.join(',')+')');
+    root.setProperty('--g2','rgb('+g2.join(',')+')');
   }catch(e){}
 });
 
+/* kö */
+async function queuePoll(){
+  var q=await api('/me/player/queue'),box=el('next');
+  if(!q||q.err||!q.queue||!q.queue.length){box.classList.remove('on');return;}
+  var t=q.queue[0],imgs=(t.album&&t.album.images)||t.images||[];
+  el('nextArt').src=imgs.length?imgs[imgs.length-1].url:'';
+  el('nextTxt').innerHTML='<i>Nästa</i><b>'+esc(t.name||'')+'</b>'+
+    ((t.artists&&t.artists.length)?' — '+esc(t.artists.map(function(a){return a.name;}).join(', ')):'');
+  box.classList.add('on');
+}
+
+/* volym */
+var vol=50,volTouched=0,volTimer=null;
+function setVolUI(v){
+  vol=Math.max(0,Math.min(100,Math.round(v)));
+  el('volFill').style.width=vol+'%';
+  el('volFill').style.setProperty('--vp',vol+'%');
+  el('volNum').textContent=vol+'%';
+  el('vol').classList.add('on');
+}
+function pushVol(delay){
+  clearTimeout(volTimer);
+  volTimer=setTimeout(async function(){
+    var r=await api('/me/player/volume?volume_percent='+vol,'PUT');
+    if(r&&r.err===403)el('vol').classList.remove('on');
+  },delay||320);
+}
+function nudgeVol(step){setVolUI(vol+step);volTouched=Date.now();pushVol();}
+function volFromX(bar,x){
+  var r=bar.getBoundingClientRect();
+  setVolUI((x-r.left)/r.width*100);volTouched=Date.now();pushVol(260);
+}
+el('volDown').addEventListener('click',function(e){e.stopPropagation();nudgeVol(-5);});
+el('volUp').addEventListener('click',function(e){e.stopPropagation();nudgeVol(5);});
+var volBar=el('volBar'),volDrag=false;
+volBar.addEventListener('pointerdown',function(e){
+  e.stopPropagation();e.preventDefault();volDrag=true;
+  try{this.setPointerCapture(e.pointerId);}catch(err){}
+  volFromX(this,e.clientX);
+});
+volBar.addEventListener('pointermove',function(e){if(volDrag){e.stopPropagation();volFromX(this,e.clientX);}});
+volBar.addEventListener('pointerup',function(e){volDrag=false;e.stopPropagation();});
+volBar.addEventListener('pointercancel',function(){volDrag=false;});
+
+/* spola i låten */
+el('track').addEventListener('pointerdown',async function(e){
+  e.stopPropagation();
+  if(!state.dur)return;
+  var r=this.getBoundingClientRect();
+  var p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+  state.pos=Math.round(p*state.dur);state.at=Date.now();
+  el('played').style.width=(p*100)+'%';
+  await api('/me/player/seek?position_ms='+state.pos,'PUT');
+});
+
 /* ---------------- Discord ---------------- */
-var dcData=null;
+var dcData=null,seenVoice={},firstDc=true;
 async function dcPoll(){
-  if(!CFG.guild){dcMsg('Inget server-ID inlagt. Öppna inställningarna uppe till höger.');return;}
+  if(!CFG.guild){dcMsg('Inget server-ID inlagt. Öppna inställningarna uppe till vänster.');return;}
   try{
     var r=await fetch('https://discord.com/api/guilds/'+encodeURIComponent(CFG.guild)+'/widget.json',{cache:'no-store'});
     if(r.status===403){dcMsg('Serverwidgeten är avstängd. Slå på den i Serverinställningar → Engagemang.');return;}
     if(r.status===404){dcMsg('Hittar ingen server med det ID:t.');return;}
     if(!r.ok){dcMsg('Discord svarar inte just nu ('+r.status+').');return;}
     dcData=await r.json();
-    renderDiscord(); renderVoice();
+    renderDiscord();renderVoice();notifyJoins();
   }catch(e){dcMsg('Kunde inte nå Discord.');}
 }
-function dcMsg(t){dcData=null;el('dcBody').innerHTML='';
+function dcMsg(t){
+  dcData=null;el('dcBody').innerHTML='';
   var d=document.createElement('div');d.id='dcMsg';d.textContent=t;el('dcBody').appendChild(d);
-  el('voice').classList.remove('on');}
-
+  el('voice').classList.remove('on');
+}
 function voiceGroups(){
   if(!dcData)return [];
   var chans=(dcData.channels||[]).slice().sort(function(a,b){return (a.position||0)-(b.position||0);});
   var by={};
-  (dcData.members||[]).forEach(function(m){
-    if(!m.channel_id)return;
-    (by[m.channel_id]=by[m.channel_id]||[]).push(m);
-  });
+  (dcData.members||[]).forEach(function(m){if(m.channel_id)(by[m.channel_id]=by[m.channel_id]||[]).push(m);});
   return chans.map(function(c){return {name:c.name,people:by[c.id]||[]};});
 }
-function face(m){
-  var i=document.createElement('img');
-  i.src=m.avatar_url||''; i.alt=''; i.loading='lazy';
-  return i;
-}
+function face(m){var i=document.createElement('img');i.src=m.avatar_url||'';i.alt='';return i;}
 function renderDiscord(){
-  var groups=voiceGroups(), body=el('dcBody');
+  var groups=voiceGroups(),body=el('dcBody');
   el('dcCount').textContent=(dcData.presence_count||0)+' online';
   body.innerHTML='';
   if(!groups.length){dcMsg('Servern har inga röstkanaler att visa.');return;}
   var live=groups.filter(function(g){return g.people.length;});
   (live.length?live:groups).forEach(function(g){
-    var c=document.createElement('div');
-    c.className='chan'+(g.people.length?' live':'');
-    var h=document.createElement('h4');
-    h.innerHTML='<span>#</span>'; h.appendChild(document.createTextNode(g.name));
-    c.appendChild(h);
-    var who=document.createElement('div'); who.className='who';
-    if(!g.people.length){
-      var e=document.createElement('div'); e.className='empty'; e.textContent='Tomt';
-      who.appendChild(e);
-    } else g.people.slice(0,6).forEach(function(m){
+    var c=document.createElement('div');c.className='chan'+(g.people.length?' live':'');
+    var h=document.createElement('h4');h.innerHTML='<span>#</span>';
+    h.appendChild(document.createTextNode(g.name));c.appendChild(h);
+    var who=document.createElement('div');who.className='who';
+    if(!g.people.length){var e2=document.createElement('div');e2.className='empty';e2.textContent='Tomt';who.appendChild(e2);}
+    else g.people.slice(0,6).forEach(function(m){
       var row=document.createElement('div');
       if(m.mute||m.deaf||m.self_mute||m.self_deaf)row.className='muted';
-      row.appendChild(face(m));
-      row.appendChild(document.createTextNode(m.username));
-      who.appendChild(row);
+      row.appendChild(face(m));row.appendChild(document.createTextNode(m.username));who.appendChild(row);
     });
-    if(g.people.length>6){
-      var more=document.createElement('div'); more.className='empty';
-      more.textContent='+'+(g.people.length-6)+' till'; who.appendChild(more);
-    }
-    c.appendChild(who); body.appendChild(c);
+    if(g.people.length>6){var more=document.createElement('div');more.className='empty';
+      more.textContent='+'+(g.people.length-6)+' till';who.appendChild(more);}
+    c.appendChild(who);body.appendChild(c);
   });
 }
 function renderVoice(){
-  var live=voiceGroups().filter(function(g){return g.people.length;});
-  var v=el('voice');
+  var live=voiceGroups().filter(function(g){return g.people.length;}),v=el('voice');
   if(!live.length){v.classList.remove('on');return;}
   var total=live.reduce(function(n,g){return n+g.people.length;},0);
-  var people=live[0].people;
-  var faces=el('voiceFaces'); faces.innerHTML='';
-  people.slice(0,5).forEach(function(m){faces.appendChild(face(m));});
-  var label='<b>'+live[0].name+'</b>';
+  var faces=el('voiceFaces');faces.innerHTML='';
+  live[0].people.slice(0,5).forEach(function(m){faces.appendChild(face(m));});
+  var label='<b>'+esc(live[0].name)+'</b>';
   if(live.length>1)label+=' + '+(live.length-1)+' kanal'+(live.length>2?'er':'')+' till';
   el('voiceName').innerHTML=label+' · '+total+' i röst';
   v.classList.add('on');
+}
+function toast(txt,avatar){
+  var t=document.createElement('div');t.className='toast';
+  if(avatar){var i=document.createElement('img');i.src=avatar;t.appendChild(i);}
+  var s=document.createElement('span');s.textContent=txt;t.appendChild(s);
+  el('toasts').appendChild(t);
+  setTimeout(function(){t.style.transition='opacity .4s';t.style.opacity='0';
+    setTimeout(function(){t.remove();},450);},7000);
+}
+function notifyJoins(){
+  var now={};
+  voiceGroups().forEach(function(g){g.people.forEach(function(m){now[m.id]=g.name;});});
+  if(!firstDc){
+    Object.keys(now).forEach(function(id){
+      if(!seenVoice[id]){
+        var m=(dcData.members||[]).filter(function(x){return x.id===id;})[0];
+        toast((m?m.username:'Någon')+' gick in i '+now[id],m&&m.avatar_url);
+      }
+    });
+  }
+  firstDc=false;seenVoice=now;
 }
 
 /* ---------------- vyväxling ---------------- */
@@ -533,32 +583,41 @@ function show(v){
   }
 }
 document.addEventListener('pointerdown',function(e){
-  if(e.target.closest('#gear, #setup, #transport, #extra, #vol, #volBar, #next'))return;
+  if(e.target.closest('#gear, #setup, #foot'))return;
   show(document.body.dataset.view==='spotify'?'discord':'spotify');
 });
 document.addEventListener('keydown',function(e){
   if(e.key===' '||e.key==='Enter'){e.preventDefault();
     show(document.body.dataset.view==='spotify'?'discord':'spotify');}
 });
-el('btnPlay').addEventListener('click',async function(){
+function stop(e){e.stopPropagation();}
+el('btnPlay').addEventListener('click',async function(e){stop(e);
   await api(state.playing?'/me/player/pause':'/me/player/play','PUT');
   state.playing=!state.playing;setTimeout(poll,350);});
-el('btnNext').addEventListener('click',async function(){await api('/me/player/next','POST');setTimeout(poll,600);});
-el('btnPrev').addEventListener('click',async function(){await api('/me/player/previous','POST');setTimeout(poll,600);});
+el('btnNext').addEventListener('click',async function(e){stop(e);await api('/me/player/next','POST');setTimeout(poll,600);});
+el('btnPrev').addEventListener('click',async function(e){stop(e);await api('/me/player/previous','POST');setTimeout(poll,600);});
+el('btnShuffle').addEventListener('click',async function(e){stop(e);
+  state.shuffle=!state.shuffle;this.classList.toggle('active',state.shuffle);
+  await api('/me/player/shuffle?state='+state.shuffle,'PUT');setTimeout(poll,400);});
+el('btnRepeat').addEventListener('click',async function(e){stop(e);
+  var order={off:'context',context:'track',track:'off'};
+  state.repeat=order[state.repeat]||'off';
+  this.classList.toggle('active',state.repeat!=='off');
+  await api('/me/player/repeat?state='+state.repeat,'PUT');setTimeout(poll,400);});
 
 /* ---------------- setup ---------------- */
 function note(t,cls){var n=el('authState');n.textContent=t;n.className=cls||'';}
 function openSetup(){
   el('setup').classList.add('on');
   el('redir').textContent=REDIRECT;
-  el('inCid').value=CFG.cid; el('inGuild').value=CFG.guild; el('inBack').value=CFG.back||'';
+  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';
   if(CFG.rt)note('Spotify är redan ansluten.','ok');
 }
 el('gear').addEventListener('click',function(e){e.stopPropagation();openSetup();});
 el('btnLogin').addEventListener('click',login);
 el('btnClose').addEventListener('click',function(){el('setup').classList.remove('on');});
 el('btnTest').addEventListener('click',async function(){
-  var g=el('inGuild').value.trim(); var s=el('dcState');
+  var g=el('inGuild').value.trim(),s=el('dcState');
   if(!g){s.textContent='Fyll i server-ID först.';s.className='warn';return;}
   s.textContent='Testar…';s.className='';
   try{
@@ -570,9 +629,9 @@ el('btnTest').addEventListener('click',async function(){
   }catch(e){s.textContent='Kunde inte nå Discord.';s.className='warn';}
 });
 el('btnMake').addEventListener('click',function(){
-  CFG.cid=el('inCid').value.trim(); ls('xe_cid',CFG.cid);
-  CFG.guild=el('inGuild').value.trim(); ls('xe_guild',CFG.guild);
-  CFG.back=parseInt(el('inBack').value,10)||0; ls('xe_back',String(CFG.back));
+  CFG.cid=el('inCid').value.trim();ls('xe_cid',CFG.cid);
+  CFG.guild=el('inGuild').value.trim();ls('xe_guild',CFG.guild);
+  CFG.back=parseInt(el('inBack').value,10)||0;ls('xe_back',String(CFG.back));
   if(!CFG.rt){el('out').textContent='Logga in på Spotify i steg 1 först.';return;}
   var p=new URLSearchParams({cid:CFG.cid,rt:CFG.rt});
   if(CFG.guild)p.set('guild',CFG.guild);
@@ -588,10 +647,10 @@ el('btnCopy').addEventListener('click',function(){
 (async function(){
   if(qs.get('code')){openSetup();await exchange(qs.get('code'));return;}
   if(!CFG.cid||!CFG.rt){openSetup();el('title').textContent='Inte ansluten';return;}
-  await poll(); dcPoll(); queuePoll();
+  await poll();dcPoll();queuePoll();
   setInterval(poll,3000);
   setInterval(tick,250);
-  setInterval(dcPoll,20000);
+  setInterval(dcPoll,15000);
   setInterval(queuePoll,15000);
 })();
 })();
