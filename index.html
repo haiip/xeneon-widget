@@ -6,12 +6,12 @@
 <title>Xeneon Edge — Spotify / Discord</title>
 <style>
   :root{
-    --ink:#F4F1EC; --ink-dim:#A3A8B4; --base:#14161C;
+    --ink:#F4F1EC; --ink-dim:#B9BEC9; --base:#14161C;
     --accent:#7BE0A0; --discord:#5865F2;
-    --pad: clamp(18px, 3vw, 52px);
-    --title: clamp(28px, 7vh, 88px);
-    --artist: clamp(15px, 3.2vh, 38px);
-    --meta: clamp(11px, 1.8vh, 19px);
+    --pad: clamp(18px, 4.5vh, 46px);
+    --title: clamp(30px, 11vh, 124px);
+    --artist: clamp(16px, 5vh, 56px);
+    --meta: clamp(12px, 2.9vh, 30px);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden}
@@ -20,16 +20,26 @@
     -webkit-font-smoothing:antialiased;user-select:none}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
-  #bg{position:fixed;inset:-14%;z-index:0;background-size:cover;background-position:center;
-      filter:blur(64px) saturate(1.5) brightness(.42);transform:scale(1.15);
-      transition:background-image .6s ease;animation:drift 44s ease-in-out infinite alternate}
+  #bg{position:fixed;inset:-16%;z-index:0;background-size:cover;background-position:center;
+      filter:blur(58px) saturate(1.75) brightness(.72);transform:scale(1.15);
+      transition:background-image .6s ease;animation:drift 34s ease-in-out infinite alternate}
   @keyframes drift{
-    from{transform:scale(1.14) translate(-1.5%,-1%)}
-    to  {transform:scale(1.24) translate(1.5%,1%)}
+    from{transform:scale(1.14) translate(-2.5%,-1.5%) rotate(-1.2deg)}
+    to  {transform:scale(1.3) translate(2.5%,1.5%) rotate(1.2deg)}
   }
   #bg::after{content:"";position:absolute;inset:0;
-      background:radial-gradient(120% 90% at 18% 50%, rgba(0,0,0,.14), rgba(0,0,0,.8))}
-  body.paused #bg{animation-play-state:paused}
+      background:radial-gradient(120% 90% at 20% 50%, rgba(0,0,0,.05), rgba(0,0,0,.52))}
+  #glow{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;
+      background:
+        radial-gradient(38% 120% at 22% 40%, var(--accent), transparent 70%),
+        radial-gradient(32% 110% at 78% 70%, var(--accent), transparent 72%);
+      mix-blend-mode:screen;filter:blur(40px);
+      animation:breathe 17s ease-in-out infinite alternate}
+  @keyframes breathe{
+    from{opacity:.34;transform:translateX(-3%) scale(1)}
+    to  {opacity:.62;transform:translateX(3%) scale(1.12)}
+  }
+  body.paused #bg,body.paused #glow{animation-play-state:paused}
 
   .view{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity .3s ease}
   .view.on{opacity:1;pointer-events:auto}
@@ -40,42 +50,49 @@
   #art{width:100%;height:100%;border-radius:10px;object-fit:cover;background:#22252E;
        box-shadow:0 24px 70px rgba(0,0,0,.6);transition:transform .9s cubic-bezier(.2,.7,.2,1)}
   body.beat #art{transform:scale(1.012)}
-  #np{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:.32em}
-  #title{font-size:var(--title);font-weight:700;letter-spacing:-.025em;line-height:1.03;
-         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  #artist{font-size:var(--artist);color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #album{font-size:var(--meta);color:var(--ink-dim);opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #transport{display:flex;align-items:center;gap:clamp(10px,1.5vw,22px);margin-top:.5em}
-  .round{border-radius:50%;display:grid;place-items:center;opacity:.75;flex:none;
-       width:clamp(46px,8.2vh,78px);height:clamp(46px,8.2vh,78px);
+  #np{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;
+      align-items:center;text-align:center;gap:.3em}
+  #title{font-size:var(--title);font-weight:700;letter-spacing:-.028em;line-height:1.02;
+         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+         text-shadow:0 4px 40px rgba(0,0,0,.45);max-width:100%}
+  #artist{font-size:var(--artist);color:var(--ink-dim);white-space:nowrap;overflow:hidden;
+          text-overflow:ellipsis;max-width:100%;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+  #album{font-size:var(--meta);color:var(--ink-dim);opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  #transport{display:flex;align-items:center;justify-content:center;gap:clamp(12px,2.4vh,30px);margin-top:.45em}
+  .round{border-radius:50%;display:grid;place-items:center;opacity:.82;flex:none;
+       width:clamp(52px,13vh,140px);height:clamp(52px,13vh,140px);
+       background:rgba(255,255,255,.07);
        transition:opacity .15s,background .15s,transform .1s}
-  .round:hover,.round:focus-visible{opacity:1;background:rgba(255,255,255,.1)}
+  .round:hover,.round:focus-visible{opacity:1;background:rgba(255,255,255,.16)}
   .round:active{transform:scale(.93)}
-  .round svg{width:48%;height:48%;fill:currentColor}
-  #btnPlay{width:clamp(56px,10.5vh,98px);height:clamp(56px,10.5vh,98px);
-       background:rgba(255,255,255,.12);opacity:1}
-  #btnPlay svg{width:44%;height:44%}
-  #time{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;margin-left:.5em}
-  #device{font-size:var(--meta);color:var(--accent);opacity:.82;
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:20ch}
+  .round svg{width:46%;height:46%;fill:currentColor}
+  #btnPlay{width:clamp(64px,17vh,180px);height:clamp(64px,17vh,180px);
+       background:rgba(255,255,255,.15);opacity:1}
+  #btnPlay svg{width:42%;height:42%}
+  #time{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;margin-left:.6em}
+  #device{font-size:var(--meta);color:var(--accent);opacity:.85;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:18ch}
 
-  #extra{display:flex;align-items:center;gap:clamp(14px,2vw,30px);margin-top:.55em;min-width:0}
-  #next{display:none;align-items:center;gap:.6em;min-width:0;flex:1}
+  #extra{display:flex;align-items:center;justify-content:center;
+         gap:clamp(16px,3vh,40px);margin-top:.5em;min-width:0;width:100%}
+  #next{display:none;align-items:center;gap:.6em;min-width:0;max-width:44%}
   #next.on{display:flex}
-  #nextArt{width:clamp(26px,4vh,42px);height:clamp(26px,4vh,42px);border-radius:5px;
+  #nextArt{width:clamp(28px,5.5vh,60px);height:clamp(28px,5.5vh,60px);border-radius:6px;
            object-fit:cover;background:#22252E;flex:none}
   #nextTxt{font-size:var(--meta);color:var(--ink-dim);white-space:nowrap;overflow:hidden;
            text-overflow:ellipsis;min-width:0}
   #nextTxt b{color:var(--ink);font-weight:600}
   #nextTxt i{font-style:normal;opacity:.55;margin-right:.5em}
 
-  #vol{display:none;align-items:center;gap:.55em;flex:none}
+  #vol{display:none;align-items:center;gap:.6em;flex:none;
+       padding:.3em .5em;border-radius:999px;background:rgba(10,11,16,.35)}
   #vol.on{display:flex}
-  #vol .round{width:clamp(38px,6.4vh,58px);height:clamp(38px,6.4vh,58px)}
-  #volBar{width:clamp(70px,9vw,150px);height:4px;border-radius:2px;background:rgba(255,255,255,.14)}
-  #volFill{height:100%;width:50%;border-radius:2px;background:var(--accent);transition:width .15s}
+  #vol .round{width:clamp(44px,9vh,92px);height:clamp(44px,9vh,92px);background:rgba(255,255,255,.09)}
+  #volBar{width:clamp(90px,16vh,220px);height:clamp(8px,1.4vh,14px);border-radius:99px;
+          background:rgba(255,255,255,.18);padding:0;touch-action:none}
+  #volFill{height:100%;width:50%;border-radius:99px;background:var(--accent);transition:width .12s}
   #volNum{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;
-          min-width:3.4ch;text-align:right}
+          min-width:4ch;text-align:right}
 
   /* röstkanal-remsa i musikvyn */
   #voice{position:fixed;right:var(--pad);bottom:calc(var(--pad) * .75);z-index:2;
@@ -158,6 +175,7 @@
 <body data-view="spotify">
 
 <div id="bg"></div>
+<div id="glow"></div>
 
 <section class="view on" id="vSpotify">
   <div id="artWrap"><img id="art" alt="" crossorigin="anonymous"></div>
@@ -371,13 +389,22 @@ function nudgeVol(step){
     if(r&&r.err===403)el('vol').classList.remove('on');
   },350);
 }
-el('volDown').addEventListener('click',function(){nudgeVol(-5);});
-el('volUp').addEventListener('click',function(){nudgeVol(5);});
-el('volBar').addEventListener('pointerdown',function(e){
-  var r=this.getBoundingClientRect();
-  setVolUI((e.clientX-r.left)/r.width*100); volTouched=Date.now();
+el('volDown').addEventListener('click',function(e){e.stopPropagation();nudgeVol(-5);});
+el('volUp').addEventListener('click',function(e){e.stopPropagation();nudgeVol(5);});
+function volFromEvent(bar,x){
+  var r=bar.getBoundingClientRect();
+  setVolUI((x-r.left)/r.width*100); volTouched=Date.now();
   clearTimeout(volTimer);
-  volTimer=setTimeout(function(){api('/me/player/volume?volume_percent='+vol,'PUT');},250);
+  volTimer=setTimeout(function(){api('/me/player/volume?volume_percent='+vol,'PUT');},300);
+}
+el('volBar').addEventListener('pointerdown',function(e){
+  e.stopPropagation(); e.preventDefault();
+  this.setPointerCapture(e.pointerId);
+  volFromEvent(this,e.clientX);
+});
+el('volBar').addEventListener('pointermove',function(e){
+  if(!this.hasPointerCapture||!this.hasPointerCapture(e.pointerId))return;
+  volFromEvent(this,e.clientX);
 });
 
 function idle(on){
@@ -506,7 +533,7 @@ function show(v){
   }
 }
 document.addEventListener('pointerdown',function(e){
-  if(e.target.closest('#gear, #setup, #transport'))return;
+  if(e.target.closest('#gear, #setup, #transport, #extra, #vol, #volBar, #next'))return;
   show(document.body.dataset.view==='spotify'?'discord':'spotify');
 });
 document.addEventListener('keydown',function(e){
