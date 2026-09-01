@@ -45,15 +45,37 @@
          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   #artist{font-size:var(--artist);color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #album{font-size:var(--meta);color:var(--ink-dim);opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #transport{display:flex;align-items:center;gap:clamp(9px,1.5vw,20px);margin-top:.45em}
-  #transport button{width:clamp(36px,6vh,58px);height:clamp(36px,6vh,58px);border-radius:50%;
-       display:grid;place-items:center;opacity:.72;transition:opacity .15s,background .15s}
-  #transport button:hover,#transport button:focus-visible{opacity:1;background:rgba(255,255,255,.09)}
-  #transport svg{width:52%;height:52%;fill:currentColor}
-  #btnPlay{background:rgba(255,255,255,.11)}
-  #time{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;margin-left:.4em}
-  #device{font-size:var(--meta);color:var(--accent);opacity:.82;margin-left:.9em;
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:26%}
+  #transport{display:flex;align-items:center;gap:clamp(10px,1.5vw,22px);margin-top:.5em}
+  .round{border-radius:50%;display:grid;place-items:center;opacity:.75;flex:none;
+       width:clamp(46px,8.2vh,78px);height:clamp(46px,8.2vh,78px);
+       transition:opacity .15s,background .15s,transform .1s}
+  .round:hover,.round:focus-visible{opacity:1;background:rgba(255,255,255,.1)}
+  .round:active{transform:scale(.93)}
+  .round svg{width:48%;height:48%;fill:currentColor}
+  #btnPlay{width:clamp(56px,10.5vh,98px);height:clamp(56px,10.5vh,98px);
+       background:rgba(255,255,255,.12);opacity:1}
+  #btnPlay svg{width:44%;height:44%}
+  #time{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;margin-left:.5em}
+  #device{font-size:var(--meta);color:var(--accent);opacity:.82;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:20ch}
+
+  #extra{display:flex;align-items:center;gap:clamp(14px,2vw,30px);margin-top:.55em;min-width:0}
+  #next{display:none;align-items:center;gap:.6em;min-width:0;flex:1}
+  #next.on{display:flex}
+  #nextArt{width:clamp(26px,4vh,42px);height:clamp(26px,4vh,42px);border-radius:5px;
+           object-fit:cover;background:#22252E;flex:none}
+  #nextTxt{font-size:var(--meta);color:var(--ink-dim);white-space:nowrap;overflow:hidden;
+           text-overflow:ellipsis;min-width:0}
+  #nextTxt b{color:var(--ink);font-weight:600}
+  #nextTxt i{font-style:normal;opacity:.55;margin-right:.5em}
+
+  #vol{display:none;align-items:center;gap:.55em;flex:none}
+  #vol.on{display:flex}
+  #vol .round{width:clamp(38px,6.4vh,58px);height:clamp(38px,6.4vh,58px)}
+  #volBar{width:clamp(70px,9vw,150px);height:4px;border-radius:2px;background:rgba(255,255,255,.14)}
+  #volFill{height:100%;width:50%;border-radius:2px;background:var(--accent);transition:width .15s}
+  #volNum{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums;
+          min-width:3.4ch;text-align:right}
 
   /* röstkanal-remsa i musikvyn */
   #voice{position:fixed;right:var(--pad);bottom:calc(var(--pad) * .75);z-index:2;
@@ -144,11 +166,20 @@
     <div id="artist"></div>
     <div id="album"></div>
     <div id="transport">
-      <button id="btnPrev" title="Föregående"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zm3 7 9-7v14z"/></svg></button>
-      <button id="btnPlay" title="Spela eller pausa"><svg viewBox="0 0 24 24"><path id="playPath" d="M7 4l13 8-13 8z"/></svg></button>
-      <button id="btnNext" title="Nästa"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM6 5l9 7-9 7z"/></svg></button>
+      <button class="round" id="btnPrev" title="Föregående"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zm3 7 9-7v14z"/></svg></button>
+      <button class="round" id="btnPlay" title="Spela eller pausa"><svg viewBox="0 0 24 24"><path id="playPath" d="M7 4l13 8-13 8z"/></svg></button>
+      <button class="round" id="btnNext" title="Nästa"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM6 5l9 7-9 7z"/></svg></button>
       <span id="time"></span>
       <span id="device"></span>
+    </div>
+    <div id="extra">
+      <div id="next"><img id="nextArt" alt=""><span id="nextTxt"></span></div>
+      <div id="vol">
+        <button class="round" id="volDown" title="Sänk volymen"><svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zm12 1h7v3h-7z"/></svg></button>
+        <div id="volBar"><div id="volFill"></div></div>
+        <button class="round" id="volUp" title="Höj volymen"><svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zm14-1h3v3h3v3h-3v3h-3v-3h-3v-3h3z"/></svg></button>
+        <span id="volNum"></span>
+      </div>
     </div>
   </div>
   <div id="idle">
@@ -299,8 +330,11 @@ async function poll(){
   document.body.classList.toggle('paused',!state.playing);
   el('playPath').setAttribute('d',state.playing?'M7 5h4v14H7zm6 0h4v14h-4z':'M7 4l13 8-13 8z');
   el('device').textContent=d.device?d.device.name:'';
+  if(d.device&&typeof d.device.volume_percent==='number'&&Date.now()-volTouched>2500)
+    setVolUI(d.device.volume_percent);
   if(d.item.id!==state.id){
     state.id=d.item.id;
+    queuePoll();
     el('title').textContent=d.item.name||'';
     el('artist').textContent=(d.item.artists||[]).map(function(a){return a.name;}).join(', ');
     el('album').textContent=d.item.album?d.item.album.name:'';
@@ -308,8 +342,47 @@ async function poll(){
     if(imgs.length){el('art').src=imgs[0].url;el('bg').style.backgroundImage='url("'+imgs[0].url+'")';}
   }
 }
+async function queuePoll(){
+  var q=await api('/me/player/queue');
+  var box=el('next');
+  if(!q||q.err||!q.queue||!q.queue.length){box.classList.remove('on');return;}
+  var t=q.queue[0];
+  var imgs=(t.album&&t.album.images)||(t.images)||[];
+  el('nextArt').src=imgs.length?imgs[imgs.length-1].url:'';
+  el('nextTxt').innerHTML='<i>Nästa</i><b>'+esc(t.name||'')+'</b>'+
+    ((t.artists&&t.artists.length)?' — '+esc(t.artists.map(function(a){return a.name;}).join(', ')):'');
+  box.classList.add('on');
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+var vol=50, volTouched=0, volTimer=null;
+function setVolUI(v){
+  vol=Math.max(0,Math.min(100,Math.round(v)));
+  el('volFill').style.width=vol+'%';
+  el('volNum').textContent=vol+'%';
+  el('vol').classList.add('on');
+}
+function nudgeVol(step){
+  setVolUI(vol+step); volTouched=Date.now();
+  clearTimeout(volTimer);
+  volTimer=setTimeout(async function(){
+    var r=await api('/me/player/volume?volume_percent='+vol,'PUT');
+    if(r&&r.err===403)el('vol').classList.remove('on');
+  },350);
+}
+el('volDown').addEventListener('click',function(){nudgeVol(-5);});
+el('volUp').addEventListener('click',function(){nudgeVol(5);});
+el('volBar').addEventListener('pointerdown',function(e){
+  var r=this.getBoundingClientRect();
+  setVolUI((e.clientX-r.left)/r.width*100); volTouched=Date.now();
+  clearTimeout(volTimer);
+  volTimer=setTimeout(function(){api('/me/player/volume?volume_percent='+vol,'PUT');},250);
+});
+
 function idle(on){
   el('idle').classList.toggle('on',on);
+  if(on){el('next').classList.remove('on');}
   el('artWrap').style.visibility=on?'hidden':'visible';
   el('np').style.visibility=on?'hidden':'visible';
   if(on){state.id=null;el('barFill').style.width='0';document.body.classList.add('paused');}
@@ -488,10 +561,11 @@ el('btnCopy').addEventListener('click',function(){
 (async function(){
   if(qs.get('code')){openSetup();await exchange(qs.get('code'));return;}
   if(!CFG.cid||!CFG.rt){openSetup();el('title').textContent='Inte ansluten';return;}
-  await poll(); dcPoll();
+  await poll(); dcPoll(); queuePoll();
   setInterval(poll,3000);
   setInterval(tick,250);
   setInterval(dcPoll,20000);
+  setInterval(queuePoll,15000);
 })();
 })();
 </script>
