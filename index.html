@@ -655,7 +655,7 @@ function dlAccountId(v){
 var dlViaProxy=false;
 function dlProxyUrl(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}
 async function dlFetch(path){
-  var url=DL+path;
+  var url=/^https?:/.test(path)?path:DL+path;
   if(!dlViaProxy){
     try{
       var r=await fetch(url,{cache:'no-store'});
@@ -666,12 +666,24 @@ async function dlFetch(path){
 }
 async function dlJson(path){
   var r=await dlFetch(path);
-  if(!r.ok)throw new Error('HTTP '+r.status);
+  if(!r.ok)throw new Error('HTTP '+r.status+' på '+String(path).split('?')[0]);
   return r.json();
+}
+async function dlJsonAny(paths){
+  var last=null;
+  for(var i=0;i<paths.length;i++){
+    try{return await dlJson(paths[i]);}catch(e){last=e;}
+  }
+  throw last;
 }
 async function dlLoadHeroes(){
   if(dlHeroes)return dlHeroes;
-  var list=await dlJson('/v1/assets/heroes');
+  /* hjältedata ligger ibland på api-servern, ibland på assets-servern */
+  var list=await dlJsonAny([
+    '/v1/assets/heroes',
+    'https://assets.deadlock-api.com/v1/heroes',
+    'https://assets.deadlock-api.com/v2/heroes'
+  ]);
   dlHeroes={};
   (list||[]).forEach(function(h){
     var img='';
@@ -737,7 +749,8 @@ function dlMsg(t){el('dlBody').innerHTML='';
 async function dlPoll(){
   if(!CFG.dl){dlMsg('Inget Steam-ID inlagt. Öppna inställningarna uppe till vänster.');return;}
   try{
-    var heroes=await dlLoadHeroes();
+    var heroes={};
+    try{heroes=await dlLoadHeroes();}catch(e){heroes={};}
     var got=await dlHistory(CFG.dl);
     var arr=got.arr;
     if(!arr.length){dlMsg('API:et svarar men har inga matcher för account-ID '+CFG.dl+'. Kolla ID:t i inställningarna.');return;}
