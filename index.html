@@ -683,6 +683,9 @@ function dlAccountId(v){
   return n;
 }
 
+/* Direktanrop först. Blockerar webbläsaren dem går resten via en öppen proxy. */
+var dlViaProxy=false;
+function dlProxyUrl(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}
 async function dlFetch(path){
   var url=/^https?:/.test(path)?path:DL+path;
   if(!dlViaProxy){
