@@ -349,12 +349,14 @@ async function wxPoll(){
          transition:transform .14s,box-shadow .14s,border-color .15s}
   .match:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(0,0,0,.45)}
   .match:active{transform:scale(.97)}
-  .match.win{border-color:rgba(95,208,138,.3);background:rgba(95,208,138,.1)}
-  .match.loss{border-color:rgba(224,104,95,.28);background:rgba(224,104,95,.1)}
+  .match.win{border-color:rgba(95,208,138,.42);
+    background:linear-gradient(175deg, rgba(58,150,102,.55) 0%, rgba(30,86,62,.5) 55%, rgba(16,40,31,.55) 100%)}
+  .match.loss{border-color:rgba(224,104,95,.4);
+    background:linear-gradient(175deg, rgba(168,72,64,.5) 0%, rgba(104,44,42,.5) 55%, rgba(44,20,20,.55) 100%)}
 
   /* papperstextur — olika per variant */
   .paper{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;
-         opacity:.16;mix-blend-mode:overlay;pointer-events:none}
+         opacity:.22;mix-blend-mode:overlay;pointer-events:none}
   .v0 .paper,.v3 .paper{background-image:url(ui/paper1.png)}
   .v1 .paper,.v4 .paper{background-image:url(ui/paper2.png)}
   .v2 .paper,.v5 .paper{background-image:url(ui/paper3.png)}
@@ -378,15 +380,15 @@ async function wxPoll(){
         background-image:url(ui/graf3.png);transform:rotate(-5deg)}
 
   .mhero{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-         width:104%;max-height:60%;object-fit:contain;object-position:bottom;
+         width:118%;max-height:74%;object-fit:contain;object-position:bottom;
          z-index:2;opacity:.96;pointer-events:none;
          transition:transform .25s ease;backface-visibility:hidden}
   .match:hover .mhero{transform:translateX(-50%) scale(1.06)}
   .v1 .mhero,.v4 .mhero{left:56%}
   .v2 .mhero{left:44%}
   .match::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
-         background:linear-gradient(180deg, rgba(12,9,6,.52) 0%, rgba(12,9,6,0) 40%,
-                    rgba(12,9,6,.3) 76%, rgba(12,9,6,.66) 100%)}
+         background:linear-gradient(180deg, rgba(10,8,6,.42) 0%, rgba(10,8,6,0) 34%,
+                    rgba(10,8,6,.18) 70%, rgba(10,8,6,.6) 100%)}
 
   .mstats{position:relative;z-index:4;display:flex;flex-direction:column;gap:.15em}
   .v2 .mstats,.v5 .mstats{align-items:flex-end;text-align:right}
@@ -412,12 +414,14 @@ async function wxPoll(){
   #dlDetail.on{display:flex}
   #dlBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
           padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
-  #teams{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,22px)}
-  .team{flex:1;min-width:0;display:flex;flex-direction:column;gap:.3em;
-        border-radius:16px;padding:.6em .8em;background:rgba(255,255,255,.05);
-        border:1px solid rgba(255,255,255,.1)}
-  .team.amber{border-color:rgba(232,184,114,.35);background:rgba(232,184,114,.09)}
-  .team.sapphire{border-color:rgba(110,160,230,.35);background:rgba(110,160,230,.09)}
+  #teams{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,22px);align-items:flex-start}
+  .team{flex:1;min-width:0;max-height:100%;display:flex;flex-direction:column;gap:.28em;
+        border-radius:14px;padding:.65em .85em .8em;overflow-y:auto;
+        border:1px solid rgba(255,255,255,.12)}
+  .team.amber{border-color:rgba(232,184,114,.3);
+        background:linear-gradient(170deg, rgba(232,184,114,.16), rgba(232,184,114,.05))}
+  .team.sapphire{border-color:rgba(110,160,230,.3);
+        background:linear-gradient(170deg, rgba(110,160,230,.16), rgba(110,160,230,.05))}
   .team h5{font-size:var(--meta);font-weight:700;letter-spacing:.02em;opacity:.85}
   .team .row{display:flex;align-items:center;gap:.55em;font-size:var(--meta);min-width:0}
   .team .row.me{background:rgba(255,255,255,.1);border-radius:8px;padding:.1em .4em}
@@ -428,11 +432,14 @@ async function wxPoll(){
   #matchInfo{font-size:var(--meta);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
   #dlDetail{position:relative}
   #dlDetail::before{content:"";position:absolute;inset:-1em -1em 0;z-index:0;
-        background:url(ui/gothic.jpg) center/cover;opacity:.13;
-        mask-image:linear-gradient(180deg,#000,transparent 88%);
-        -webkit-mask-image:linear-gradient(180deg,#000,transparent 88%);pointer-events:none}
+        background:url(ui/gothic.jpg) center/cover;opacity:.06;filter:blur(2px);
+        mask-image:linear-gradient(180deg,#000,transparent 70%);
+        -webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
   #teams{position:relative;z-index:1}
-  .team h5{padding-bottom:.45em;background:url(ui/border.png) bottom center/100% auto no-repeat}
+  .team h5{padding-bottom:.4em;margin-bottom:.15em;
+        border-bottom:1px solid currentColor;opacity:.9}
+  .team.amber h5{color:#E8B872}
+  .team.sapphire h5{color:#8FB6E8}
   .team .row .mvp{width:clamp(14px,2.6vh,26px);height:auto;flex:none;opacity:.95}
   .team{overflow-y:auto}
   .kit{display:flex;flex-wrap:wrap;gap:.22em;margin:-.1em 0 .45em calc(clamp(18px,3.2vh,32px) + .55em)}
@@ -1116,9 +1123,9 @@ async function dlLoadHeroes(){
 /* Provar flera varianter av historik-anropet och kommer ihåg vilken som gav träff. */
 var dlPath=null;
 function dlCandidates(id){return [
-  '/v1/players/'+id+'/match-history',
-  '/v1/players/'+id+'/match-history?only_stored_history=false',
+  '/v1/players/'+id+'/match-history?only_stored_history=false',   /* hämtar färskt från Valve */
   '/v1/players/'+id+'/match-history?force_refetch=true',
+  '/v1/players/'+id+'/match-history',
   '/v1/players/'+id+'/matches'
 ];}
 function dlRows(j){
@@ -1128,7 +1135,8 @@ function dlRows(j){
   return [];
 }
 async function dlHistory(id){
-  var paths=dlPath?[dlPath].concat(dlCandidates(id)):dlCandidates(id);
+  var paths=dlCandidates(id);
+  if(dlPath&&paths.indexOf(dlPath)>0)paths=[dlPath].concat(paths);
   var lastErr=null;
   for(var i=0;i<paths.length;i++){
     try{
