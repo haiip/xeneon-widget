@@ -864,9 +864,16 @@ async function token(){
   return tok.v;
 }
 async function api(path,method){
-  var t=await token();if(!t)return null;
+  var t=await token();
+  if(!t)return {authfail:true};
   var r=await fetch('https://api.spotify.com/v1'+path,{method:method||'GET',headers:{Authorization:'Bearer '+t}});
-  if(r.status===401){tok=null;return null;}
+  if(r.status===401){
+    tok=null;
+    var t2=await token();
+    if(!t2)return {authfail:true};
+    r=await fetch('https://api.spotify.com/v1'+path,{method:method||'GET',
+      headers:{Authorization:'Bearer '+t2}});
+  }
   if(r.status===204||r.status===202)return {empty:true};
   if(!r.ok)return {err:r.status};
   var txt=await r.text();return txt?JSON.parse(txt):{empty:true};
@@ -876,7 +883,11 @@ async function api(path,method){
 var state={id:null,playing:false,pos:0,dur:0,at:0,shuffle:false,repeat:'off'};
 async function poll(){
   var d=await api('/me/player');
-  if(!d||d.empty||!d.item){idle(true);return;}
+  if(d&&d.authfail){idle(true,'Spotify-anslutningen behöver förnyas — kör setup igen');return;}
+  if(d&&d.err===403){idle(true,'Spotify nekar åtkomst (403). Kräver Premium.');return;}
+  if(d&&d.err===429){idle(true,'Spotify bad oss vänta en stund (429)');return;}
+  if(d&&d.err){idle(true,'Spotify svarade '+d.err);return;}
+  if(!d||d.empty||!d.item){idle(true,'Inget spelas just nu');return;}
   idle(false);
   state.playing=!!d.is_playing;
   state.pos=d.progress_ms||0;state.dur=d.item.duration_ms||0;state.at=Date.now();
@@ -917,7 +928,8 @@ function swapTrack(item,instant){
   document.body.classList.add('swap');
   swapTimer=setTimeout(paint,170);
 }
-function idle(on){
+function idle(on,msg){
+  if(msg)el('idleMsg').textContent=msg;
   el('idle').classList.toggle('on',on);
   document.body.classList.toggle('idle',on);
   if(on&&CFG.wx&&Date.now()-wxLast>10*60*1000){wxLast=Date.now();wxPoll();}
