@@ -307,9 +307,11 @@ async function wxPoll(){
     -webkit-backdrop-filter:blur(26px) saturate(1.25);
     border-bottom:1px solid rgba(232,184,114,.16);
     display:flex;flex-direction:column;gap:.5em;
-    transform:translateY(-100%);transition:transform .34s cubic-bezier(.2,.8,.2,1);
+    transform:translateY(-100%) translateZ(0);will-change:transform;
+    backface-visibility:hidden;isolation:isolate;
+    transition:transform .34s cubic-bezier(.2,.8,.2,1);
     box-shadow:0 26px 70px rgba(0,0,0,.45)}
-  #vDeadlock.open{transform:translateY(0)}
+  #vDeadlock.open{transform:translateY(0) translateZ(0)}
   #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:5;
     width:clamp(90px,14vw,190px);height:clamp(14px,2.6vh,26px);
     display:grid;place-items:end center;cursor:pointer}
@@ -327,7 +329,7 @@ async function wxPoll(){
   body[data-view="discord"] #streak{display:none}
   #dlHead{display:flex;align-items:baseline;gap:.9em;flex:none;flex-wrap:wrap}
   #dlLogo{height:clamp(30px,9.5vh,96px);width:auto;flex:none;
-          filter:drop-shadow(0 3px 16px rgba(232,184,114,.28))}
+          background:none;backface-visibility:hidden;transform:translateZ(0)}
   #dlHead.haslogo h2{display:none}
   #dlHead{align-items:center}
   #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#F0CB93;
@@ -355,7 +357,7 @@ async function wxPoll(){
   .mhero{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
          width:104%;max-height:62%;object-fit:contain;object-position:bottom;
          z-index:0;opacity:.95;pointer-events:none;
-         filter:drop-shadow(0 6px 18px rgba(0,0,0,.55));transition:transform .25s ease}
+         transition:transform .25s ease;backface-visibility:hidden}
   .match:hover .mhero{transform:translateX(-50%) scale(1.05)}
   .match::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
          background:linear-gradient(180deg, rgba(12,9,6,.5) 0%, rgba(12,9,6,0) 42%,
