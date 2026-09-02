@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xeneon Edge — Spotify / Discord</title>
 <style>
+  @font-face{font-family:'Reaver';src:url('fonts/reaver-semibold.woff2') format('woff2');
+    font-weight:600 900;font-display:swap}
+  @font-face{font-family:'Reaver';src:url('fonts/reaver-regular.woff2') format('woff2');
+    font-weight:400 500;font-display:swap}
+  @font-face{font-family:'Radiance';src:url('fonts/radiance-regular.woff2') format('woff2');
+    font-weight:400 500;font-display:swap}
+  @font-face{font-family:'Radiance';src:url('fonts/radiance-bold.woff2') format('woff2');
+    font-weight:600 900;font-display:swap}
   :root{
     --ink:#F7F5F1; --ink-dim:#C6CBD4; --base:#161922;
     --accent:#7BE0A0; --accent2:#5C8FD6; --g1:#2C4A46; --g2:#12151C;
@@ -300,6 +308,12 @@ async function wxPoll(){
 }
 
 /* ---------------- Deadlock ---------------- */
+  #vDeadlock,#dlFlash,#streak{font-family:'Radiance','Segoe UI',system-ui,sans-serif}
+  #dlHead h2,.team h5,.mres,.mname,#dlBack,.mkda{font-family:'Reaver','Radiance',serif}
+  .mkda{letter-spacing:.01em}
+  .mres{letter-spacing:.12em}
+  .mname{letter-spacing:.03em;font-weight:600}
+  #streak b{font-family:'Reaver',serif}
   #vDeadlock{position:fixed;left:0;right:0;top:0;height:86%;z-index:4;
     padding:var(--pad);padding-top:calc(var(--pad) * .6);
     background:linear-gradient(180deg, rgba(20,14,9,.62) 0%, rgba(16,11,7,.5) 62%, rgba(14,10,7,.12) 100%);
