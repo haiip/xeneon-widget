@@ -863,7 +863,7 @@ async function token(){
   tok={v:j.access_token,exp:Date.now()+((j.expires_in||3600)-60)*1000};
   return tok.v;
 }
-var spWait=0;                       /* tidpunkt då vi får fråga igen */
+var spWait=0,spFail=0;                       /* tidpunkt då vi får fråga igen */
 async function api(path,method){
   if(Date.now()<spWait)return {err:429,wait:Math.ceil((spWait-Date.now())/1000)};
   var t=await token();
@@ -877,10 +877,14 @@ async function api(path,method){
       headers:{Authorization:'Bearer '+t2}});
   }
   if(r.status===429){
-    var ra=parseInt(r.headers.get('Retry-After')||'30',10);
-    spWait=Date.now()+(isNaN(ra)?30:ra+2)*1000;
-    return {err:429,wait:isNaN(ra)?30:ra};
+    var ra=parseInt(r.headers.get('Retry-After')||'0',10);
+    if(isNaN(ra))ra=0;
+    spFail=Math.min(spFail+1,4);
+    var back=Math.max(ra, 30*Math.pow(2,spFail-1));   /* 30, 60, 120, 240 s */
+    spWait=Date.now()+(back+2)*1000;
+    return {err:429,wait:back};
   }
+  spFail=0;
   if(r.status===204||r.status===202)return {empty:true};
   if(!r.ok)return {err:r.status};
   var txt=await r.text();return txt?JSON.parse(txt):{empty:true};
@@ -892,8 +896,7 @@ async function poll(){
   var d=await api('/me/player');
   if(d&&d.authfail){idle(true,'Spotify-anslutningen behöver förnyas — kör setup igen');return;}
   if(d&&d.err===403){idle(true,'Spotify nekar åtkomst (403). Kräver Premium.');return;}
-  if(d&&d.err===429){
-    idle(true,'Spotify bad oss vänta '+(d.wait||30)+' s');return;}
+  if(d&&d.err===429){idle(true,waitText());return;}
   if(d&&d.err){idle(true,'Spotify svarade '+d.err);return;}
   if(!d||d.empty||!d.item){idle(true,'Inget spelas just nu');return;}
   idle(false);
@@ -946,8 +949,14 @@ function idle(on,msg){
   el('foot').style.visibility=on?'hidden':'visible';
   if(on){state.id=null;el('played').style.width='0';document.body.classList.add('paused');}
 }
+function waitText(){
+  var left=Math.max(0,Math.ceil((spWait-Date.now())/1000));
+  return left?'Spotify pausade oss · '+left+' s kvar':'Återansluter…';
+}
 function ms(x){var s=Math.floor(x/1000);return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);}
 function tick(){
+  if(spWait>Date.now()&&el('idle').classList.contains('on'))
+    el('idleMsg').textContent=waitText();
   var now=new Date();
   var hhmm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
   el('clock').textContent=hhmm;
