@@ -457,12 +457,13 @@ async function wxPoll(){
   .team.king h5{color:#E8B872}
   .team.mother h5{color:#9DC2F0}
   .team h5{font-size:var(--meta);font-weight:700;letter-spacing:.02em;opacity:.85}
-  .prow{position:relative;border-radius:12px;overflow:hidden;padding:.28em .5em;
-        margin-bottom:-.05em}
-  .prow .rowbg{position:absolute;inset:0;z-index:0;background-size:cover;
-        background-position:center 28%;opacity:.4;
-        mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.45) 46%,transparent 82%);
-        -webkit-mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.45) 46%,transparent 82%)}
+  .prow{position:relative;border-radius:12px;padding:.3em .55em .35em;
+        margin-bottom:.1em}
+  .prow .rowbg{position:absolute;inset:0;z-index:0;border-radius:12px;overflow:hidden;
+        background-size:cover;
+        background-position:center 28%;opacity:.6;
+        mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.6) 62%,transparent 96%);
+        -webkit-mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.6) 62%,transparent 96%)}
   .prow>.row,.prow>.kit{position:relative;z-index:1}
   .team .row{display:flex;align-items:center;gap:.6em;min-width:0;
         font-size:calc(var(--meta) * 1.18);line-height:1.25}
@@ -475,23 +476,26 @@ async function wxPoll(){
   #dlDetail{position:relative;background:#120c07;flex:1;min-height:0}
 
   #teams{position:relative;z-index:1;width:100%}
-  .team{position:relative;overflow:hidden}
-  .patron{width:clamp(40px,8.5vh,84px);height:clamp(40px,8.5vh,84px);flex:none;
+  .team{position:relative}
+  .patron{width:clamp(44px,10.5vh,108px);height:clamp(44px,10.5vh,108px);flex:none;
         background-size:contain;background-repeat:no-repeat;background-position:center;
         opacity:.95}
 
-  .team h5{display:flex;align-items:center;gap:.75em;padding-bottom:.45em;margin-bottom:.2em;
+  .team h5{display:flex;align-items:center;justify-content:center;gap:.85em;
+        padding-bottom:.5em;margin-bottom:.3em;
         border-bottom:1px solid currentColor;opacity:.95}
-  .team h5 .ttl{height:clamp(20px,4.6vh,46px);width:auto}
-  .tres{font-size:calc(var(--meta) * .85);letter-spacing:.12em;text-transform:uppercase;
-        font-weight:700}
+  .team h5 .ttl{height:clamp(30px,9vh,92px);width:auto;max-width:52%;object-fit:contain}
+  .tres{font-size:calc(var(--meta) * 1.15);letter-spacing:.14em;text-transform:uppercase;
+        font-weight:700;font-family:'Reaver',serif}
   .tres.w{color:#7CE0A6} .tres.l{color:#E88E86}
 
   .team .row .mvp{width:clamp(14px,2.6vh,26px);height:auto;flex:none;opacity:.95}
   .team{overflow-y:auto}
-  .kit{display:flex;flex-wrap:wrap;gap:.3em;margin:.1em 0 .5em calc(clamp(30px,5.6vh,58px) + .65em)}
+  .kit{display:flex;flex-wrap:wrap;gap:.3em;overflow:visible;
+        margin:.15em 0 .1em calc(clamp(30px,5.6vh,58px) + .65em)}
   .kit img{width:clamp(24px,4.6vh,48px);height:clamp(24px,4.6vh,48px);border-radius:6px;
-           object-fit:contain;background:none;opacity:0;transition:opacity .18s ease}
+           object-fit:contain;object-position:center;flex:none;background:none;
+           opacity:0;transition:opacity .18s ease}
   .kit img.in{opacity:1}
   .kit .chip{font-size:calc(var(--meta) * .72);color:var(--ink-dim);opacity:.7;
            background:rgba(255,255,255,.08);border-radius:4px;padding:0 .35em}
@@ -509,8 +513,8 @@ async function wxPoll(){
   #dlBg{position:absolute;inset:-1.4em -1.4em 0;z-index:0;background-color:#120c07;background-size:cover;
         background-position:center 25%;pointer-events:none}
   #dlBg::after{content:"";position:absolute;inset:0;
-        background:linear-gradient(180deg, rgba(17,12,8,.35) 0%, rgba(17,12,8,.55) 50%,
-                   rgba(15,10,7,1) 96%)}
+        background:linear-gradient(180deg, rgba(15,11,7,.62) 0%, rgba(15,11,7,.76) 50%,
+                   rgba(14,10,7,1) 96%)}
 
   /* hjältelistan */
   #heroBtn{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
