@@ -7,7 +7,7 @@
 <style>
   :root{
     --ink:#F7F5F1; --ink-dim:#C6CBD4; --base:#161922;
-    --accent:#7BE0A0; --g1:#2C4A46; --g2:#12151C;
+    --accent:#7BE0A0; --accent2:#5C8FD6; --g1:#2C4A46; --g2:#12151C;
     --discord:#5865F2;
     --pad: clamp(16px, 4vh, 44px);
     --title: clamp(28px, 12vh, 132px);
@@ -26,26 +26,46 @@
   *{-webkit-tap-highlight-color:transparent}
 
   /* --- bakgrund: mjuk färgtoning ur omslaget + drivande omslagsbild --- */
-  #grad{position:fixed;inset:0;z-index:0;
-        background:linear-gradient(155deg, var(--g1) 0%, var(--g2) 78%);
-        transition:background 1.2s ease}
+  #grad{position:fixed;inset:0;z-index:0;background-size:180% 180%;
+        background-image:linear-gradient(155deg, var(--g1) 0%, var(--g2) 55%, var(--g1) 100%);
+        animation:slide 28s ease-in-out infinite alternate;
+        transition:background-image .7s ease}
+  @keyframes slide{
+    from{background-position:0% 20%}
+    to  {background-position:100% 80%}
+  }
   #bg{position:fixed;inset:-16%;z-index:0;background-size:cover;background-position:center;
       filter:blur(70px) saturate(1.7) brightness(.85);opacity:.5;
       transition:background-image .45s ease;animation:drift 36s ease-in-out infinite alternate}
   @keyframes drift{
-    from{transform:scale(1.15) translate(-3%,-2%) rotate(-1.5deg)}
-    to  {transform:scale(1.32) translate(3%,2%) rotate(1.5deg)}
+    from{transform:scale(1.15) translate(-3%,-2%) rotate(-1.5deg);filter:blur(70px) saturate(1.6) brightness(.8) hue-rotate(-8deg)}
+    to  {transform:scale(1.32) translate(3%,2%) rotate(1.5deg);filter:blur(70px) saturate(1.9) brightness(.92) hue-rotate(8deg)}
   }
-  #glow{position:fixed;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;
-      background:
-        radial-gradient(40% 130% at 20% 35%, var(--accent), transparent 70%),
-        radial-gradient(34% 120% at 80% 75%, var(--accent), transparent 72%);
-      filter:blur(50px);animation:breathe 19s ease-in-out infinite alternate}
-  @keyframes breathe{
-    from{opacity:.22;transform:translateX(-3%) scale(1)}
-    to  {opacity:.46;transform:translateX(3%) scale(1.14)}
+  #glow,#glow2,#glow3{position:fixed;inset:-10%;z-index:0;pointer-events:none;
+      mix-blend-mode:screen;will-change:transform,opacity}
+  #glow{background:radial-gradient(closest-side, var(--accent), transparent 72%);
+        width:70%;height:150%;inset:auto;left:-8%;top:-25%;filter:blur(60px);
+        animation:orbit1 23s ease-in-out infinite alternate}
+  #glow2{background:radial-gradient(closest-side, var(--accent2), transparent 72%);
+        width:60%;height:140%;inset:auto;right:-6%;top:-15%;filter:blur(70px);
+        animation:orbit2 31s ease-in-out infinite alternate}
+  #glow3{background:radial-gradient(closest-side, var(--accent), transparent 70%);
+        width:44%;height:120%;inset:auto;left:38%;bottom:-40%;filter:blur(80px);
+        animation:orbit3 17s ease-in-out infinite alternate}
+  @keyframes orbit1{
+    from{opacity:.22;transform:translate(0,0) scale(1)}
+    to  {opacity:.5;transform:translate(26%,12%) scale(1.22)}
   }
-  body.paused #bg,body.paused #glow{animation-play-state:paused}
+  @keyframes orbit2{
+    from{opacity:.42;transform:translate(0,6%) scale(1.1)}
+    to  {opacity:.16;transform:translate(-30%,-8%) scale(.9)}
+  }
+  @keyframes orbit3{
+    from{opacity:.3;transform:translate(-14%,0) scale(.95)}
+    to  {opacity:.12;transform:translate(18%,-14%) scale(1.3)}
+  }
+  body.paused #bg,body.paused #glow,body.paused #glow2,body.paused #glow3,
+  body.paused #grad{animation-play-state:paused}
 
   .view{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity .3s ease}
   .view.on{opacity:1;pointer-events:auto}
@@ -266,6 +286,8 @@
 <div id="grad"></div>
 <div id="bg"></div>
 <div id="glow"></div>
+<div id="glow2"></div>
+<div id="glow3"></div>
 
 <img id="art" alt="" crossorigin="anonymous" style="display:none">
 <section class="view on" id="vSpotify">
@@ -545,11 +567,24 @@ el('art').addEventListener('load',function(){
     }
     var lum=best[0]*.299+best[1]*.587+best[2]*.114;
     if(lum<90){var k=115/Math.max(lum,1);best=best.map(function(v){return Math.min(255,Math.round(v*k));});}
+    /* en andra färg med tydligt annan nyans, så molnen inte blir enfärgade */
+    var second=best,bestDiff=-1;
+    for(var j=0;j<d.length;j+=4){
+      var r2=d[j],g2=d[j+1],b2=d[j+2],mx2=Math.max(r2,g2,b2),mn2=Math.min(r2,g2,b2);
+      if(mx2<45||mx2>245)continue;
+      var s2=mx2-mn2;
+      var diff=Math.abs(r2-best[0])+Math.abs(g2-best[1])+Math.abs(b2-best[2]);
+      var score=s2*0.6+diff*0.9;
+      if(score>bestDiff){bestDiff=score;second=[r2,g2,b2];}
+    }
+    var lum2=second[0]*.299+second[1]*.587+second[2]*.114;
+    if(lum2<80){var k2=105/Math.max(lum2,1);second=second.map(function(v){return Math.min(255,Math.round(v*k2));});}
     var avg=sum.map(function(v){return Math.round(v/n);});
     var g1=avg.map(function(v,i){return Math.min(255,Math.round(v*.6+best[i]*.28));});
     var g2=avg.map(function(v){return Math.round(v*.22+14);});
     var root=document.documentElement.style;
     root.setProperty('--accent','rgb('+best.join(',')+')');
+    root.setProperty('--accent2','rgb('+second.join(',')+')');
     root.setProperty('--g1','rgb('+g1.join(',')+')');
     root.setProperty('--g2','rgb('+g2.join(',')+')');
   }catch(e){}
