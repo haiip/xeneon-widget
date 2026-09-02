@@ -1095,10 +1095,15 @@ el('track').addEventListener('pointerdown',async function(e){
 
 /* ---------------- Discord ---------------- */
 var dcData=null,seenVoice={},firstDc=true;
+var dcWait=0;
 async function dcPoll(){
+  if(Date.now()<dcWait)return;
   if(!CFG.guild){dcMsg('Inget server-ID inlagt. Öppna inställningarna uppe till vänster.');return;}
   try{
     var r=await fetch('https://discord.com/api/guilds/'+encodeURIComponent(CFG.guild)+'/widget.json',{cache:'no-store'});
+    if(r.status===429){
+      var ra=parseInt(r.headers.get('Retry-After')||'60',10);
+      dcWait=Date.now()+(isNaN(ra)?60:ra+2)*1000;return;}
     if(r.status===403){dcMsg('Serverwidgeten är avstängd. Slå på den i Serverinställningar → Engagemang.');return;}
     if(r.status===404){dcMsg('Hittar ingen server med det ID:t.');return;}
     if(!r.ok){dcMsg('Discord svarar inte just nu ('+r.status+').');return;}
@@ -1277,8 +1282,15 @@ async function dlFetch(path){
   }
   return fetch(dlProxyUrl(url),{cache:'no-store'});
 }
+var dlWait=0;
 async function dlJson(path){
+  if(Date.now()<dlWait)throw new Error('väntar på Deadlock-API');
   var r=await dlFetch(path);
+  if(r.status===429){
+    var ra=parseInt(r.headers.get('Retry-After')||'60',10);
+    dlWait=Date.now()+(isNaN(ra)?60:ra+2)*1000;
+    throw new Error('HTTP 429 — väntar '+(isNaN(ra)?60:ra)+' s');
+  }
   if(!r.ok)throw new Error('HTTP '+r.status+' på '+String(path).split('?')[0]);
   return r.json();
 }
@@ -1507,7 +1519,9 @@ var dlHot=0,dlTick=null;
 function dlSchedule(){
   clearTimeout(dlTick);
   var hot=Date.now()-dlHot<15*60*1000;
-  dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},hot?30000:120000);
+  var wait=document.hidden?300000:(hot?30000:120000);
+  if(Date.now()<dlWait)wait=Math.max(wait,dlWait-Date.now());
+  dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},wait);
 }
 
 
@@ -2037,10 +2051,10 @@ el('btnCopy').addEventListener('click',function(){
     setTimeout(function(){poll().then(loop,loop);},wait);
   })();
   setInterval(tick,250);
-  setInterval(dcPoll,15000);
-  setInterval(queuePoll,60000);
+  setInterval(function(){if(!document.hidden)dcPoll();},30000);
+  setInterval(function(){if(!document.hidden)queuePoll();},60000);
   if(CFG.dl){dlPoll().then(dlSchedule,dlSchedule);}
-  if(CFG.wx){wxPoll();setInterval(wxPoll,900000);}
+  if(CFG.wx){wxPoll();setInterval(function(){if(!document.hidden)wxPoll();},1800000);}
 })();
 })();
 </script>
