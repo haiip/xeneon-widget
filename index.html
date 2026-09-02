@@ -256,6 +256,25 @@
   .match .hero{font-size:var(--meta);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .match .kda{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums}
   .match .sub{font-size:var(--meta);color:var(--ink-dim);opacity:.6}
+  .match{cursor:pointer;transition:transform .12s,border-color .15s}
+  .match:active{transform:scale(.97)}
+  #dlDetail{flex:1;min-height:0;display:none;flex-direction:column;gap:.5em}
+  #dlDetail.on{display:flex}
+  #dlBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
+          padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
+  #teams{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,22px)}
+  .team{flex:1;min-width:0;display:flex;flex-direction:column;gap:.3em;
+        border-radius:16px;padding:.6em .8em;background:rgba(255,255,255,.05);
+        border:1px solid rgba(255,255,255,.1)}
+  .team.amber{border-color:rgba(232,184,114,.35);background:rgba(232,184,114,.09)}
+  .team.sapphire{border-color:rgba(110,160,230,.35);background:rgba(110,160,230,.09)}
+  .team h5{font-size:var(--meta);font-weight:700;letter-spacing:.02em;opacity:.85}
+  .team .row{display:flex;align-items:center;gap:.55em;font-size:var(--meta);min-width:0}
+  .team .row.me{background:rgba(255,255,255,.1);border-radius:8px;padding:.1em .4em}
+  .team .row img{width:clamp(18px,3.2vh,32px);height:clamp(18px,3.2vh,32px);
+        object-fit:contain;flex:none}
+  .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .team .row .st{color:var(--ink-dim);font-variant-numeric:tabular-nums}
   #dlMsg{font-size:var(--meta);color:var(--ink-dim);margin:auto;text-align:center;max-width:60ch;line-height:1.5}
 
   /* aviseringar */
@@ -365,9 +384,13 @@
     <h2>Deadlock</h2>
     <span id="dlForm"></span>
     <span id="dlStreak"></span>
-    <span id="dlClose">Dra upp för att stänga</span>
+    <span id="dlClose">Swipe up to close</span>
   </div>
-  <div id="dlBody"><div id="dlMsg">Hämtar…</div></div>
+  <div id="dlBody"><div id="dlMsg">Loading…</div></div>
+  <div id="dlDetail">
+    <button id="dlBack">← Back to recent matches</button>
+    <div id="teams"></div>
+  </div>
 </section>
 
 <div id="now"></div>
@@ -873,27 +896,27 @@ async function dlProbe(raw){
 function dlMsg(t){el('dlBody').innerHTML='';
   var d=document.createElement('div');d.id='dlMsg';d.textContent=t;el('dlBody').appendChild(d);}
 async function dlPoll(){
-  if(!CFG.dl){dlMsg('Inget Steam-ID inlagt. Öppna inställningarna uppe till vänster.');return;}
+  if(!CFG.dl){dlMsg('No Steam ID set. Open settings in the top left corner.');return;}
   try{
     var heroes={};
     try{heroes=await dlLoadHeroes();}catch(e){heroes={};}
     var got=await dlHistory(CFG.dl);
     var arr=got.arr;
-    if(!arr.length){dlMsg('API:et svarar men har inga matcher för account-ID '+CFG.dl+'. Kolla ID:t i inställningarna.');return;}
+    if(!arr.length){dlMsg('The API responded but has no matches for account ID '+CFG.dl+'. Check the ID in settings.');return;}
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
     var recent=arr.slice(0,20);
     var wins=recent.filter(dlWon).length;
-    el('dlForm').innerHTML='Senaste 20: <b>'+wins+'V '+(recent.length-wins)+'F</b> · '+
-      Math.round(wins/recent.length*100)+'% vinst';
+    el('dlForm').innerHTML='Last '+recent.length+': <b>'+wins+'W '+(recent.length-wins)+'L</b> · '+
+      Math.round(wins/recent.length*100)+'% winrate';
     var streak=0,w=dlWon(recent[0]);
     for(var i=0;i<recent.length&&dlWon(recent[i])===w;i++)streak++;
-    el('dlStreak').textContent=streak+(w?' vinster i rad':' förluster i rad');
+    el('dlStreak').textContent=streak+(w?' win streak':' loss streak');
     var pill=el('streak');
-    if(w&&streak>=2){pill.innerHTML='<b>'+streak+'</b> vinster i rad';pill.classList.add('on');}
+    if(w&&streak>=2){pill.innerHTML='<b>'+streak+'</b> win streak';pill.classList.add('on');}
     else pill.classList.remove('on');
     var body=el('dlBody');body.innerHTML='';
     recent.slice(0,10).forEach(function(m){
-      var h=heroes[m.hero_id]||{name:'Hjälte '+m.hero_id,img:''};
+      var h=heroes[m.hero_id]||{name:'Hero '+m.hero_id,img:''};
       var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss');
       if(h.img){var im=document.createElement('img');im.src=h.img;im.alt='';c.appendChild(im);}
       var n=document.createElement('div');n.className='hero';n.textContent=h.name;c.appendChild(n);
@@ -902,22 +925,23 @@ async function dlPoll(){
       c.appendChild(k);
       var sub=document.createElement('div');sub.className='sub';
       var parts=[];
-      if(m.net_worth)parts.push(Math.round(m.net_worth/1000)+'k själar');
+      if(m.net_worth)parts.push(Math.round(m.net_worth/1000)+'k souls');
       if(m.match_duration_s)parts.push(Math.round(m.match_duration_s/60)+' min');
       sub.textContent=parts.join(' · ');c.appendChild(sub);
+      c.addEventListener('click',function(e){e.stopPropagation();showMatch(m);});
       body.appendChild(c);
     });
     /* ny match: visa den under klockan och gå upp i tempo en stund */
     var top=recent[0];
     if(!dlFirst&&top&&top.match_id!==dlLastMatch){
-      var hh=heroes[top.hero_id]||{name:'okänd hjälte',img:''};
+      var hh=heroes[top.hero_id]||{name:'Unknown hero',img:''};
       flashMatch(top,hh);
       dlHot=Date.now();
     }
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
   }catch(e){
-    dlMsg('Kunde inte hämta Deadlock-data för account-ID '+CFG.dl+'. ('+e.message+')');
+    dlMsg('Could not load Deadlock data for account ID '+CFG.dl+'. ('+e.message+')');
   }
 }
 function dlWon(m){
@@ -936,7 +960,7 @@ function flashMatch(m,hero){
   f.innerHTML='';
   if(hero.img){var i=document.createElement('img');i.src=hero.img;i.alt='';f.appendChild(i);}
   var v=document.createElement('span');v.className=win?'w':'l';
-  v.textContent=win?'Vinst':'Förlust';f.appendChild(v);
+  v.textContent=win?'Win':'Loss';f.appendChild(v);
   var n=document.createElement('span');n.textContent=hero.name;f.appendChild(n);
   var k=document.createElement('span');k.className='kda';
   k.textContent=(m.player_kills|0)+'/'+(m.player_deaths|0)+'/'+(m.player_assists|0);
@@ -956,10 +980,71 @@ function dlSchedule(){
   dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},hot?30000:120000);
 }
 
+
+/* ---------------- Enskild match ---------------- */
+var TEAMS=[{key:'amber',name:'Amber Hand'},{key:'sapphire',name:'Sapphire Flame'}];
+function dlPlayers(j){
+  if(!j)return [];
+  var cands=[j.players,j.match_info&&j.match_info.players,j.data&&j.data.players,
+             j.data&&j.data.match_info&&j.data.match_info.players];
+  for(var i=0;i<cands.length;i++)if(Array.isArray(cands[i])&&cands[i].length)return cands[i];
+  return [];
+}
+function teamOf(p){
+  var t=p.team;
+  if(typeof t!=='number')t=p.player_team;
+  if(typeof t!=='number'&&typeof p.player_slot==='number')t=p.player_slot<6?0:1;
+  return t===1?1:0;
+}
+async function showMatch(m){
+  el('dlBody').style.display='none';
+  el('dlDetail').classList.add('on');
+  var box=el('teams');
+  box.innerHTML='<div id="dlMsg">Loading match '+m.match_id+'…</div>';
+  try{
+    var heroes=dlHeroes||{};
+    var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
+    var players=dlPlayers(j);
+    if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
+    box.innerHTML='';
+    TEAMS.forEach(function(t,ti){
+      var col=document.createElement('div');col.className='team '+t.key;
+      var h=document.createElement('h5');
+      var mine=players.filter(function(p){return String(p.account_id)===String(CFG.dl);})[0];
+      var won=mine&&teamOf(mine)===ti?dlWon(m):(mine?!dlWon(m):false);
+      h.textContent=t.name+(mine?(won?' · Win':' · Loss'):'');
+      col.appendChild(h);
+      players.filter(function(p){return teamOf(p)===ti;}).forEach(function(p){
+        var hero=heroes[p.hero_id]||{name:'Hero '+p.hero_id,img:''};
+        var row=document.createElement('div');row.className='row';
+        if(String(p.account_id)===String(CFG.dl))row.className+=' me';
+        if(hero.img){var im=document.createElement('img');im.src=hero.img;im.alt='';row.appendChild(im);}
+        var nm=document.createElement('span');nm.className='nm';
+        nm.textContent=hero.name+(String(p.account_id)===String(CFG.dl)?' (you)':'');
+        row.appendChild(nm);
+        var st=document.createElement('span');st.className='st';
+        st.textContent=(p.kills|0)+'/'+(p.deaths|0)+'/'+(p.assists|0)+
+          (p.net_worth?'  ·  '+Math.round(p.net_worth/1000)+'k':'');
+        row.appendChild(st);
+        col.appendChild(row);
+      });
+      box.appendChild(col);
+    });
+  }catch(e){
+    box.innerHTML='<div id="dlMsg">Could not load match details. ('+esc(e.message)+')</div>';
+  }
+}
+function closeMatch(){
+  el('dlDetail').classList.remove('on');
+  el('dlBody').style.display='';
+}
+el('dlBack').addEventListener('click',function(e){e.stopPropagation();closeMatch();});
+
 /* ---------------- Deadlock-luckan ---------------- */
 var sheetOpen=false,gStart=null,sheetTimer=null;
 function openSheet(on){
   sheetOpen=!!on;
+  if(!sheetOpen)closeMatch();
   el('vDeadlock').classList.toggle('open',sheetOpen);
   document.body.classList.toggle('sheet',sheetOpen);
   clearTimeout(sheetTimer);
