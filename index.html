@@ -342,37 +342,71 @@ async function wxPoll(){
   #dlBody{flex:1;min-height:0;display:flex;gap:clamp(8px,1.2vw,18px);overflow-x:auto}
   #dlBody::-webkit-scrollbar{height:4px}
   #dlBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
-  .match{flex:none;width:clamp(150px,16vw,250px);border-radius:18px;
-         position:relative;overflow:hidden;display:block;padding:.75em .9em 0;
-         background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-         border-top:2px solid rgba(255,255,255,.3);
-         backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.25);
-         cursor:pointer;transition:transform .14s,box-shadow .14s,border-color .15s}
-  .match:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.4)}
+  .match{flex:none;width:clamp(150px,16vw,250px);border-radius:14px;
+         position:relative;overflow:hidden;display:block;padding:.7em .85em 0;
+         background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+         box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer;
+         transition:transform .14s,box-shadow .14s,border-color .15s}
+  .match:hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(0,0,0,.45)}
   .match:active{transform:scale(.97)}
-  .match.win{border-top-color:#5FD08A;background:rgba(95,208,138,.13);
-             border-color:rgba(95,208,138,.22)}
-  .match.loss{border-top-color:#E0685F;background:rgba(224,104,95,.12);
-              border-color:rgba(224,104,95,.2)}
+  .match.win{border-color:rgba(95,208,138,.3);background:rgba(95,208,138,.1)}
+  .match.loss{border-color:rgba(224,104,95,.28);background:rgba(224,104,95,.1)}
+
+  /* papperstextur — olika per variant */
+  .paper{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;
+         opacity:.16;mix-blend-mode:overlay;pointer-events:none}
+  .v0 .paper,.v3 .paper{background-image:url(ui/paper1.png)}
+  .v1 .paper,.v4 .paper{background-image:url(ui/paper2.png)}
+  .v2 .paper,.v5 .paper{background-image:url(ui/paper3.png)}
+  .v3 .paper{transform:scaleX(-1)}
+  .v4 .paper{transform:rotate(180deg)}
+
+  /* dekor — sigill, graffiti, kulhål */
+  .deco{position:absolute;z-index:1;background-size:contain;background-repeat:no-repeat;
+        pointer-events:none}
+  .v0 .deco{width:52%;aspect-ratio:1;right:-10%;top:4%;opacity:.16;
+        background-image:url(ui/sigil1.png);transform:rotate(-9deg)}
+  .v1 .deco{width:46%;aspect-ratio:1;left:-8%;bottom:26%;opacity:.2;
+        background-image:url(ui/graf1.png);transform:rotate(6deg)}
+  .v2 .deco{width:34%;aspect-ratio:1;right:6%;top:38%;opacity:.14;
+        background-image:url(ui/symbol1.png)}
+  .v3 .deco{width:26%;aspect-ratio:.8;right:9%;top:8%;opacity:.5;
+        background-image:url(ui/bullet2.png)}
+  .v4 .deco{width:56%;aspect-ratio:1;left:-14%;top:2%;opacity:.15;
+        background-image:url(ui/sigil3.png);transform:rotate(14deg)}
+  .v5 .deco{width:48%;aspect-ratio:1;right:-8%;bottom:30%;opacity:.18;
+        background-image:url(ui/graf3.png);transform:rotate(-5deg)}
+
   .mhero{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-         width:104%;max-height:62%;object-fit:contain;object-position:bottom;
-         z-index:0;opacity:.95;pointer-events:none;
+         width:104%;max-height:60%;object-fit:contain;object-position:bottom;
+         z-index:2;opacity:.96;pointer-events:none;
          transition:transform .25s ease;backface-visibility:hidden}
-  .match:hover .mhero{transform:translateX(-50%) scale(1.05)}
-  .match::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-         background:linear-gradient(180deg, rgba(12,9,6,.5) 0%, rgba(12,9,6,0) 42%,
-                    rgba(12,9,6,.25) 78%, rgba(12,9,6,.6) 100%)}
-  .mstats{position:relative;z-index:2;display:flex;flex-direction:column;gap:.12em}
-  .mres{font-size:calc(var(--meta) * .78);font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-  .win .mres{color:#7CE0A6}
-  .loss .mres{color:#E88E86}
-  .mkda{font-size:clamp(15px,3.6vh,38px);font-weight:700;letter-spacing:-.02em;
-        font-variant-numeric:tabular-nums;line-height:1.05}
-  .msub{font-size:calc(var(--meta) * .8);color:var(--ink-dim);opacity:.85;
-        font-variant-numeric:tabular-nums;line-height:1.35}
-  .mname{position:absolute;left:0;right:0;bottom:.5em;z-index:2;text-align:center;
-         font-size:var(--meta);font-weight:700;letter-spacing:-.01em;
-         text-shadow:0 2px 12px rgba(0,0,0,.8);
+  .match:hover .mhero{transform:translateX(-50%) scale(1.06)}
+  .v1 .mhero,.v4 .mhero{left:56%}
+  .v2 .mhero{left:44%}
+  .match::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+         background:linear-gradient(180deg, rgba(12,9,6,.52) 0%, rgba(12,9,6,0) 40%,
+                    rgba(12,9,6,.3) 76%, rgba(12,9,6,.66) 100%)}
+
+  .mstats{position:relative;z-index:4;display:flex;flex-direction:column;gap:.15em}
+  .v2 .mstats,.v5 .mstats{align-items:flex-end;text-align:right}
+  .mres{align-self:flex-start;font-size:calc(var(--meta) * .8);font-weight:800;
+        letter-spacing:.1em;text-transform:uppercase;color:#fff;
+        padding:.28em .85em;background-size:100% 100%;background-repeat:no-repeat;
+        text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  .v2 .mres,.v5 .mres{align-self:flex-end}
+  .win .mres{background-image:url(ui/stamp-win.png);transform:rotate(-3deg)}
+  .loss .mres{background-image:url(ui/stamp-loss.png);transform:rotate(2.5deg)}
+  .v1 .mres,.v4 .mres{transform:rotate(4deg)}
+  .mkda{font-size:clamp(15px,3.8vh,40px);font-weight:800;letter-spacing:-.025em;
+        font-variant-numeric:tabular-nums;line-height:1.02;
+        text-shadow:0 2px 14px rgba(0,0,0,.6)}
+  .msub{font-size:calc(var(--meta) * .78);color:var(--ink-dim);opacity:.9;
+        font-variant-numeric:tabular-nums;line-height:1.35;
+        text-shadow:0 1px 8px rgba(0,0,0,.7)}
+  .mname{position:absolute;left:0;right:0;bottom:.45em;z-index:4;text-align:center;
+         font-size:var(--meta);font-weight:800;letter-spacing:.01em;
+         text-shadow:0 2px 12px rgba(0,0,0,.9);
          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 .5em}
   #dlDetail{flex:1;min-height:0;display:none;flex-direction:column;gap:.5em}
   #dlDetail.on{display:flex}
@@ -391,7 +425,15 @@ async function wxPoll(){
         object-fit:contain;flex:none}
   .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .team .row .st{color:var(--ink-dim);font-variant-numeric:tabular-nums}
-  #matchInfo{font-size:var(--meta);color:var(--ink-dim);opacity:.75}
+  #matchInfo{font-size:var(--meta);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
+  #dlDetail{position:relative}
+  #dlDetail::before{content:"";position:absolute;inset:-1em -1em 0;z-index:0;
+        background:url(ui/gothic.jpg) center/cover;opacity:.13;
+        mask-image:linear-gradient(180deg,#000,transparent 88%);
+        -webkit-mask-image:linear-gradient(180deg,#000,transparent 88%);pointer-events:none}
+  #teams{position:relative;z-index:1}
+  .team h5{padding-bottom:.45em;background:url(ui/border.png) bottom center/100% auto no-repeat}
+  .team .row .mvp{width:clamp(14px,2.6vh,26px);height:auto;flex:none;opacity:.95}
   .team{overflow-y:auto}
   .kit{display:flex;flex-wrap:wrap;gap:.22em;margin:-.1em 0 .45em calc(clamp(18px,3.2vh,32px) + .55em)}
   .kit img{width:clamp(15px,2.6vh,26px);height:clamp(15px,2.6vh,26px);border-radius:4px;
@@ -1142,7 +1184,10 @@ async function dlPoll(){
     var body=el('dlBody');body.innerHTML='';
     recent.slice(0,10).forEach(function(m){
       var h=heroes[m.hero_id]||{name:'Hero '+m.hero_id,img:''};
-      var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss');
+      var v='v'+(Math.abs(Number(String(m.match_id).slice(-6))||0)%6);
+      var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss')+' '+v;
+      c.appendChild(Object.assign(document.createElement('div'),{className:'paper'}));
+      c.appendChild(Object.assign(document.createElement('div'),{className:'deco'}));
 
       var st=document.createElement('div');st.className='mstats';
       var res=document.createElement('div');res.className='mres';
@@ -1305,6 +1350,7 @@ async function showMatch(m){
       var won=mine&&teamOf(mine)===ti?dlWon(m):(mine?!dlWon(m):false);
       h.textContent=t.name+(mine?(won?' · Win':' · Loss'):'');
       col.appendChild(h);
+      var topNW=players.reduce(function(a,b){return (b.net_worth||0)>(a.net_worth||0)?b:a;},players[0]);
       players.filter(function(p){return teamOf(p)===ti;}).forEach(function(p){
         var hero=heroes[p.hero_id]||{name:'Hero '+p.hero_id,img:''};
         var row=document.createElement('div');row.className='row';
@@ -1320,6 +1366,10 @@ async function showMatch(m){
           (p.net_worth?'  ·  '+Math.round(p.net_worth/1000)+'k':'')+
           (spm?'  ·  '+spm+'/min':'');
         row.appendChild(st);
+        if(p===topNW){
+          var mv=document.createElement('img');mv.src='ui/mvp.png';mv.className='mvp';
+          mv.title='Flest själar i matchen';row.appendChild(mv);
+        }
         col.appendChild(row);
         var ids=playerItems(p);
         if(ids.length){
