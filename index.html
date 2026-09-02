@@ -545,26 +545,28 @@ async function wxPoll(){
   .skill img{width:clamp(22px,4vh,42px);height:clamp(22px,4vh,42px);object-fit:contain;flex:none}
   .skill span{font-size:calc(var(--meta) * .82);white-space:nowrap}
 
-  #hStats{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,26px);overflow:hidden}
-  .sgroup{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;
-        border-radius:12px;border:1px solid rgba(255,255,255,.1);
+  #hStats{flex:none;align-self:flex-start;width:clamp(300px,42%,620px);
+        display:flex;flex-direction:column;border-radius:14px;overflow:hidden;
+        border:1px solid rgba(255,255,255,.14);
+        box-shadow:0 14px 40px rgba(0,0,0,.45);
         background:linear-gradient(180deg,
-          color-mix(in srgb, var(--hcol,#5a3a20) 55%, rgba(0,0,0,.55)),
-          color-mix(in srgb, var(--hcol,#5a3a20) 28%, rgba(0,0,0,.72)))}
+          color-mix(in srgb, var(--hcol,#5a3a20) 52%, rgba(0,0,0,.6)),
+          color-mix(in srgb, var(--hcol,#5a3a20) 26%, rgba(0,0,0,.78)))}
+  .sgroup{display:flex;flex-direction:column}
   .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .95);
-        letter-spacing:.06em;text-align:center;padding:.28em;color:#17100a;font-weight:700}
+        letter-spacing:.06em;text-align:center;padding:.24em;color:#17100a;font-weight:700}
   .sgroup.weapon h4{background:#E0913F}
   .sgroup.vitality h4{background:#7FC24A}
   .sgroup.spirit h4{background:#B37BD8}
-  .srow{display:flex;align-items:center;gap:.5em;padding:.2em .8em;
-        font-size:calc(var(--meta) * .88);line-height:1.35}
-  .srow:nth-child(even){background:rgba(0,0,0,.16)}
-  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.82);text-align:right;
+  .srow{display:flex;align-items:center;gap:.5em;padding:.14em .9em;
+        font-size:calc(var(--meta) * .85);line-height:1.3}
+  .srow:nth-child(even){background:rgba(0,0,0,.14)}
+  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.85);text-align:right;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .srow .ico{width:clamp(14px,2.4vh,22px);height:clamp(14px,2.4vh,22px);
+  .srow .ico{width:clamp(13px,2.2vh,20px);height:clamp(13px,2.2vh,20px);
         object-fit:contain;flex:none;opacity:.95}
   .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
-        min-width:4.5ch;color:#fff}
+        min-width:5ch;color:#fff}
   #hArt{flex:none;width:clamp(160px,26%,400px);position:relative;
         display:flex;align-items:flex-end;justify-content:center;
         border-radius:16px;overflow:hidden;
@@ -1819,17 +1821,19 @@ var SROWS={
  ],
  vitality:[
   ['Health','health',['max_health','health']],
-  ['Health Regen','health_regen',['health_regen','health_regeneration']],
-  ['Bullet Resist','health',['bullet_armor','bullet_resist']],
-  ['Spirit Resist','health',['spirit_armor','spirit_resist','tech_armor']],
+  ['Health Regen','health_regen',['health_regen','health_regeneration','base_health_regen']],
+  ['Bullet Resist','health',['bullet_armor','bullet_resist','bullet_armor_damage_reduction',
+        'bullet_resist_percent','base_bullet_resist']],
+  ['Spirit Resist','health',['spirit_armor','spirit_resist','tech_armor','tech_resist',
+        'tech_armor_damage_reduction','spirit_resist_percent']],
   ['Move Speed','move_speed',['max_move_speed','move_speed']],
   ['Sprint Speed','sprint_speed',['sprint_speed']],
-  ['Dash Speed','dash_speed',['dash_speed','air_dash_speed']],
+  ['Dash Speed','dash_speed',['dash_speed','air_dash_speed','dash_distance','slide_speed']],
   ['Stamina','stamina',['stamina']],
   ['Stamina Cooldown','stamina_cooldown',['stamina_cooldown','stamina_regen_per_second']]
  ],
  spirit:[
-  ['Spirit Power','spirit_power',['tech_power','spirit_power']]
+  ['Spirit Power','spirit_power',['tech_power','spirit_power','base_tech_power','tech_damage']]
  ]
 };
 /* Letar igenom hela objektträdet efter första fältet som matchar. */
@@ -1964,7 +1968,10 @@ async function showHeroSheet(h){
         if(def[0]==='Damage Per Second'&&cyc&&dmg)v=round(dmg*pel/cyc,1);
       }
       if(v===null)return;
-      if(typeof v==='number')v=round(v,2);
+      if(typeof v==='number'){
+        if(def[0]==='Bullet Velocity'&&v>2000)v=Math.round(v/25.86);   /* enheter → m/s */
+        v=round(v,2);
+      }
       n++;any=true;
       var r=document.createElement('div');r.className='srow';
       r.appendChild(Object.assign(document.createElement('span'),{className:'k',textContent:def[0]}));
