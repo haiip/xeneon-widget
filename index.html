@@ -31,7 +31,7 @@
         transition:background 1.2s ease}
   #bg{position:fixed;inset:-16%;z-index:0;background-size:cover;background-position:center;
       filter:blur(70px) saturate(1.7) brightness(.85);opacity:.5;
-      transition:background-image .8s ease;animation:drift 36s ease-in-out infinite alternate}
+      transition:background-image .45s ease;animation:drift 36s ease-in-out infinite alternate}
   @keyframes drift{
     from{transform:scale(1.15) translate(-3%,-2%) rotate(-1.5deg)}
     to  {transform:scale(1.32) translate(3%,2%) rotate(1.5deg)}
@@ -59,10 +59,10 @@
        transition:transform .9s cubic-bezier(.2,.7,.2,1)}
   body.beat #artView{transform:scale(1.012)}
   #main{flex:1;min-width:0;display:flex;flex-direction:column}
-  #artView,#head{transition:opacity .42s ease, transform .42s ease}
+  #artView,#head{transition:opacity .2s ease, transform .22s ease}
   body.swap #artView{opacity:0;transform:scale(.965)}
   body.swap #head{opacity:0;transform:translateY(10px)}
-  #grad{transition:background 1.4s ease}
+  #grad{transition:background .7s ease}
   #head{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.12em}
   #title{font-size:var(--title);font-weight:800;letter-spacing:-.03em;line-height:1;
          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -128,8 +128,8 @@
   #idleMsg{font-size:var(--meta);color:var(--ink-dim);margin-top:.4em}
 
   /* röstremsa */
-  #now{position:fixed;top:calc(var(--pad) * .55);left:50%;transform:translateX(-50%);z-index:2;
-        font-size:var(--meta);font-weight:600;color:var(--ink);opacity:.55;
+  #now{position:fixed;top:calc(var(--pad) * .5);left:50%;transform:translateX(-50%);z-index:2;
+        font-size:clamp(16px,4.4vh,46px);font-weight:600;color:var(--ink);opacity:.62;
         font-variant-numeric:tabular-nums;letter-spacing:.02em}
   body.sheet #now{opacity:0}
   #voice{position:fixed;right:var(--pad);top:var(--pad);z-index:2;display:none;
@@ -172,12 +172,15 @@
 
 
   /* ---------------- Deadlock ---------------- */
-  #vDeadlock{position:fixed;left:0;right:0;top:0;height:100%;z-index:4;
+  #vDeadlock{position:fixed;left:0;right:0;top:0;height:86%;z-index:4;
     padding:var(--pad);padding-top:calc(var(--pad) * .6);
-    background:rgba(14,10,7,.96);backdrop-filter:blur(20px);
+    background:linear-gradient(180deg, rgba(20,14,9,.62) 0%, rgba(16,11,7,.5) 62%, rgba(14,10,7,.12) 100%);
+    backdrop-filter:blur(26px) saturate(1.25);
+    -webkit-backdrop-filter:blur(26px) saturate(1.25);
+    border-bottom:1px solid rgba(232,184,114,.16);
     display:flex;flex-direction:column;gap:.5em;
     transform:translateY(-100%);transition:transform .34s cubic-bezier(.2,.8,.2,1);
-    box-shadow:0 30px 80px rgba(0,0,0,.7)}
+    box-shadow:0 26px 70px rgba(0,0,0,.45)}
   #vDeadlock.open{transform:translateY(0)}
   #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:5;
     width:clamp(90px,14vw,190px);height:clamp(14px,2.6vh,26px);
@@ -195,19 +198,25 @@
   #streak b{color:#fff;font-weight:700}
   body[data-view="discord"] #streak{display:none}
   #dlHead{display:flex;align-items:baseline;gap:.9em;flex:none;flex-wrap:wrap}
-  #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#E8B872}
+  #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#F0CB93;
+             text-shadow:0 2px 20px rgba(0,0,0,.35)}
   #dlForm{font-size:var(--meta);color:var(--ink-dim)}
   #dlForm b{color:var(--ink)}
-  #dlStreak{font-size:var(--meta);padding:.15em .7em;border-radius:99px;
-            background:rgba(232,184,114,.16);color:#E8B872}
+  #dlStreak{font-size:var(--meta);padding:.15em .8em;border-radius:99px;
+            background:rgba(232,184,114,.2);color:#F5DCB4;
+            border:1px solid rgba(232,184,114,.28)}
   #dlBody{flex:1;min-height:0;display:flex;gap:clamp(8px,1.2vw,18px);overflow-x:auto}
   #dlBody::-webkit-scrollbar{height:4px}
   #dlBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
-  .match{flex:none;width:clamp(120px,13vw,200px);border-radius:12px;padding:.7em .8em;
+  .match{flex:none;width:clamp(120px,13vw,200px);border-radius:16px;padding:.7em .8em;
          display:flex;flex-direction:column;gap:.35em;
-         background:rgba(255,255,255,.05);border-top:3px solid rgba(255,255,255,.25)}
-  .match.win{border-top-color:#5FD08A;background:rgba(95,208,138,.1)}
-  .match.loss{border-top-color:#E0685F;background:rgba(224,104,95,.1)}
+         background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+         border-top:2px solid rgba(255,255,255,.3);
+         backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.22)}
+  .match.win{border-top-color:#5FD08A;background:rgba(95,208,138,.14);
+             border-color:rgba(95,208,138,.22)}
+  .match.loss{border-top-color:#E0685F;background:rgba(224,104,95,.13);
+              border-color:rgba(224,104,95,.2)}
   .match img{width:100%;height:clamp(40px,11vh,110px);object-fit:contain;object-position:center}
   .match .hero{font-size:var(--meta);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .match .kda{font-size:var(--meta);color:var(--ink-dim);font-variant-numeric:tabular-nums}
@@ -500,7 +509,7 @@ function swapTrack(item,instant){
   clearTimeout(swapTimer);
   if(instant){paint();return;}
   document.body.classList.add('swap');
-  swapTimer=setTimeout(paint,380);
+  swapTimer=setTimeout(paint,170);
 }
 function idle(on){
   el('idle').classList.toggle('on',on);
