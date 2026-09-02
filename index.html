@@ -152,6 +152,21 @@
         font-size:clamp(16px,4.4vh,46px);font-weight:600;color:var(--ink);opacity:.62;
         font-variant-numeric:tabular-nums;letter-spacing:.02em}
   body.sheet #now{opacity:0}
+  #dlFlash{position:fixed;top:calc(var(--pad) * .5 + clamp(20px,5.4vh,56px));left:50%;
+        transform:translateX(-50%) translateY(-8px);z-index:2;opacity:0;
+        display:flex;align-items:center;gap:.5em;white-space:nowrap;
+        padding:.3em .85em;border-radius:999px;font-size:var(--meta);
+        background:rgba(20,14,9,.5);backdrop-filter:blur(12px);
+        border:1px solid rgba(255,255,255,.12);color:var(--ink);
+        transition:opacity .35s ease, transform .35s ease;pointer-events:none}
+  #dlFlash.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  #dlFlash img{width:clamp(18px,3.2vh,32px);height:clamp(18px,3.2vh,32px);
+        border-radius:5px;object-fit:contain}
+  #dlFlash .w{color:#7CE0A6;font-weight:700}
+  #dlFlash .l{color:#E88E86;font-weight:700}
+  #dlFlash .kda{color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  body.sheet #dlFlash{opacity:0}
+  body[data-view="discord"] #dlFlash{opacity:0}
   #voice{position:fixed;right:var(--pad);top:var(--pad);z-index:2;display:none;
          align-items:center;gap:.7em;padding:.45em .8em;border-radius:999px;
          background:rgba(10,11,16,.4);backdrop-filter:blur(14px);
@@ -356,6 +371,7 @@
 </section>
 
 <div id="now"></div>
+<div id="dlFlash"></div>
 <div id="grip" title="Deadlock"></div>
 <div id="streak"></div>
 <div id="toasts"></div>
@@ -891,12 +907,12 @@ async function dlPoll(){
       sub.textContent=parts.join(' · ');c.appendChild(sub);
       body.appendChild(c);
     });
-    /* avisering när en ny match dykt upp */
+    /* ny match: visa den under klockan och gå upp i tempo en stund */
     var top=recent[0];
     if(!dlFirst&&top&&top.match_id!==dlLastMatch){
-      var hh=heroes[top.hero_id]||{name:'okänd hjälte'};
-      toast((dlWon(top)?'Vinst':'Förlust')+' med '+hh.name+' · '+
-        (top.player_kills|0)+'/'+(top.player_deaths|0)+'/'+(top.player_assists|0),hh.img);
+      var hh=heroes[top.hero_id]||{name:'okänd hjälte',img:''};
+      flashMatch(top,hh);
+      dlHot=Date.now();
     }
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
@@ -911,6 +927,34 @@ function dlWon(m){
   return !!m.won;
 }
 
+
+
+/* Liten resultatrad under klockan när en match dykt upp i listan. */
+var dlFlashTimer=null;
+function flashMatch(m,hero){
+  var f=el('dlFlash'),win=dlWon(m);
+  f.innerHTML='';
+  if(hero.img){var i=document.createElement('img');i.src=hero.img;i.alt='';f.appendChild(i);}
+  var v=document.createElement('span');v.className=win?'w':'l';
+  v.textContent=win?'Vinst':'Förlust';f.appendChild(v);
+  var n=document.createElement('span');n.textContent=hero.name;f.appendChild(n);
+  var k=document.createElement('span');k.className='kda';
+  k.textContent=(m.player_kills|0)+'/'+(m.player_deaths|0)+'/'+(m.player_assists|0);
+  f.appendChild(k);
+  if(m.net_worth){var sN=document.createElement('span');sN.className='kda';
+    sN.textContent=Math.round(m.net_worth/1000)+'k';f.appendChild(sN);}
+  f.classList.add('on');
+  clearTimeout(dlFlashTimer);
+  dlFlashTimer=setTimeout(function(){f.classList.remove('on');},25000);
+}
+
+/* Hämtar tätt en kvart efter en ny match, glest annars. */
+var dlHot=0,dlTick=null;
+function dlSchedule(){
+  clearTimeout(dlTick);
+  var hot=Date.now()-dlHot<15*60*1000;
+  dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},hot?30000:120000);
+}
 
 /* ---------------- Deadlock-luckan ---------------- */
 var sheetOpen=false,gStart=null,sheetTimer=null;
@@ -1037,7 +1081,7 @@ el('btnCopy').addEventListener('click',function(){
   setInterval(tick,250);
   setInterval(dcPoll,15000);
   setInterval(queuePoll,15000);
-  if(CFG.dl){dlPoll();setInterval(dlPoll,120000);}
+  if(CFG.dl){dlPoll().then(dlSchedule,dlSchedule);}
 })();
 })();
 </script>
