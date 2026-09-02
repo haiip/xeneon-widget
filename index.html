@@ -533,28 +533,43 @@ async function wxPoll(){
   .hcell img{width:clamp(30px,4.6vh,58px);height:clamp(30px,4.6vh,58px);object-fit:contain}
   .hcell span{font-size:calc(var(--meta) * .68);text-align:center;line-height:1.15;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--ink-dim)}
-  #heroSum{display:none;flex:1;min-height:0;gap:clamp(14px,2vw,40px);align-items:stretch}
+
+  #heroSum{display:none;flex:1;min-height:0;gap:clamp(16px,2.4vw,48px);align-items:stretch}
   #heroSum.on{display:flex}
-  #hArt{flex:none;width:clamp(150px,22%,330px);position:relative;
+  #hMid{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5em}
+  #hMid .nameimg{height:clamp(26px,8.5vh,92px);max-width:60%;object-fit:contain;
+        align-self:flex-start}
+  #hSkills{display:flex;gap:.5em;flex-wrap:wrap;flex:none}
+  .skill{display:flex;align-items:center;gap:.5em;padding:.32em .7em;border-radius:99px;
+        background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+  .skill img{width:clamp(22px,4vh,42px);height:clamp(22px,4vh,42px);object-fit:contain;flex:none}
+  .skill span{font-size:calc(var(--meta) * .82);white-space:nowrap}
+
+  #hStats{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,26px);overflow:hidden}
+  .sgroup{flex:1;min-width:0;display:flex;flex-direction:column;gap:.15em;
+        border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);
+        border:1px solid rgba(255,255,255,.08)}
+  .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .95);
+        letter-spacing:.08em;text-transform:uppercase;text-align:center;
+        padding:.3em;color:#1a1206}
+  .sgroup.weapon h4{background:#E0913F}
+  .sgroup.vitality h4{background:#7FC24A}
+  .sgroup.spirit h4{background:#B37BD8}
+  .srow{display:flex;justify-content:space-between;gap:.8em;padding:.16em .8em;
+        font-size:calc(var(--meta) * .88);line-height:1.3}
+  .srow:nth-child(odd){background:rgba(255,255,255,.035)}
+  .srow .k{color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  #hArt{flex:none;width:clamp(160px,26%,400px);position:relative;
         display:flex;align-items:flex-end;justify-content:center;
         border-radius:16px;overflow:hidden;
-        background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.35))}
+        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.4))}
   #hArt .bg{position:absolute;inset:0;background-size:cover;background-position:center 22%;
-        opacity:.55}
-  #hArt .render{position:relative;width:106%;max-height:100%;object-fit:contain;
+        opacity:.6}
+  #hArt .render{position:relative;width:108%;max-height:100%;object-fit:contain;
         object-position:bottom}
-  #hMid{flex:1;min-width:0;display:flex;flex-direction:column;gap:.6em;align-items:center}
-  #hMid .nameimg{height:clamp(26px,8vh,86px);max-width:80%;object-fit:contain}
-  #hMid .sheet{flex:1;min-height:0;width:auto;object-fit:contain;
-        border-radius:12px;background:rgba(0,0,0,.25)}
-  #hSkills{flex:none;width:clamp(120px,17%,240px);display:flex;flex-direction:column;
-        gap:.5em;justify-content:center}
-  #hSkills h4{font-family:'Reaver',serif;font-size:var(--meta);color:#F0CB93;
-        letter-spacing:.06em;text-transform:uppercase;opacity:.85}
-  .skill{display:flex;align-items:center;gap:.6em;padding:.35em .5em;border-radius:12px;
-        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
-  .skill img{width:clamp(28px,5.2vh,54px);height:clamp(28px,5.2vh,54px);object-fit:contain;flex:none}
-  .skill span{font-size:calc(var(--meta) * .82);line-height:1.15;min-width:0}
+
   #heroBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
         padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
 
@@ -1759,19 +1774,114 @@ function heroAbilities(h){
   vals.forEach(function(v){
     if(typeof v==='string'){
       var a=dlByClass[v];
-      if(a&&a.img&&out.length<4)out.push(a);
-    }else if(v&&v.name){
-      if(out.length<4)out.push({name:v.name,img:v.image||(v.images&&v.images.icon)||''});
+      /* hoppa över interna namn utan riktig titel */
+      if(a&&a.name&&a.name.indexOf('citadel_')!==0&&out.length<4)out.push(a);
+    }else if(v&&v.name&&out.length<4){
+      out.push({name:v.name,img:v.image||(v.images&&v.images.icon)||''});
     }
   });
   return out;
 }
+
+/* ---- statistikkortet byggs av API:ets siffror, inte av en bild ---- */
+var SLABEL={
+  max_health:'Health',health_regen:'Health regen',bullet_armor:'Bullet resist',
+  bullet_resist:'Bullet resist',spirit_armor:'Spirit resist',spirit_resist:'Spirit resist',
+  max_move_speed:'Move speed',sprint_speed:'Sprint speed',crouch_speed:'Crouch speed',
+  stamina:'Stamina',stamina_cooldown:'Stamina cooldown',stamina_regen_per_second:'Stamina regen',
+  light_melee_damage:'Light melee',heavy_melee_damage:'Heavy melee',
+  weapon_power:'Weapon power',tech_power:'Spirit power',tech_range:'Spirit range',
+  tech_duration:'Spirit duration',tech_cooldown:'Spirit cooldown',
+  dps:'Damage per second',bullet_damage:'Bullet damage',ammo:'Ammo',clip_size:'Ammo',
+  bullets_per_second:'Bullets per sec',reload_time:'Reload time',
+  bullet_speed:'Bullet velocity',bullets_per_shot:'Pellets per shot',
+  reload_speed:'Reload speed',fire_rate:'Fire rate',
+  headshot_bonus:'Headshot bonus',falloff_start_range:'Falloff start',
+  falloff_end_range:'Falloff end'
+};
+function statGroup(key){
+  if(/health|regen|resist|armor|speed|stamina|melee/.test(key))return 'vitality';
+  if(/tech|spirit/.test(key))return 'spirit';
+  return 'weapon';
+}
+function statVal(v){
+  if(v&&typeof v==='object')v=('value' in v)?v.value:(v.display_value||v.base||null);
+  if(v===null||v===undefined||typeof v==='object')return null;
+  if(typeof v==='number')return Math.round(v*100)/100;
+  return v;
+}
+function collectStats(h){
+  var raw=h.raw||{},src={};
+  [raw.starting_stats,raw.stats,raw.hero_stats,raw.weapon_stats,raw.base_stats].forEach(function(o){
+    if(o&&typeof o==='object')Object.keys(o).forEach(function(k){if(!(k in src))src[k]=o[k];});
+  });
+  var groups={weapon:[],vitality:[],spirit:[]};
+  Object.keys(src).forEach(function(k){
+    var v=statVal(src[k]);
+    if(v===null||v==='')return;
+    var label=SLABEL[k]||k.replace(/_/g,' ').replace(/^./,function(c){return c.toUpperCase();});
+    groups[statGroup(k)].push([label,v]);
+  });
+  return groups;
+}
+
 async function showHeroSheet(h){
   var box=el('heroSum');box.innerHTML='';
   el('heroGrid').style.display='none';
   try{await dlLoadItems();}catch(e){}
 
-  /* vänster: figuren mot sin egen bakgrund */
+  var mid=document.createElement('div');mid.id='hMid';
+  var back=document.createElement('button');back.id='heroBack';back.textContent='← All heroes';
+  back.addEventListener('click',function(e){e.stopPropagation();
+    box.classList.remove('on');el('heroGrid').style.display='';});
+  mid.appendChild(back);
+
+  var logo=document.createElement('img');logo.className='nameimg';
+  logo.src='heroes/name/'+heroSlug(h.name)+'.svg';logo.alt=h.name;
+  logo.addEventListener('error',function(){
+    var t=document.createElement('h2');t.textContent=h.name;
+    t.style.fontFamily="'Reaver',serif";t.style.fontSize='var(--artist)';this.replaceWith(t);});
+  mid.appendChild(logo);
+
+  var ab=heroAbilities(h);
+  if(ab.length){
+    var sk=document.createElement('div');sk.id='hSkills';
+    ab.forEach(function(a){
+      var row=document.createElement('div');row.className='skill';
+      if(a.img){var im=document.createElement('img');im.src=a.img;im.alt='';im.decoding='async';
+        im.addEventListener('error',function(){this.remove();});row.appendChild(im);}
+      row.appendChild(Object.assign(document.createElement('span'),{textContent:a.name}));
+      sk.appendChild(row);
+    });
+    mid.appendChild(sk);
+  }
+
+  var groups=collectStats(h),wrap=document.createElement('div');wrap.id='hStats';
+  var titles={weapon:'Weapon',vitality:'Vitality',spirit:'Spirit'};
+  var any=false;
+  ['weapon','vitality','spirit'].forEach(function(g){
+    if(!groups[g].length)return;
+    any=true;
+    var col=document.createElement('div');col.className='sgroup '+g;
+    col.appendChild(Object.assign(document.createElement('h4'),{textContent:titles[g]}));
+    groups[g].slice(0,12).forEach(function(pair){
+      var r=document.createElement('div');r.className='srow';
+      r.appendChild(Object.assign(document.createElement('span'),{className:'k',textContent:pair[0]}));
+      r.appendChild(Object.assign(document.createElement('span'),{className:'v',textContent:pair[1]}));
+      col.appendChild(r);
+    });
+    wrap.appendChild(col);
+  });
+  if(any)mid.appendChild(wrap);
+  else{
+    var fb=document.createElement('img');fb.className='sheet';
+    fb.style.maxHeight='100%';fb.style.objectFit='contain';
+    fb.src='heroes/summary/'+heroSlug(h.name)+'.png';
+    fb.addEventListener('error',function(){this.remove();});
+    mid.appendChild(fb);
+  }
+  box.appendChild(mid);
+
   var art=document.createElement('div');art.id='hArt';
   art.appendChild(Object.assign(document.createElement('div'),
     {className:'bg',style:'background-image:url(heroes/bg/'+heroSlug(h.name)+'.jpg)'}));
@@ -1781,40 +1891,6 @@ async function showHeroSheet(h){
   art.appendChild(render);
   box.appendChild(art);
 
-  /* mitten: namnet över statistikbladet */
-  var mid=document.createElement('div');mid.id='hMid';
-  var back=document.createElement('button');back.id='heroBack';back.textContent='← All heroes';
-  back.addEventListener('click',function(e){e.stopPropagation();
-    box.classList.remove('on');el('heroGrid').style.display='';});
-  mid.appendChild(back);
-  var logo=document.createElement('img');logo.className='nameimg';
-  logo.src='heroes/name/'+heroSlug(h.name)+'.svg';logo.alt=h.name;
-  logo.addEventListener('error',function(){
-    var t=document.createElement('h2');t.textContent=h.name;
-    t.style.fontFamily="'Reaver',serif";t.style.fontSize='var(--artist)';this.replaceWith(t);});
-  mid.appendChild(logo);
-  var sheet=document.createElement('img');sheet.className='sheet';
-  sheet.src='heroes/summary/'+heroSlug(h.name)+'.png';sheet.alt=h.name+' stats';
-  sheet.addEventListener('error',function(){
-    this.replaceWith(Object.assign(document.createElement('div'),
-      {id:'dlMsg',textContent:'No stat sheet for '+h.name+' yet.'}));});
-  mid.appendChild(sheet);
-  box.appendChild(mid);
-
-  /* höger: förmågorna */
-  var ab=heroAbilities(h);
-  if(ab.length){
-    var col=document.createElement('div');col.id='hSkills';
-    col.appendChild(Object.assign(document.createElement('h4'),{textContent:'Abilities'}));
-    ab.forEach(function(a){
-      var row=document.createElement('div');row.className='skill';
-      if(a.img){var im=document.createElement('img');im.src=a.img;im.alt='';im.decoding='async';
-        im.addEventListener('error',function(){this.remove();});row.appendChild(im);}
-      row.appendChild(Object.assign(document.createElement('span'),{textContent:a.name}));
-      col.appendChild(row);
-    });
-    box.appendChild(col);
-  }
   box.classList.add('on');
 }
 el('heroBtn').addEventListener('click',function(e){e.stopPropagation();showHeroes(!heroOpen);});
