@@ -358,6 +358,15 @@ async function wxPoll(){
   #dlStreak{font-size:var(--meta);padding:.15em .8em;border-radius:99px;
             background:rgba(232,184,114,.2);color:#F5DCB4;
             border:1px solid rgba(232,184,114,.28)}
+  #career{display:none;flex:none;gap:clamp(8px,1.2vw,20px);flex-wrap:wrap;
+        padding:.15em 0 .1em}
+  #career.on{display:flex}
+  .stat{display:flex;flex-direction:column;gap:.02em;padding:.35em .9em;border-radius:10px;
+        background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)}
+  .stat b{font-family:'Reaver',serif;font-size:calc(var(--meta) * 1.35);font-weight:700;
+        letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.05}
+  .stat span{font-size:calc(var(--meta) * .78);color:var(--ink-dim);opacity:.8;
+        letter-spacing:.06em;text-transform:uppercase}
   #dlBody{flex:1;min-height:0;display:flex;gap:clamp(8px,1.2vw,18px);overflow-x:auto}
   #dlBody::-webkit-scrollbar{height:4px}
   #dlBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
@@ -434,46 +443,46 @@ async function wxPoll(){
   #dlBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
           padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
   #teams{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,22px);align-items:flex-start}
-  .team{flex:1;min-width:0;max-height:100%;display:flex;flex-direction:column;gap:.28em;
-        border-radius:14px;padding:.65em .85em .8em;overflow-y:auto;
+  .team{flex:1;min-width:0;max-height:100%;display:flex;flex-direction:column;gap:.34em;
+        border-radius:14px;padding:.8em 1em .9em;overflow-y:auto;
         border:1px solid rgba(255,255,255,.12)}
-  .team.amber{border-color:rgba(232,184,114,.3);
-        background:linear-gradient(170deg, rgba(232,184,114,.16), rgba(232,184,114,.05))}
-  .team.sapphire{border-color:rgba(110,160,230,.3);
-        background:linear-gradient(170deg, rgba(110,160,230,.16), rgba(110,160,230,.05))}
+  .team.king{border-color:rgba(232,184,114,.34);
+        background:linear-gradient(170deg, rgba(78,54,26,.72), rgba(32,21,10,.6))}
+  .team.mother{border-color:rgba(120,170,235,.34);
+        background:linear-gradient(170deg, rgba(28,50,82,.72), rgba(13,22,37,.6))}
+  .team.king h5{color:#E8B872}
+  .team.mother h5{color:#9DC2F0}
   .team h5{font-size:var(--meta);font-weight:700;letter-spacing:.02em;opacity:.85}
-  .team .row{display:flex;align-items:center;gap:.55em;font-size:var(--meta);min-width:0}
+  .team .row{display:flex;align-items:center;gap:.6em;min-width:0;
+        font-size:calc(var(--meta) * 1.18);line-height:1.25}
   .team .row.me{background:rgba(255,255,255,.1);border-radius:8px;padding:.1em .4em}
   .team .row img{width:clamp(18px,3.2vh,32px);height:clamp(18px,3.2vh,32px);
         object-fit:contain;flex:none}
   .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .team .row .st{color:var(--ink-dim);font-variant-numeric:tabular-nums}
-  #matchInfo{font-size:var(--meta);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
+  .team .row .st{color:var(--ink);opacity:.9;font-variant-numeric:tabular-nums;font-weight:600}
+  #matchInfo{font-size:calc(var(--meta) * 1.05);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
   #dlDetail{position:relative}
-  #dlDetail::before{content:"";position:absolute;inset:-1em -1em 0;z-index:0;
-        background:url(ui/gothic.jpg) center/cover;opacity:.06;filter:blur(2px);
-        mask-image:linear-gradient(180deg,#000,transparent 70%);
-        -webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
+  #dlDetail::before{content:"";position:absolute;inset:-1.4em -1.4em 0;z-index:0;
+        background:url(ui/patrons-bg.jpg) center 22%/cover;opacity:.5;
+        mask-image:linear-gradient(180deg,#000 55%,transparent 96%);
+        -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 96%);pointer-events:none}
   #teams{position:relative;z-index:1}
   .team{position:relative;overflow:hidden}
-  .patron{position:absolute;right:-6%;top:-4%;width:62%;aspect-ratio:16/9;z-index:0;
+  .patron{position:absolute;right:2%;top:1.5%;width:clamp(38px,9vh,92px);aspect-ratio:1;z-index:0;
         background-size:contain;background-repeat:no-repeat;background-position:top right;
-        opacity:.22;pointer-events:none;
-        mask-image:linear-gradient(200deg,#000 20%,transparent 78%);
-        -webkit-mask-image:linear-gradient(200deg,#000 20%,transparent 78%)}
+        opacity:.85;pointer-events:none}
   .team>*:not(.patron){position:relative;z-index:1}
   .team h5{display:flex;align-items:center;gap:.7em;padding-bottom:.4em;margin-bottom:.15em;
         border-bottom:1px solid currentColor;opacity:.95}
-  .team h5 .ttl{height:clamp(22px,5.2vh,52px);width:auto}
+  .team h5 .ttl{height:clamp(20px,4.6vh,46px);width:auto}
   .tres{font-size:calc(var(--meta) * .85);letter-spacing:.12em;text-transform:uppercase;
         font-weight:700}
   .tres.w{color:#7CE0A6} .tres.l{color:#E88E86}
-  .team.amber h5{color:#E8B872}
-  .team.sapphire h5{color:#8FB6E8}
+
   .team .row .mvp{width:clamp(14px,2.6vh,26px);height:auto;flex:none;opacity:.95}
   .team{overflow-y:auto}
-  .kit{display:flex;flex-wrap:wrap;gap:.22em;margin:-.1em 0 .45em calc(clamp(18px,3.2vh,32px) + .55em)}
-  .kit img{width:clamp(15px,2.6vh,26px);height:clamp(15px,2.6vh,26px);border-radius:4px;
+  .kit{display:flex;flex-wrap:wrap;gap:.26em;margin:-.05em 0 .6em calc(clamp(26px,5vh,52px) + .6em)}
+  .kit img{width:clamp(20px,3.6vh,38px);height:clamp(20px,3.6vh,38px);border-radius:5px;
            object-fit:contain;background:rgba(255,255,255,.08)}
   .kit .chip{font-size:calc(var(--meta) * .72);color:var(--ink-dim);opacity:.7;
            background:rgba(255,255,255,.08);border-radius:4px;padding:0 .35em}
@@ -609,6 +618,7 @@ async function wxPoll(){
     <button id="dlRefresh" title="Hämta om">Refresh</button>
     <span id="dlClose">Swipe up to close</span>
   </div>
+  <div id="career"></div>
   <div id="dlBody"><div id="dlMsg">Loading…</div></div>
   <div id="dlDetail">
     <button id="dlBack">← Back to recent matches</button>
@@ -1211,6 +1221,7 @@ async function dlPoll(){
     var arr=got.arr;
     if(!arr.length){dlMsg('The API responded but has no matches for account ID '+CFG.dl+'. Check the ID in settings.');return;}
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
+    renderCareer(arr);
     var recent=arr.slice(0,20);
     var wins=recent.filter(dlWon).length;
     el('dlForm').innerHTML='Last '+recent.length+': <b>'+wins+'W '+(recent.length-wins)+'L</b> · '+
@@ -1325,6 +1336,35 @@ function dlSchedule(){
 }
 
 
+
+/* Karriärsiffror räknade ur hela historiken vi fått. */
+function renderCareer(all){
+  var box=el('career');box.innerHTML='';
+  if(!all||!all.length){box.classList.remove('on');return;}
+  var w=0,k=0,d=0,a=0,nw=0,mins=0;
+  all.forEach(function(m){
+    if(dlWon(m))w++;
+    k+=m.player_kills|0; d+=m.player_deaths|0; a+=m.player_assists|0;
+    nw+=m.net_worth|0; mins+=(m.match_duration_s||0)/60;
+  });
+  var n=all.length;
+  function add(v,label){
+    var c=document.createElement('div');c.className='stat';
+    var b=document.createElement('b');b.textContent=v;
+    var s2=document.createElement('span');s2.textContent=label;
+    c.appendChild(b);c.appendChild(s2);box.appendChild(c);
+  }
+  add(n.toLocaleString('en-US'),'Games');
+  add(w.toLocaleString('en-US'),'Won');
+  add(Math.round(w/n*100)+'%','Winrate');
+  add(((k+a)/Math.max(d,1)).toFixed(2),'KDA');
+  add(k.toLocaleString('en-US'),'Kills');
+  add(a.toLocaleString('en-US'),'Assists');
+  if(nw)add(Math.round(nw/1000).toLocaleString('en-US')+'k','Souls');
+  if(mins)add(Math.round(mins/60).toLocaleString('en-US')+' h','Played');
+  box.classList.add('on');
+}
+
 /* ---------------- Enskild match ---------------- */
 var dlItems=null;
 async function dlLoadItems(){
@@ -1355,8 +1395,10 @@ function playerItems(p){
    .filter(function(v,i,a){return v&&a.indexOf(v)===i;});
 }
 
-var TEAMS=[{key:'amber',name:'The Archmother',art:'archmother'},
-           {key:'sapphire',name:'The Hidden King',art:'hiddenking'}];
+/* Lag 0 = The Hidden King (guld), lag 1 = The Archmother (blå).
+   title = namnplåten, icon = symbolen. */
+var TEAMS=[{key:'king',name:'The Hidden King',title:'hiddenking',icon:'archmother'},
+           {key:'mother',name:'The Archmother',title:'archmother',icon:'hiddenking'}];
 function dlPlayers(j){
   if(!j)return [];
   var cands=[j.players,j.match_info&&j.match_info.players,j.data&&j.data.players,
@@ -1392,12 +1434,12 @@ async function showMatch(m){
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
       col.appendChild(Object.assign(document.createElement('div'),
-        {className:'patron',style:'background-image:url(ui/patron-'+t.art+'.png)'}));
+        {className:'patron',style:'background-image:url(ui/patron-'+t.icon+'.png)'}));
       var h=document.createElement('h5');
       var mine=players.filter(function(p){return String(p.account_id)===String(CFG.dl);})[0];
       var won=mine&&teamOf(mine)===ti?dlWon(m):(mine?!dlWon(m):false);
       var ttl=document.createElement('img');ttl.className='ttl';
-      ttl.src='ui/title-'+t.art+'.png';ttl.alt=t.name;
+      ttl.src='ui/title-'+t.title+'.png';ttl.alt=t.name;
       ttl.addEventListener('error',function(){
         this.replaceWith(Object.assign(document.createElement('span'),{textContent:t.name}));});
       h.appendChild(ttl);
