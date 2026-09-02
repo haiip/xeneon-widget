@@ -23,7 +23,8 @@
     --meta: clamp(11px, 2.7vh, 28px);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;overflow:hidden}
+  html,body{width:100%;height:100%;min-width:100vw;min-height:100vh;overflow:hidden;
+      background:#14161C}
   body{background:var(--base);color:var(--ink);
     font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;user-select:none}
@@ -75,7 +76,7 @@
   body.paused #bg,body.paused #glow,body.paused #glow2,body.paused #glow3,
   body.paused #grad{animation-play-state:paused}
 
-  .view{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity .3s ease}
+  .view{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;opacity:0;pointer-events:none;transition:opacity .3s ease}
   .view.on{opacity:1;pointer-events:auto}
 
   /* ---------------- Spotify ---------------- */
@@ -314,7 +315,7 @@ async function wxPoll(){
   .mres{letter-spacing:.12em}
   .mname{letter-spacing:.03em;font-weight:600}
   #streak b{font-family:'Reaver',serif}
-  #vDeadlock{position:fixed;left:0;right:0;top:0;height:88%;z-index:4;
+  #vDeadlock{position:fixed;left:0;right:0;top:0;width:100vw;height:88vh;z-index:4;
     padding:var(--pad);padding-top:calc(var(--pad) * .6);
     background:linear-gradient(180deg, rgba(17,12,8,.97) 0%, rgba(15,10,7,.95) 62%,
                rgba(13,9,6,.86) 100%);
@@ -446,7 +447,7 @@ async function wxPoll(){
   #dlBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
           padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
   #teams{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,22px);align-items:flex-start}
-  .team{flex:1;min-width:0;max-height:100%;display:flex;flex-direction:column;gap:.34em;
+  .team{flex:1 1 0;min-width:180px;max-height:100%;display:flex;flex-direction:column;gap:.34em;
         border-radius:14px;padding:.8em 1em .9em;overflow-y:auto;
         border:1px solid rgba(255,255,255,.12)}
   .team.king{border-color:rgba(232,184,114,.34);background-color:#191108;
@@ -466,7 +467,7 @@ async function wxPoll(){
   #matchInfo{flex:none;min-height:1.4em;font-size:calc(var(--meta) * 1.05);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
   #dlDetail{position:relative;background:#120c07;flex:1;min-height:0}
 
-  #teams{position:relative;z-index:1}
+  #teams{position:relative;z-index:1;width:100%}
   .team{position:relative;overflow:hidden}
   .patron{position:absolute;right:2%;top:1.5%;width:clamp(38px,9vh,92px);aspect-ratio:1;z-index:0;
         background-size:contain;background-repeat:no-repeat;background-position:top right;
