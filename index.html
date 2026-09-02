@@ -863,7 +863,9 @@ async function token(){
   tok={v:j.access_token,exp:Date.now()+((j.expires_in||3600)-60)*1000};
   return tok.v;
 }
+var spWait=0;                       /* tidpunkt då vi får fråga igen */
 async function api(path,method){
+  if(Date.now()<spWait)return {err:429,wait:Math.ceil((spWait-Date.now())/1000)};
   var t=await token();
   if(!t)return {authfail:true};
   var r=await fetch('https://api.spotify.com/v1'+path,{method:method||'GET',headers:{Authorization:'Bearer '+t}});
@@ -873,6 +875,11 @@ async function api(path,method){
     if(!t2)return {authfail:true};
     r=await fetch('https://api.spotify.com/v1'+path,{method:method||'GET',
       headers:{Authorization:'Bearer '+t2}});
+  }
+  if(r.status===429){
+    var ra=parseInt(r.headers.get('Retry-After')||'30',10);
+    spWait=Date.now()+(isNaN(ra)?30:ra+2)*1000;
+    return {err:429,wait:isNaN(ra)?30:ra};
   }
   if(r.status===204||r.status===202)return {empty:true};
   if(!r.ok)return {err:r.status};
@@ -885,7 +892,8 @@ async function poll(){
   var d=await api('/me/player');
   if(d&&d.authfail){idle(true,'Spotify-anslutningen behöver förnyas — kör setup igen');return;}
   if(d&&d.err===403){idle(true,'Spotify nekar åtkomst (403). Kräver Premium.');return;}
-  if(d&&d.err===429){idle(true,'Spotify bad oss vänta en stund (429)');return;}
+  if(d&&d.err===429){
+    idle(true,'Spotify bad oss vänta '+(d.wait||30)+' s');return;}
   if(d&&d.err){idle(true,'Spotify svarade '+d.err);return;}
   if(!d||d.empty||!d.item){idle(true,'Inget spelas just nu');return;}
   idle(false);
@@ -992,6 +1000,7 @@ el('art').addEventListener('load',function(){
 
 /* kö */
 async function queuePoll(){
+  if(Date.now()<spWait)return;
   var q=await api('/me/player/queue'),box=el('next');
   if(!q||q.err||!q.queue||!q.queue.length){box.classList.remove('on');return;}
   var t=q.queue[0],imgs=(t.album&&t.album.images)||t.images||[];
@@ -1872,6 +1881,7 @@ document.addEventListener('keydown',function(e){
 });
 function stop(e){e.stopPropagation();}
 el('btnPlay').addEventListener('click',async function(e){stop(e);
+  if(Date.now()<spWait)return;
   await api(state.playing?'/me/player/pause':'/me/player/play','PUT');
   state.playing=!state.playing;setTimeout(poll,350);});
 el('btnNext').addEventListener('click',async function(e){stop(e);await api('/me/player/next','POST');setTimeout(poll,600);});
@@ -1957,10 +1967,13 @@ el('btnCopy').addEventListener('click',function(){
   if(qs.get('code')){openSetup();await exchange(qs.get('code'));return;}
   if(!CFG.cid||!CFG.rt){openSetup();el('title').textContent='Inte ansluten';return;}
   await poll();dcPoll();queuePoll();
-  setInterval(poll,3000);
+  (function loop(){
+    var wait=document.hidden?15000:(Date.now()<spWait?Math.max(spWait-Date.now(),5000):5000);
+    setTimeout(function(){poll().then(loop,loop);},wait);
+  })();
   setInterval(tick,250);
   setInterval(dcPoll,15000);
-  setInterval(queuePoll,15000);
+  setInterval(queuePoll,60000);
   if(CFG.dl){dlPoll().then(dlSchedule,dlSchedule);}
   if(CFG.wx){wxPoll();setInterval(wxPoll,900000);}
 })();
