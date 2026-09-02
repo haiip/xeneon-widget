@@ -141,11 +141,35 @@
   #device{font-size:var(--meta);color:var(--accent);opacity:.85;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:20ch}
 
-  #idle{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center}
+  #idle{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+        gap:clamp(24px,5vw,90px);padding:0 var(--pad)}
   #idle.on{display:flex}
-  #clock{font-size:clamp(54px,30vh,220px);font-weight:200;letter-spacing:-.04em;
-         font-variant-numeric:tabular-nums;line-height:1}
-  #idleMsg{font-size:var(--meta);color:var(--ink-dim);margin-top:.4em}
+  body.idle #now{display:none}
+  #idleLeft{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+  #clock{font-size:clamp(54px,32vh,240px);font-weight:200;letter-spacing:-.045em;
+         font-variant-numeric:tabular-nums;line-height:.92}
+  #date{font-size:var(--meta);color:var(--ink-dim);opacity:.8;margin-top:.5em;
+        text-transform:capitalize;letter-spacing:.04em}
+  #idleMsg{font-size:var(--meta);color:var(--ink-dim);opacity:.5;margin-top:.2em}
+  #wxRule{width:1px;align-self:stretch;margin:14% 0;
+          background:linear-gradient(180deg,transparent,rgba(255,255,255,.22),transparent)}
+  #wx{display:none;flex-direction:column;gap:clamp(8px,1.6vh,18px);min-width:0}
+  #wx.on{display:flex}
+  #wxNow{display:flex;align-items:center;gap:clamp(10px,2vw,26px)}
+  #wxIcon{width:clamp(44px,13vh,130px);height:clamp(44px,13vh,130px);flex:none}
+  #wxTemp{font-size:clamp(34px,14vh,120px);font-weight:300;letter-spacing:-.04em;
+          line-height:.9;font-variant-numeric:tabular-nums}
+  #wxText{font-size:var(--meta);color:var(--ink-dim)}
+  #wxPlace{font-size:var(--meta);color:var(--ink-dim);opacity:.65}
+  #wxRange{font-size:var(--meta);color:var(--ink-dim);opacity:.8;margin-top:.25em;
+           font-variant-numeric:tabular-nums}
+  #wxHours{display:flex;gap:clamp(6px,1vw,16px)}
+  .hr{display:flex;flex-direction:column;align-items:center;gap:.25em;
+      padding:.5em clamp(6px,.9vw,14px);border-radius:14px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+      font-size:calc(var(--meta) * .82);color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .hr b{color:var(--ink);font-weight:600;font-size:var(--meta)}
+  .hr svg{width:clamp(16px,3vh,30px);height:clamp(16px,3vh,30px)}
 
   /* röstremsa */
   #now{position:fixed;top:calc(var(--pad) * .5);left:50%;transform:translateX(-50%);z-index:2;
@@ -206,7 +230,76 @@
   #dcMsg{font-size:var(--meta);color:var(--ink-dim);align-self:center;margin:auto}
 
 
-  /* ---------------- Deadlock ---------------- */
+  
+/* ---------------- Väder (Open-Meteo, ingen nyckel) ---------------- */
+var WXT={0:'Klart',1:'Mest klart',2:'Halvklart',3:'Mulet',45:'Dimma',48:'Underkyld dimma',
+ 51:'Duggregn',53:'Duggregn',55:'Tätt duggregn',56:'Underkylt duggregn',57:'Underkylt duggregn',
+ 61:'Lätt regn',63:'Regn',65:'Kraftigt regn',66:'Underkylt regn',67:'Underkylt regn',
+ 71:'Lätt snö',73:'Snö',75:'Kraftig snö',77:'Kornsnö',
+ 80:'Regnskurar',81:'Regnskurar',82:'Kraftiga skurar',85:'Snöbyar',86:'Snöbyar',
+ 95:'Åska',96:'Åska med hagel',99:'Åska med hagel'};
+function wxIcon(code,size){
+  var c=code,A='#F0CB93',B='#CBD5E4',W='2.4';
+  function svg(inner){return '<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" '+
+    'stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';}
+  var sun='<circle cx="24" cy="24" r="9" stroke="'+A+'" stroke-width="'+W+'"/>'+
+    '<path d="M24 6v4M24 38v4M6 24h4M38 24h4M11 11l3 3M34 34l3 3M37 11l-3 3M14 34l-3 3" stroke="'+A+'" stroke-width="'+W+'"/>';
+  var cloud='<path d="M16 34h17a7 7 0 0 0 .6-14 10 10 0 0 0-19 2.5A6 6 0 0 0 16 34z" stroke="'+B+'" stroke-width="'+W+'"/>';
+  if(c===0)return svg(sun);
+  if(c===1||c===2)return svg('<circle cx="19" cy="19" r="6.5" stroke="'+A+'" stroke-width="'+W+'"/>'+
+    '<path d="M19 6v3M6 19h3M10 10l2 2" stroke="'+A+'" stroke-width="'+W+'"/>'+cloud);
+  if(c===3)return svg(cloud);
+  if(c===45||c===48)return svg(cloud+'<path d="M12 40h24M16 44h16" stroke="'+B+'" stroke-width="'+W+'"/>');
+  if(c>=71&&c<=77||c===85||c===86)return svg(cloud+'<path d="M18 39v4M24 41v4M30 39v4" stroke="'+B+'" stroke-width="'+W+'"/>');
+  if(c>=95)return svg(cloud+'<path d="M26 37l-6 6h6l-3 5" stroke="'+A+'" stroke-width="'+W+'"/>');
+  return svg(cloud+'<path d="M18 38l-2 5M24 38l-2 5M30 38l-2 5" stroke="#8FB6E8" stroke-width="'+W+'"/>');
+}
+var wxTimer=null;
+async function wxPoll(){
+  if(!CFG.wx){el('wx').classList.remove('on');return;}
+  var p=CFG.wx.split(',');
+  try{
+    var u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(p[0])+
+      '&longitude='+encodeURIComponent(p[1])+
+      '&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code'+
+      '&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=2';
+    var r=await fetch(u,{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var j=await r.json();
+    var cur=j.current||{};
+    el('wxTemp').textContent=Math.round(cur.temperature_2m)+'°';
+    el('wxText').textContent=WXT[cur.weather_code]||'';
+    el('wxIcon').innerHTML=wxIcon(cur.weather_code);
+    if(j.daily&&j.daily.temperature_2m_max)
+      el('wxRange').textContent='Högst '+Math.round(j.daily.temperature_2m_max[0])+
+        '°  ·  lägst '+Math.round(j.daily.temperature_2m_min[0])+'°';
+    el('wxPlace').textContent=p[2]?decodeURIComponent(p[2]):'';
+    /* fyra kommande timmar */
+    var box=el('wxHours');box.innerHTML='';
+    if(j.hourly&&j.hourly.time){
+      var now=Date.now(),start=-1;
+      for(var i=0;i<j.hourly.time.length;i++){
+        if(new Date(j.hourly.time[i]).getTime()>now){start=i;break;}
+      }
+      if(start>=0)for(var k=start;k<start+4&&k<j.hourly.time.length;k++){
+        var d=new Date(j.hourly.time[k]);
+        var cell=document.createElement('div');cell.className='hr';
+        var lab=document.createElement('span');
+        lab.textContent=('0'+d.getHours()).slice(-2)+':00';
+        var ic=document.createElement('div');
+        ic.innerHTML=wxIcon(j.hourly.weather_code[k]);
+        ic.style.width='100%';ic.style.display='grid';ic.style.placeItems='center';
+        var t=document.createElement('b');
+        t.textContent=Math.round(j.hourly.temperature_2m[k])+'°';
+        cell.appendChild(lab);cell.appendChild(ic);cell.appendChild(t);
+        box.appendChild(cell);
+      }
+    }
+    el('wx').classList.add('on');
+  }catch(e){el('wx').classList.remove('on');}
+}
+
+/* ---------------- Deadlock ---------------- */
   #vDeadlock{position:fixed;left:0;right:0;top:0;height:86%;z-index:4;
     padding:var(--pad);padding-top:calc(var(--pad) * .6);
     background:linear-gradient(180deg, rgba(20,14,9,.62) 0%, rgba(16,11,7,.5) 62%, rgba(14,10,7,.12) 100%);
@@ -370,8 +463,24 @@
   </div>
   </div>
   <div id="idle">
-    <div id="clock">--:--</div>
-    <div id="idleMsg">Inget spelas just nu</div>
+    <div id="idleLeft">
+      <div id="clock">--:--</div>
+      <div id="date"></div>
+      <div id="idleMsg">Inget spelas just nu</div>
+    </div>
+    <div id="wxRule"></div>
+    <div id="wx">
+      <div id="wxNow">
+        <div id="wxIcon"></div>
+        <div>
+          <div id="wxTemp">--°</div>
+          <div id="wxText"></div>
+          <div id="wxRange"></div>
+        </div>
+      </div>
+      <div id="wxHours"></div>
+      <div id="wxPlace"></div>
+    </div>
   </div>
 </section>
 
@@ -455,8 +564,18 @@
     </div>
     <p id="dlState"></p>
   </div>
+
   <div class="step">
-    <h3>4. Tillbaka till musiken automatiskt</h3>
+    <h3>4. Väder i viloläget</h3>
+    <p>Skriv din ort så visas vädret bredvid klockan när ingen musik spelas. Data från Open-Meteo, ingen nyckel eller inloggning behövs.</p>
+    <div class="field">
+      <input id="inWx" placeholder="Solna" autocomplete="off">
+      <button class="btn ghost" id="btnWx">Slå upp</button>
+    </div>
+    <p id="wxState"></p>
+  </div>
+  <div class="step">
+    <h3>5. Tillbaka till musiken automatiskt</h3>
     <p>Sekunder innan Discord-vyn växlar tillbaka av sig själv. 0 stänger av.</p>
     <div class="field">
       <input id="inBack" placeholder="0" inputmode="numeric" style="max-width:120px;min-width:120px">
@@ -464,7 +583,7 @@
   </div>
 
   <div class="step">
-    <h3>5. Klistra in i iCUE</h3>
+    <h3>6. Klistra in i iCUE</h3>
     <p>Lägg till en iFrame-widget och klistra in hela kodraden nedan.</p>
     <div class="field">
       <button class="btn" id="btnMake">Skapa kod</button>
@@ -485,7 +604,7 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorag
   catch(e){if(v===undefined)return mem[k]||null;mem[k]=v;return v;}}
 var qs=new URLSearchParams(location.search);
 var CFG={cid:qs.get('cid')||ls('xe_cid')||'', rt:qs.get('rt')||ls('xe_rt')||'',
-  guild:qs.get('guild')||ls('xe_guild')||'', dl:qs.get('dl')||ls('xe_dl')||'', back:parseInt(qs.get('back')||ls('xe_back')||'0',10)||0};
+  guild:qs.get('guild')||ls('xe_guild')||'', dl:qs.get('dl')||ls('xe_dl')||'', wx:qs.get('wx')||ls('xe_wx')||'', back:parseInt(qs.get('back')||ls('xe_back')||'0',10)||0};
 var REDIRECT=location.origin+location.pathname;
 var SCOPES='user-read-playback-state user-modify-playback-state user-read-currently-playing';
 var el=function(id){return document.getElementById(id);};
@@ -567,7 +686,7 @@ async function poll(){
 }
 
 /* Tonar ut, byter innehåll, tonar in igen — istället för ett hårt hopp. */
-var swapTimer=null;
+var swapTimer=null,wxLast=0;
 function swapTrack(item,instant){
   var imgs=(item.album&&item.album.images)||[];
   var url=imgs.length?imgs[0].url:'';
@@ -589,6 +708,8 @@ function swapTrack(item,instant){
 }
 function idle(on){
   el('idle').classList.toggle('on',on);
+  document.body.classList.toggle('idle',on);
+  if(on&&CFG.wx&&Date.now()-wxLast>10*60*1000){wxLast=Date.now();wxPoll();}
   el('artWrap').style.visibility=on?'hidden':'visible';
   el('head').style.visibility=on?'hidden':'visible';
   el('foot').style.visibility=on?'hidden':'visible';
@@ -600,6 +721,8 @@ function tick(){
   var hhmm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
   el('clock').textContent=hhmm;
   el('now').textContent=hhmm;
+  el('date').textContent=now.toLocaleDateString('sv-SE',
+    {weekday:'long',day:'numeric',month:'long'});
   if(!state.dur)return;
   var p=state.pos+(state.playing?Date.now()-state.at:0);
   if(p>state.dur)p=state.dur;
@@ -794,6 +917,75 @@ function notifyJoins(){
   firstDc=false;seenVoice=now;
 }
 
+
+
+/* ---------------- Väder (Open-Meteo, ingen nyckel) ---------------- */
+var WXT={0:'Klart',1:'Mest klart',2:'Halvklart',3:'Mulet',45:'Dimma',48:'Underkyld dimma',
+ 51:'Duggregn',53:'Duggregn',55:'Tätt duggregn',56:'Underkylt duggregn',57:'Underkylt duggregn',
+ 61:'Lätt regn',63:'Regn',65:'Kraftigt regn',66:'Underkylt regn',67:'Underkylt regn',
+ 71:'Lätt snö',73:'Snö',75:'Kraftig snö',77:'Kornsnö',
+ 80:'Regnskurar',81:'Regnskurar',82:'Kraftiga skurar',85:'Snöbyar',86:'Snöbyar',
+ 95:'Åska',96:'Åska med hagel',99:'Åska med hagel'};
+function wxIcon(code,size){
+  var c=code,A='#F0CB93',B='#CBD5E4',W='2.4';
+  function svg(inner){return '<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" '+
+    'stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';}
+  var sun='<circle cx="24" cy="24" r="9" stroke="'+A+'" stroke-width="'+W+'"/>'+
+    '<path d="M24 6v4M24 38v4M6 24h4M38 24h4M11 11l3 3M34 34l3 3M37 11l-3 3M14 34l-3 3" stroke="'+A+'" stroke-width="'+W+'"/>';
+  var cloud='<path d="M16 34h17a7 7 0 0 0 .6-14 10 10 0 0 0-19 2.5A6 6 0 0 0 16 34z" stroke="'+B+'" stroke-width="'+W+'"/>';
+  if(c===0)return svg(sun);
+  if(c===1||c===2)return svg('<circle cx="19" cy="19" r="6.5" stroke="'+A+'" stroke-width="'+W+'"/>'+
+    '<path d="M19 6v3M6 19h3M10 10l2 2" stroke="'+A+'" stroke-width="'+W+'"/>'+cloud);
+  if(c===3)return svg(cloud);
+  if(c===45||c===48)return svg(cloud+'<path d="M12 40h24M16 44h16" stroke="'+B+'" stroke-width="'+W+'"/>');
+  if(c>=71&&c<=77||c===85||c===86)return svg(cloud+'<path d="M18 39v4M24 41v4M30 39v4" stroke="'+B+'" stroke-width="'+W+'"/>');
+  if(c>=95)return svg(cloud+'<path d="M26 37l-6 6h6l-3 5" stroke="'+A+'" stroke-width="'+W+'"/>');
+  return svg(cloud+'<path d="M18 38l-2 5M24 38l-2 5M30 38l-2 5" stroke="#8FB6E8" stroke-width="'+W+'"/>');
+}
+var wxTimer=null;
+async function wxPoll(){
+  if(!CFG.wx){el('wx').classList.remove('on');return;}
+  var p=CFG.wx.split(',');
+  try{
+    var u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(p[0])+
+      '&longitude='+encodeURIComponent(p[1])+
+      '&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code'+
+      '&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=2';
+    var r=await fetch(u,{cache:'no-store'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var j=await r.json();
+    var cur=j.current||{};
+    el('wxTemp').textContent=Math.round(cur.temperature_2m)+'°';
+    el('wxText').textContent=WXT[cur.weather_code]||'';
+    el('wxIcon').innerHTML=wxIcon(cur.weather_code);
+    if(j.daily&&j.daily.temperature_2m_max)
+      el('wxRange').textContent='Högst '+Math.round(j.daily.temperature_2m_max[0])+
+        '°  ·  lägst '+Math.round(j.daily.temperature_2m_min[0])+'°';
+    el('wxPlace').textContent=p[2]?decodeURIComponent(p[2]):'';
+    /* fyra kommande timmar */
+    var box=el('wxHours');box.innerHTML='';
+    if(j.hourly&&j.hourly.time){
+      var now=Date.now(),start=-1;
+      for(var i=0;i<j.hourly.time.length;i++){
+        if(new Date(j.hourly.time[i]).getTime()>now){start=i;break;}
+      }
+      if(start>=0)for(var k=start;k<start+4&&k<j.hourly.time.length;k++){
+        var d=new Date(j.hourly.time[k]);
+        var cell=document.createElement('div');cell.className='hr';
+        var lab=document.createElement('span');
+        lab.textContent=('0'+d.getHours()).slice(-2)+':00';
+        var ic=document.createElement('div');
+        ic.innerHTML=wxIcon(j.hourly.weather_code[k]);
+        ic.style.width='100%';ic.style.display='grid';ic.style.placeItems='center';
+        var t=document.createElement('b');
+        t.textContent=Math.round(j.hourly.temperature_2m[k])+'°';
+        cell.appendChild(lab);cell.appendChild(ic);cell.appendChild(t);
+        box.appendChild(cell);
+      }
+    }
+    el('wx').classList.add('on');
+  }catch(e){el('wx').classList.remove('on');}
+}
 
 /* ---------------- Deadlock ---------------- */
 var DL='https://api.deadlock-api.com',dlHeroes=null,dlLastMatch=null,dlFirst=true;
@@ -1020,11 +1212,11 @@ async function dlLoadItems(){
   return dlItems;
 }
 function playerItems(p){
-  var raw=p.items||p.item_ids||p.abilities||[];
+  var raw=p.items||p.item_ids||[];               /* inte abilities — det är hjälteförmågor */
   if(!Array.isArray(raw))return [];
   return raw.filter(function(x){
     if(typeof x==='number')return true;
-    return !x.sold_time_s;                       /* sålda föremål räknas inte */
+    return !x.sold_time_s&&!x.sold;              /* sålda föremål räknas inte */
   }).map(function(x){return typeof x==='number'?x:(x.item_id||x.id);})
    .filter(function(v,i,a){return v&&a.indexOf(v)===i;});
 }
@@ -1088,11 +1280,12 @@ async function showMatch(m){
         var ids=playerItems(p);
         if(ids.length){
           var kit=document.createElement('div');kit.className='kit';
-          ids.slice(-10).forEach(function(id){
+          ids.slice(-12).forEach(function(id){
             var it=items[id];
-            if(it&&it.img){var ii=document.createElement('img');ii.src=it.img;ii.title=it.name;kit.appendChild(ii);}
+            if(!it)return;                        /* okänt id = inte ett shopföremål */
+            if(it.img){var ii=document.createElement('img');ii.src=it.img;ii.title=it.name;kit.appendChild(ii);}
             else{var sp=document.createElement('span');sp.className='chip';
-                 sp.textContent=it?it.name:('#'+id);kit.appendChild(sp);}
+                 sp.textContent=it.name;kit.appendChild(sp);}
           });
           col.appendChild(kit);
         }
@@ -1185,7 +1378,7 @@ function note(t,cls){var n=el('authState');n.textContent=t;n.className=cls||'';}
 function openSetup(){
   el('setup').classList.add('on');
   el('redir').textContent=REDIRECT;
-  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;
+  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
   if(CFG.rt)note('Spotify är redan ansluten.','ok');
 }
 el('gear').addEventListener('click',function(e){e.stopPropagation();openSetup();});
@@ -1210,8 +1403,24 @@ el('btnDlTest').addEventListener('click',async function(){
   var rows=await dlProbe(raw);
   st.innerHTML=rows.map(esc).join('<br>');
   st.className=rows.join(' ').indexOf(': 0 matcher')<rows.join(' ').length&&/[1-9]\d* matcher/.test(rows.join(' '))?'ok':'warn';
-  if(dlPath){ls('xe_dl',CFG.dl);el('inDl').value=CFG.dl;
+  if(dlPath){ls('xe_dl',CFG.dl);el('inDl').value=CFG.dl;el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
     st.innerHTML+='<br><b>Använder: '+esc(dlPath)+'</b>';}
+});
+el('btnWx').addEventListener('click',async function(){
+  var q=el('inWx').value.trim(),st=el('wxState');
+  if(!q){st.textContent='Skriv en ort först.';st.className='warn';return;}
+  st.textContent='Söker…';st.className='';
+  try{
+    var r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=sv&name='+encodeURIComponent(q));
+    var j=await r.json();
+    var hit=(j.results||[])[0];
+    if(!hit){st.textContent='Hittade ingen ort med det namnet.';st.className='warn';return;}
+    CFG.wx=hit.latitude+','+hit.longitude+','+encodeURIComponent(hit.name);
+    ls('xe_wx',CFG.wx);
+    st.textContent='Hittade '+hit.name+(hit.admin1?', '+hit.admin1:'')+'. Vädret hämtas härifrån.';
+    st.className='ok';
+    wxPoll();
+  }catch(e){st.textContent='Sökningen misslyckades.';st.className='warn';}
 });
 el('btnMake').addEventListener('click',function(){
   CFG.cid=el('inCid').value.trim();ls('xe_cid',CFG.cid);
@@ -1223,6 +1432,7 @@ el('btnMake').addEventListener('click',function(){
   if(CFG.guild)p.set('guild',CFG.guild);
   if(CFG.back)p.set('back',String(CFG.back));
   if(CFG.dl)p.set('dl',CFG.dl);
+  if(CFG.wx)p.set('wx',CFG.wx);
   el('out').textContent='<iframe src="'+REDIRECT+'?'+p.toString()+'" width="100%" height="100%" frameborder="0"></iframe>';
 });
 el('btnCopy').addEventListener('click',function(){
@@ -1240,6 +1450,7 @@ el('btnCopy').addEventListener('click',function(){
   setInterval(dcPoll,15000);
   setInterval(queuePoll,15000);
   if(CFG.dl){dlPoll().then(dlSchedule,dlSchedule);}
+  if(CFG.wx){wxPoll();setInterval(wxPoll,900000);}
 })();
 })();
 </script>
