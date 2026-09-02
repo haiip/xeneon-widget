@@ -1587,7 +1587,7 @@ async function dlLoadItems(){
     if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
     var slot=it.item_slot_type||it.slot_type||it.slot||'';
     if(it.class_name)dlByClass[it.class_name]={name:it.name||it.class_name,img:img,
-        type:(it.type||'').toLowerCase()};
+        type:(it.type||'').toLowerCase(),raw:it};
     dlItems[it.id]={name:it.name||it.class_name||('Item '+it.id),img:img,
                     type:(it.type||'').toLowerCase(),slot:String(slot).toLowerCase(),
                     cost:it.cost||it.item_tier||0};
@@ -1832,23 +1832,40 @@ var SROWS={
   ['Spirit Power','spirit_power',['tech_power','spirit_power']]
  ]
 };
-function pickStat(src,keys){
+/* Letar igenom hela objektträdet efter första fältet som matchar. */
+function deepFind(obj,keys,depth){
+  if(!obj||typeof obj!=='object'||(depth||0)>4)return null;
   for(var i=0;i<keys.length;i++){
-    if(keys[i] in src){
-      var v=statVal(src[keys[i]]);
+    if(keys[i] in obj){
+      var v=statVal(obj[keys[i]]);
+      if(v!==null&&v!==''&&!isNaN(Number(v)))return Number(v);
       if(v!==null&&v!=='')return v;
+    }
+  }
+  var ks=Object.keys(obj);
+  for(var j=0;j<ks.length;j++){
+    var child=obj[ks[j]];
+    if(child&&typeof child==='object'){
+      var hit=deepFind(child,keys,(depth||0)+1);
+      if(hit!==null)return hit;
     }
   }
   return null;
 }
-function statSource(h){
-  var raw=h.raw||{},src={};
-  [raw.starting_stats,raw.stats,raw.hero_stats,raw.weapon_stats,raw.base_stats,
-   raw.weapon_primary&&raw.weapon_primary.stats].forEach(function(o){
-    if(o&&typeof o==='object')Object.keys(o).forEach(function(k){if(!(k in src))src[k]=o[k];});
-  });
-  return src;
+function weaponRaw(h){
+  var raw=h.raw||{},items=raw.items||{};
+  var cls=items.weapon_primary||items.weapon||items.primary_weapon;
+  if(typeof cls==='string'&&dlByClass[cls])return dlByClass[cls].raw||null;
+  return raw.weapon_primary||raw.weapon||null;
 }
+function pickStat(srcs,keys){
+  for(var i=0;i<srcs.length;i++){
+    var v=deepFind(srcs[i],keys);
+    if(v!==null)return v;
+  }
+  return null;
+}
+function round(v,n){var p=Math.pow(10,n||2);return Math.round(v*p)/p;}
 /* hjältens egen färg plockas ur bakgrundsbilden */
 function tintFrom(url,el){
   var im=new Image();
@@ -1934,7 +1951,15 @@ async function showHeroSheet(h){
     var n=0;
     SROWS[g].forEach(function(def){
       var v=pickStat(src,def[2]);
+      if(v===null&&g==='weapon'){
+        var cyc=pickStat(src,['cycle_time','fire_rate_cycle_time','time_between_shots']);
+        var dmg=pickStat(src,['bullet_damage','damage']);
+        var pel=pickStat(src,['bullets_per_shot','pellets'])||1;
+        if(def[0]==='Bullets per sec'&&cyc)v=round(1/cyc,2);
+        if(def[0]==='Damage Per Second'&&cyc&&dmg)v=round(dmg*pel/cyc,1);
+      }
       if(v===null)return;
+      if(typeof v==='number')v=round(v,2);
       n++;any=true;
       var r=document.createElement('div');r.className='srow';
       r.appendChild(Object.assign(document.createElement('span'),{className:'k',textContent:def[0]}));
@@ -1947,7 +1972,28 @@ async function showHeroSheet(h){
     });
     if(n)wrap.appendChild(col);
   });
-  if(any){mid.appendChild(wrap);tintFrom('heroes/bg/'+heroSlug(h.name)+'.jpg',wrap);}
+  if(any){
+    mid.appendChild(wrap);
+    tintFrom('heroes/bg/'+heroSlug(h.name)+'.jpg',wrap);
+    /* dubbelklick på rubriken listar alla tillgängliga fältnamn */
+    wrap.addEventListener('dblclick',function(e){
+      e.stopPropagation();
+      var keys={};
+      statSource(h).forEach(function(o){
+        if(o&&typeof o==='object')Object.keys(o).forEach(function(k){
+          var v=statVal(o[k]); if(v!==null&&typeof v!=='object')keys[k]=v;
+        });
+      });
+      var box=document.createElement('div');
+      box.style.cssText='position:absolute;inset:8%;z-index:9;overflow:auto;padding:1em;'+
+        'background:rgba(8,6,4,.97);border-radius:12px;font-size:13px;line-height:1.5;'+
+        'font-family:Consolas,monospace;white-space:pre-wrap';
+      box.textContent=Object.keys(keys).sort().map(function(k){return k+' = '+keys[k];}).join('\n')
+        ||'Inga fält hittades.';
+      box.addEventListener('click',function(){this.remove();});
+      el('heroSum').appendChild(box);
+    });
+  }
   else{
     var fb=document.createElement('img');fb.className='sheet';
     fb.style.maxHeight='100%';fb.style.objectFit='contain';
