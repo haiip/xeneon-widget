@@ -374,7 +374,8 @@ async function wxPoll(){
   #dlBody{flex:1;min-height:0;display:flex;gap:clamp(8px,1.2vw,18px);overflow-x:auto}
   #dlBody::-webkit-scrollbar{height:4px}
   #dlBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
-  .match{flex:none;width:clamp(150px,16vw,250px);border-radius:14px;
+  .match{flex:0 0 auto;scroll-snap-align:start;
+         width:calc((100% - 6 * var(--gap)) / 7);min-width:150px;border-radius:14px;
          position:relative;overflow:hidden;display:block;padding:.7em .85em 0;
          background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
          box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer;
@@ -564,6 +565,18 @@ async function wxPoll(){
         color:var(--ink-dim)}
   #pBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;
         padding:.2em .9em;border-radius:99px;border:1px solid rgba(232,184,114,.35)}
+
+  @supports (animation-timeline: view()){
+    #dlBody .match{
+      animation:cardSwipe linear both;
+      animation-timeline:view(inline);
+      animation-range:entry 0% entry 90%, exit 10% exit 100%;
+    }
+    @keyframes cardSwipe{
+      0%  {opacity:.15;transform:scale(.9) translateY(10px)}
+      100%{opacity:1;transform:none}
+    }
+  }
 
   /* aviseringar */
   #toasts{position:fixed;right:var(--pad);bottom:var(--pad);z-index:6;display:flex;
@@ -1322,7 +1335,7 @@ async function dlPoll(){
     if(w&&streak>=2){pill.innerHTML='<b>'+streak+'</b> win streak';pill.classList.add('on');}
     else pill.classList.remove('on');
     var body=el('dlBody');body.innerHTML='';
-    recent.slice(0,10).forEach(function(m){
+    recent.slice(0,14).forEach(function(m){
       var h=heroes[m.hero_id]||{name:'Hero '+m.hero_id,img:''};
       var v='v'+(Math.abs(Number(String(m.match_id).slice(-6))||0)%6);
       var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss')+' '+v;
@@ -1786,17 +1799,23 @@ function showPlayer(p,hero,team,items,dur){
 
 /* ---------------- Deadlock-luckan ---------------- */
 var sheetOpen=false,gStart=null,sheetTimer=null;
+var SHEET_IDLE=20000;              /* stänger 20 s efter senaste beröring */
+function sheetIdle(){
+  clearTimeout(sheetTimer);
+  if(sheetOpen)sheetTimer=setTimeout(function(){openSheet(false);},SHEET_IDLE);
+}
 function openSheet(on){
   sheetOpen=!!on;
   if(!sheetOpen){closeMatch();showHeroes(false);}
   el('vDeadlock').classList.toggle('open',sheetOpen);
   document.body.classList.toggle('sheet',sheetOpen);
   clearTimeout(sheetTimer);
-  if(sheetOpen){
-    dlPoll();
-    if(CFG.back>0)sheetTimer=setTimeout(function(){openSheet(false);},CFG.back*1000);
-  }
+  if(sheetOpen){dlPoll();sheetIdle();}
 }
+/* varje beröring inne i luckan startar om nedräkningen */
+['pointerdown','pointermove','wheel','scroll','click'].forEach(function(ev){
+  el('vDeadlock').addEventListener(ev,function(){if(sheetOpen)sheetIdle();},true);
+});
 el('grip').addEventListener('pointerdown',function(e){e.stopPropagation();openSheet(!sheetOpen);});
 document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot'))return;
