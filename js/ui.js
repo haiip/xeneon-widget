@@ -7,6 +7,7 @@ function sheetIdle(){
 }
 function openSheet(on){
   sheetOpen=!!on;
+  var gt=el('gripText'); if(gt)gt.textContent=sheetOpen?'Stäng':'Deadlock';
   if(!sheetOpen){closeMatch();showHeroes(false);}
   el('vDeadlock').classList.toggle('open',sheetOpen);
   document.body.classList.toggle('sheet',sheetOpen);
@@ -18,17 +19,29 @@ function openSheet(on){
   el('vDeadlock').addEventListener(ev,function(){if(sheetOpen)sheetIdle();},true);
 });
 el('grip').addEventListener('pointerdown',function(e){e.stopPropagation();openSheet(!sheetOpen);});
+el('dlClose').addEventListener('click',function(e){e.stopPropagation();openSheet(false);});
 document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot'))return;
   gStart={x:e.clientX,y:e.clientY,t:Date.now()};
 },true);
-document.addEventListener('pointerup',function(e){
+function gestureEnd(x,y){
   if(!gStart)return;
-  var dy=e.clientY-gStart.y,dx=e.clientX-gStart.x,start=gStart;gStart=null;
-  if(Math.abs(dy)<50||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
+  var dy=y-gStart.y,dx=x-gStart.x,start=gStart;gStart=null;
+  if(Math.abs(dy)<40||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
   if(!CFG.dl)return;
-  if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.3){openSheet(true);}
-  else if(dy<0&&sheetOpen){openSheet(false);}
+  if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.35)openSheet(true);
+  else if(dy<0&&sheetOpen)openSheet(false);
+}
+document.addEventListener('pointerup',function(e){gestureEnd(e.clientX,e.clientY);},true);
+document.addEventListener('pointercancel',function(){gStart=null;},true);
+/* vissa pekskärmar skickar inte pointerup — lyssna på touch också */
+document.addEventListener('touchend',function(e){
+  var t=e.changedTouches&&e.changedTouches[0];
+  if(t)gestureEnd(t.clientX,t.clientY);
+},true);
+document.addEventListener('touchstart',function(e){
+  var t=e.touches&&e.touches[0];
+  if(t&&!e.target.closest('#gear, #setup, #foot'))gStart={x:t.clientX,y:t.clientY,t:Date.now()};
 },true);
 
 /* ---------------- vyväxling ---------------- */

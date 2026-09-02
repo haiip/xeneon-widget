@@ -318,19 +318,29 @@ async function wxPoll(){
     transition:transform .34s cubic-bezier(.2,.8,.2,1);
     box-shadow:0 26px 70px rgba(0,0,0,.45)}
   #vDeadlock.open{transform:translateY(0)}
-  #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:5;
-    width:clamp(90px,14vw,190px);height:clamp(14px,2.6vh,26px);
-    display:grid;place-items:end center;cursor:pointer}
-  #grip::after{content:"";width:100%;height:clamp(3px,.6vh,6px);border-radius:99px;
-    background:rgba(255,255,255,.26);transition:background .2s,width .2s}
-  #grip:hover::after{background:#E8B872;width:110%}
-  body.sheet #grip{top:auto;bottom:0;align-items:start}
+  #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:6;
+    width:clamp(110px,16vw,230px);height:clamp(22px,4vh,42px);
+    display:flex;align-items:center;justify-content:center;gap:.4em;cursor:pointer;
+    border-radius:0 0 14px 14px;
+    background:linear-gradient(180deg, rgba(232,184,114,.28), rgba(232,184,114,.1));
+    border:1px solid rgba(232,184,114,.32);border-top:0;
+    transition:background .2s,transform .15s}
+  #grip:hover{background:linear-gradient(180deg, rgba(232,184,114,.45), rgba(232,184,114,.18))}
+  #grip:active{transform:translateX(-50%) scale(.96)}
+  #grip svg{width:clamp(14px,2.4vh,24px);height:clamp(14px,2.4vh,24px);fill:#F0CB93;
+    transition:transform .3s}
+  #grip span{font-size:calc(var(--meta) * .72);color:#F0CB93;letter-spacing:.08em;
+    text-transform:uppercase;font-weight:600;white-space:nowrap}
+  body.sheet #grip{top:auto;bottom:0;border-radius:14px 14px 0 0;
+    border:1px solid rgba(232,184,114,.32);border-bottom:0}
+  body.sheet #grip svg{transform:rotate(180deg)}
+  #dlClose{margin-left:auto;font-size:var(--meta);color:var(--ink-dim);opacity:.6;cursor:pointer}
+  #dlClose:hover{opacity:1;color:#F0CB93}
   #dlFresh{font-size:calc(var(--meta) * .85);color:var(--ink-dim);opacity:.7}
   #dlRefresh{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
         padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
   #dlRefresh:hover{opacity:1;background:rgba(232,184,114,.14)}
   #dlRefresh.busy{opacity:.4}
-  #dlClose{margin-left:auto;font-size:var(--meta);color:var(--ink-dim);opacity:.6}
   #streak{position:fixed;left:var(--pad);top:var(--pad);z-index:2;display:none;
     align-items:center;gap:.5em;padding:.35em .85em;border-radius:999px;
     font-size:var(--meta);background:rgba(232,184,114,.18);color:#F0CB93;
