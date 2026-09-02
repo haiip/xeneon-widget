@@ -546,21 +546,25 @@ async function wxPoll(){
   .skill span{font-size:calc(var(--meta) * .82);white-space:nowrap}
 
   #hStats{flex:1;min-height:0;display:flex;gap:clamp(10px,1.4vw,26px);overflow:hidden}
-  .sgroup{flex:1;min-width:0;display:flex;flex-direction:column;gap:.15em;
-        border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04);
-        border:1px solid rgba(255,255,255,.08)}
+  .sgroup{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;
+        border-radius:12px;border:1px solid rgba(255,255,255,.1);
+        background:linear-gradient(180deg,
+          color-mix(in srgb, var(--hcol,#5a3a20) 55%, rgba(0,0,0,.55)),
+          color-mix(in srgb, var(--hcol,#5a3a20) 28%, rgba(0,0,0,.72)))}
   .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .95);
-        letter-spacing:.08em;text-transform:uppercase;text-align:center;
-        padding:.3em;color:#1a1206}
+        letter-spacing:.06em;text-align:center;padding:.28em;color:#17100a;font-weight:700}
   .sgroup.weapon h4{background:#E0913F}
   .sgroup.vitality h4{background:#7FC24A}
   .sgroup.spirit h4{background:#B37BD8}
-  .srow{display:flex;justify-content:space-between;gap:.8em;padding:.16em .8em;
-        font-size:calc(var(--meta) * .88);line-height:1.3}
-  .srow:nth-child(odd){background:rgba(255,255,255,.035)}
-  .srow .k{color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-
+  .srow{display:flex;align-items:center;gap:.5em;padding:.2em .8em;
+        font-size:calc(var(--meta) * .88);line-height:1.35}
+  .srow:nth-child(even){background:rgba(0,0,0,.16)}
+  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.82);text-align:right;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow .ico{width:clamp(14px,2.4vh,22px);height:clamp(14px,2.4vh,22px);
+        object-fit:contain;flex:none;opacity:.95}
+  .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
+        min-width:4.5ch;color:#fff}
   #hArt{flex:none;width:clamp(160px,26%,400px);position:relative;
         display:flex;align-items:flex-end;justify-content:center;
         border-radius:16px;overflow:hidden;
@@ -1799,6 +1803,71 @@ var SLABEL={
   headshot_bonus:'Headshot bonus',falloff_start_range:'Falloff start',
   falloff_end_range:'Falloff end'
 };
+
+/* Ordning, etikett, ikon och tänkbara fältnamn — som i spelets eget kort. */
+var SROWS={
+ weapon:[
+  ['Damage Per Second','damage_per_second',['dps','damage_per_second','weapon_dps']],
+  ['Bullet Damage','bullet_damage',['bullet_damage','damage']],
+  ['Pellets per shot','pellets_per_shot',['bullets_per_shot','pellets']],
+  ['Ammo','ammo',['clip_size','ammo','max_ammo']],
+  ['Bullets per sec','damage_per_second',['bullets_per_second','fire_rate']],
+  ['Reload Time','reload_time',['reload_time','reload_duration']],
+  ['Bullet Velocity','bullet_velocity',['bullet_speed','bullet_velocity']],
+  ['Light Melee','light_melee',['light_melee_damage','light_melee']],
+  ['Heavy Melee','heavy_melee',['heavy_melee_damage','heavy_melee']]
+ ],
+ vitality:[
+  ['Health','health',['max_health','health']],
+  ['Health Regen','health_regen',['health_regen','health_regeneration']],
+  ['Bullet Resist','health',['bullet_armor','bullet_resist']],
+  ['Spirit Resist','health',['spirit_armor','spirit_resist','tech_armor']],
+  ['Move Speed','move_speed',['max_move_speed','move_speed']],
+  ['Sprint Speed','sprint_speed',['sprint_speed']],
+  ['Dash Speed','dash_speed',['dash_speed','air_dash_speed']],
+  ['Stamina','stamina',['stamina']],
+  ['Stamina Cooldown','stamina_cooldown',['stamina_cooldown','stamina_regen_per_second']]
+ ],
+ spirit:[
+  ['Spirit Power','spirit_power',['tech_power','spirit_power']]
+ ]
+};
+function pickStat(src,keys){
+  for(var i=0;i<keys.length;i++){
+    if(keys[i] in src){
+      var v=statVal(src[keys[i]]);
+      if(v!==null&&v!=='')return v;
+    }
+  }
+  return null;
+}
+function statSource(h){
+  var raw=h.raw||{},src={};
+  [raw.starting_stats,raw.stats,raw.hero_stats,raw.weapon_stats,raw.base_stats,
+   raw.weapon_primary&&raw.weapon_primary.stats].forEach(function(o){
+    if(o&&typeof o==='object')Object.keys(o).forEach(function(k){if(!(k in src))src[k]=o[k];});
+  });
+  return src;
+}
+/* hjältens egen färg plockas ur bakgrundsbilden */
+function tintFrom(url,el){
+  var im=new Image();
+  im.onload=function(){
+    try{
+      var c=document.createElement('canvas');c.width=c.height=10;
+      var x=c.getContext('2d');x.drawImage(im,0,0,10,10);
+      var d=x.getImageData(0,0,10,10).data,best=[90,58,32],sat=-1;
+      for(var i=0;i<d.length;i+=4){
+        var r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+        if(mx<30||mx>250)continue;
+        var s2=mx-mn;
+        if(s2>sat){sat=s2;best=[r,g,b];}
+      }
+      el.style.setProperty('--hcol','rgb('+best.join(',')+')');
+    }catch(e){}
+  };
+  im.src=url;
+}
 function statGroup(key){
   if(/health|regen|resist|armor|speed|stamina|melee/.test(key))return 'vitality';
   if(/tech|spirit/.test(key))return 'spirit';
@@ -1856,23 +1925,29 @@ async function showHeroSheet(h){
     mid.appendChild(sk);
   }
 
-  var groups=collectStats(h),wrap=document.createElement('div');wrap.id='hStats';
-  var titles={weapon:'Weapon',vitality:'Vitality',spirit:'Spirit'};
+  var src=statSource(h),wrap=document.createElement('div');wrap.id='hStats';
+  var titles={weapon:'Weapon Stats',vitality:'Vitality Stats',spirit:'Spirit Stats'};
   var any=false;
   ['weapon','vitality','spirit'].forEach(function(g){
-    if(!groups[g].length)return;
-    any=true;
     var col=document.createElement('div');col.className='sgroup '+g;
     col.appendChild(Object.assign(document.createElement('h4'),{textContent:titles[g]}));
-    groups[g].slice(0,12).forEach(function(pair){
+    var n=0;
+    SROWS[g].forEach(function(def){
+      var v=pickStat(src,def[2]);
+      if(v===null)return;
+      n++;any=true;
       var r=document.createElement('div');r.className='srow';
-      r.appendChild(Object.assign(document.createElement('span'),{className:'k',textContent:pair[0]}));
-      r.appendChild(Object.assign(document.createElement('span'),{className:'v',textContent:pair[1]}));
+      r.appendChild(Object.assign(document.createElement('span'),{className:'k',textContent:def[0]}));
+      var ic=document.createElement('img');ic.className='ico';ic.alt='';
+      ic.src='stats/'+def[1]+'.png';
+      ic.addEventListener('error',function(){this.remove();});
+      r.appendChild(ic);
+      r.appendChild(Object.assign(document.createElement('span'),{className:'v',textContent:v}));
       col.appendChild(r);
     });
-    wrap.appendChild(col);
+    if(n)wrap.appendChild(col);
   });
-  if(any)mid.appendChild(wrap);
+  if(any){mid.appendChild(wrap);tintFrom('heroes/bg/'+heroSlug(h.name)+'.jpg',wrap);}
   else{
     var fb=document.createElement('img');fb.className='sheet';
     fb.style.maxHeight='100%';fb.style.objectFit='contain';
