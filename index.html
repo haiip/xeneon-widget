@@ -534,48 +534,51 @@ async function wxPoll(){
   .hcell span{font-size:calc(var(--meta) * .68);text-align:center;line-height:1.15;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--ink-dim)}
 
-  #heroSum{display:none;flex:1;min-height:0;gap:clamp(16px,2.4vw,48px);align-items:stretch}
+  #heroSum{display:none;flex:1;min-height:0;position:relative;
+        align-items:flex-start;justify-content:center;gap:1em}
   #heroSum.on{display:flex}
-  #hMid{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5em}
-  #hMid .nameimg{height:clamp(26px,8.5vh,92px);max-width:60%;object-fit:contain;
-        align-self:flex-start}
-  #hSkills{display:flex;gap:.5em;flex-wrap:wrap;flex:none}
-  .skill{display:flex;align-items:center;gap:.5em;padding:.32em .7em;border-radius:99px;
-        background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
-  .skill img{width:clamp(22px,4vh,42px);height:clamp(22px,4vh,42px);object-fit:contain;flex:none}
-  .skill span{font-size:calc(var(--meta) * .82);white-space:nowrap}
+  #hBackdrop{position:absolute;inset:0;z-index:0;background-size:cover;
+        background-position:center 20%;opacity:.22;
+        mask-image:radial-gradient(75% 90% at 50% 40%,#000,transparent 82%);
+        -webkit-mask-image:radial-gradient(75% 90% at 50% 40%,#000,transparent 82%)}
+  #hCard{position:relative;z-index:1;max-height:100%;overflow-y:auto;
+        width:clamp(300px,38%,560px);display:flex;flex-direction:column;
+        border-radius:16px;border:1px solid rgba(255,255,255,.16);
+        background:linear-gradient(180deg,#221a12,#15100b 60%,#100c08);
+        box-shadow:0 18px 50px rgba(0,0,0,.55)}
+  #hCard .nameimg{height:clamp(24px,7vh,72px);max-width:74%;object-fit:contain;
+        align-self:center;margin:.6em 0 .4em}
+  #hPortrait{position:relative;align-self:center;width:74%;aspect-ratio:1;
+        border-radius:10px;overflow:hidden;margin-bottom:.55em;
+        border:1px solid rgba(255,255,255,.14);display:flex;align-items:flex-end;
+        justify-content:center;background:#0d0a07}
+  #hPortrait .bg{position:absolute;inset:0;background-size:cover;background-position:center 22%}
+  #hPortrait .render{position:relative;width:104%;height:100%;object-fit:contain;
+        object-position:bottom}
+  #hSkills{display:flex;gap:.35em;flex-wrap:wrap;justify-content:center;
+        padding:0 .7em .6em}
+  .skill{display:flex;align-items:center;gap:.4em;padding:.24em .6em;border-radius:99px;
+        background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+  .skill img{width:clamp(18px,3.2vh,32px);height:clamp(18px,3.2vh,32px);
+        object-fit:contain;flex:none}
+  .skill span{font-size:calc(var(--meta) * .74);white-space:nowrap}
 
-  #hStats{flex:none;align-self:flex-start;width:clamp(300px,42%,620px);
-        display:flex;flex-direction:column;border-radius:14px;overflow:hidden;
-        border:1px solid rgba(255,255,255,.14);
-        box-shadow:0 14px 40px rgba(0,0,0,.45);
-        background:linear-gradient(180deg,
-          color-mix(in srgb, var(--hcol,#5a3a20) 52%, rgba(0,0,0,.6)),
-          color-mix(in srgb, var(--hcol,#5a3a20) 26%, rgba(0,0,0,.78)))}
+  #hStats{display:flex;flex-direction:column}
   .sgroup{display:flex;flex-direction:column}
   .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .95);
         letter-spacing:.06em;text-align:center;padding:.24em;color:#17100a;font-weight:700}
   .sgroup.weapon h4{background:#E0913F}
   .sgroup.vitality h4{background:#7FC24A}
   .sgroup.spirit h4{background:#B37BD8}
-  .srow{display:flex;align-items:center;gap:.5em;padding:.14em .9em;
-        font-size:calc(var(--meta) * .85);line-height:1.3}
-  .srow:nth-child(even){background:rgba(0,0,0,.14)}
-  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.85);text-align:right;
+  .srow{display:flex;align-items:center;gap:.5em;padding:.16em .9em;
+        font-size:calc(var(--meta) * .85);line-height:1.3;background:#171310}
+  .srow:nth-child(even){background:#1e1815}
+  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.86);text-align:right;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .srow .ico{width:clamp(13px,2.2vh,20px);height:clamp(13px,2.2vh,20px);
         object-fit:contain;flex:none;opacity:.95}
   .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
         min-width:5ch;color:#fff}
-  #hArt{flex:none;width:clamp(160px,26%,400px);position:relative;
-        display:flex;align-items:flex-end;justify-content:center;
-        border-radius:16px;overflow:hidden;
-        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.4))}
-  #hArt .bg{position:absolute;inset:0;background-size:cover;background-position:center 22%;
-        opacity:.6}
-  #hArt .render{position:relative;width:108%;max-height:100%;object-fit:contain;
-        object-position:bottom}
-
   #heroBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
         padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
 
@@ -1924,19 +1927,34 @@ async function showHeroSheet(h){
   var box=el('heroSum');box.innerHTML='';
   el('heroGrid').style.display='none';
   try{await dlLoadItems();}catch(e){}
+  var slug=heroSlug(h.name);
 
-  var mid=document.createElement('div');mid.id='hMid';
+  box.appendChild(Object.assign(document.createElement('div'),
+    {id:'hBackdrop',style:'background-image:url(heroes/bg/'+slug+'.jpg)'}));
+
   var back=document.createElement('button');back.id='heroBack';back.textContent='← All heroes';
   back.addEventListener('click',function(e){e.stopPropagation();
     box.classList.remove('on');el('heroGrid').style.display='';});
-  mid.appendChild(back);
+  box.appendChild(back);
+
+  var card=document.createElement('div');card.id='hCard';
 
   var logo=document.createElement('img');logo.className='nameimg';
-  logo.src='heroes/name/'+heroSlug(h.name)+'.svg';logo.alt=h.name;
+  logo.src='heroes/name/'+slug+'.svg';logo.alt=h.name;
   logo.addEventListener('error',function(){
     var t=document.createElement('h2');t.textContent=h.name;
-    t.style.fontFamily="'Reaver',serif";t.style.fontSize='var(--artist)';this.replaceWith(t);});
-  mid.appendChild(logo);
+    t.style.cssText="font-family:'Reaver',serif;font-size:var(--artist);text-align:center;margin:.4em 0";
+    this.replaceWith(t);});
+  card.appendChild(logo);
+
+  var por=document.createElement('div');por.id='hPortrait';
+  por.appendChild(Object.assign(document.createElement('div'),
+    {className:'bg',style:'background-image:url(heroes/bg/'+slug+'.jpg)'}));
+  var render=document.createElement('img');render.className='render';
+  render.src='heroes/'+slug+'.png';render.alt='';
+  render.addEventListener('error',function(){this.remove();});
+  por.appendChild(render);
+  card.appendChild(por);
 
   var ab=heroAbilities(h);
   if(ab.length){
@@ -1948,12 +1966,11 @@ async function showHeroSheet(h){
       row.appendChild(Object.assign(document.createElement('span'),{textContent:a.name}));
       sk.appendChild(row);
     });
-    mid.appendChild(sk);
+    card.appendChild(sk);
   }
 
   var src=statSource(h),wrap=document.createElement('div');wrap.id='hStats';
   var titles={weapon:'Weapon Stats',vitality:'Vitality Stats',spirit:'Spirit Stats'};
-  var any=false;
   ['weapon','vitality','spirit'].forEach(function(g){
     var col=document.createElement('div');col.className='sgroup '+g;
     col.appendChild(Object.assign(document.createElement('h4'),{textContent:titles[g]}));
@@ -1967,12 +1984,14 @@ async function showHeroSheet(h){
         if(def[0]==='Bullets per sec'&&cyc)v=round(1/cyc,2);
         if(def[0]==='Damage Per Second'&&cyc&&dmg)v=round(dmg*pel/cyc,1);
       }
+      /* Spirit Power visas alltid, som i spelet, även när den är noll */
+      if(v===null&&def[0]==='Spirit Power')v=0;
       if(v===null)return;
       if(typeof v==='number'){
-        if(def[0]==='Bullet Velocity'&&v>2000)v=Math.round(v/25.86);   /* enheter → m/s */
+        if(def[0]==='Bullet Velocity'&&v>2000)v=Math.round(v/25.86);
         v=round(v,2);
       }
-      n++;any=true;
+      n++;
       var r=document.createElement('div');r.className='srow';
       r.appendChild(Object.assign(document.createElement('span'),{className:'k',textContent:def[0]}));
       var ic=document.createElement('img');ic.className='ico';ic.alt='';
@@ -1984,46 +2003,27 @@ async function showHeroSheet(h){
     });
     if(n)wrap.appendChild(col);
   });
-  if(any){
-    mid.appendChild(wrap);
-    tintFrom('heroes/bg/'+heroSlug(h.name)+'.jpg',wrap);
-    /* dubbelklick på rubriken listar alla tillgängliga fältnamn */
-    wrap.addEventListener('dblclick',function(e){
-      e.stopPropagation();
-      var keys={};
-      statSource(h).forEach(function(o){
-        if(o&&typeof o==='object')Object.keys(o).forEach(function(k){
-          var v=statVal(o[k]); if(v!==null&&typeof v!=='object')keys[k]=v;
-        });
-      });
-      var box=document.createElement('div');
-      box.style.cssText='position:absolute;inset:8%;z-index:9;overflow:auto;padding:1em;'+
-        'background:rgba(8,6,4,.97);border-radius:12px;font-size:13px;line-height:1.5;'+
-        'font-family:Consolas,monospace;white-space:pre-wrap';
-      box.textContent=Object.keys(keys).sort().map(function(k){return k+' = '+keys[k];}).join('\n')
-        ||'Inga fält hittades.';
-      box.addEventListener('click',function(){this.remove();});
-      el('heroSum').appendChild(box);
+  card.appendChild(wrap);
+
+  /* dubbelklick listar alla fältnamn API:et har för hjälten */
+  card.addEventListener('dblclick',function(e){
+    e.stopPropagation();
+    var keys={};
+    statSource(h).forEach(function(o){
+      if(o&&typeof o==='object')Object.keys(o).forEach(function(k){
+        var v=statVal(o[k]); if(v!==null&&typeof v!=='object')keys[k]=v;});
     });
-  }
-  else{
-    var fb=document.createElement('img');fb.className='sheet';
-    fb.style.maxHeight='100%';fb.style.objectFit='contain';
-    fb.src='heroes/summary/'+heroSlug(h.name)+'.png';
-    fb.addEventListener('error',function(){this.remove();});
-    mid.appendChild(fb);
-  }
-  box.appendChild(mid);
+    var dbg=document.createElement('div');
+    dbg.style.cssText='position:absolute;inset:6%;z-index:9;overflow:auto;padding:1em;'+
+      'background:rgba(8,6,4,.97);border-radius:12px;font-size:13px;line-height:1.5;'+
+      'font-family:Consolas,monospace;white-space:pre-wrap';
+    dbg.textContent=Object.keys(keys).sort().map(function(k){return k+' = '+keys[k];}).join('\n')
+      ||'Inga fält hittades.';
+    dbg.addEventListener('click',function(){this.remove();});
+    box.appendChild(dbg);
+  });
 
-  var art=document.createElement('div');art.id='hArt';
-  art.appendChild(Object.assign(document.createElement('div'),
-    {className:'bg',style:'background-image:url(heroes/bg/'+heroSlug(h.name)+'.jpg)'}));
-  var render=document.createElement('img');render.className='render';
-  render.src='heroes/'+heroSlug(h.name)+'.png';render.alt='';
-  render.addEventListener('error',function(){this.remove();});
-  art.appendChild(render);
-  box.appendChild(art);
-
+  box.appendChild(card);
   box.classList.add('on');
 }
 el('heroBtn').addEventListener('click',function(e){e.stopPropagation();showHeroes(!heroOpen);});
