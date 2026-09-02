@@ -533,12 +533,28 @@ async function wxPoll(){
   .hcell img{width:clamp(30px,4.6vh,58px);height:clamp(30px,4.6vh,58px);object-fit:contain}
   .hcell span{font-size:calc(var(--meta) * .68);text-align:center;line-height:1.15;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--ink-dim)}
-  #heroSum{display:none;flex:1;min-height:0;gap:clamp(14px,2vw,34px);align-items:flex-start}
+  #heroSum{display:none;flex:1;min-height:0;gap:clamp(14px,2vw,40px);align-items:stretch}
   #heroSum.on{display:flex}
-  #heroSum img.sheet{max-height:100%;width:auto;object-fit:contain;
+  #hArt{flex:none;width:clamp(150px,22%,330px);position:relative;
+        display:flex;align-items:flex-end;justify-content:center;
+        border-radius:16px;overflow:hidden;
+        background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.35))}
+  #hArt .bg{position:absolute;inset:0;background-size:cover;background-position:center 22%;
+        opacity:.55}
+  #hArt .render{position:relative;width:106%;max-height:100%;object-fit:contain;
+        object-position:bottom}
+  #hMid{flex:1;min-width:0;display:flex;flex-direction:column;gap:.6em;align-items:center}
+  #hMid .nameimg{height:clamp(26px,8vh,86px);max-width:80%;object-fit:contain}
+  #hMid .sheet{flex:1;min-height:0;width:auto;object-fit:contain;
         border-radius:12px;background:rgba(0,0,0,.25)}
-  #heroSum .side{display:flex;flex-direction:column;gap:.5em;min-width:0}
-  #heroSum .side img.big{width:clamp(120px,26vh,300px);object-fit:contain}
+  #hSkills{flex:none;width:clamp(120px,17%,240px);display:flex;flex-direction:column;
+        gap:.5em;justify-content:center}
+  #hSkills h4{font-family:'Reaver',serif;font-size:var(--meta);color:#F0CB93;
+        letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+  .skill{display:flex;align-items:center;gap:.6em;padding:.35em .5em;border-radius:12px;
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
+  .skill img{width:clamp(28px,5.2vh,54px);height:clamp(28px,5.2vh,54px);object-fit:contain;flex:none}
+  .skill span{font-size:calc(var(--meta) * .82);line-height:1.15;min-width:0}
   #heroBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
         padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
 
@@ -1289,7 +1305,8 @@ async function dlLoadHeroes(){
       if(!img&&typeof imgs[k]==='string')img=imgs[k];
     });
     if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
-    dlHeroes[h.id]={name:h.name||('Hero '+h.id),img:img};
+    dlHeroes[h.id]={name:h.name||('Hero '+h.id),img:img,raw:h,
+      playable:!(h.in_development||h.disabled||h.is_disabled)};
   });
   return dlHeroes;
 }
@@ -1524,7 +1541,7 @@ function renderCareer(all){
 }
 
 /* ---------------- Enskild match ---------------- */
-var dlItems=null;
+var dlItems=null,dlByClass={};
 async function dlLoadItems(){
   if(dlItems)return dlItems;
   var list=await dlJsonAny(['/v1/assets/items',
@@ -1536,6 +1553,8 @@ async function dlLoadItems(){
     var imgs=it.images||{};
     if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
     var slot=it.item_slot_type||it.slot_type||it.slot||'';
+    if(it.class_name)dlByClass[it.class_name]={name:it.name||it.class_name,img:img,
+        type:(it.type||'').toLowerCase()};
     dlItems[it.id]={name:it.name||it.class_name||('Item '+it.id),img:img,
                     type:(it.type||'').toLowerCase(),slot:String(slot).toLowerCase(),
                     cost:it.cost||it.item_tier||0};
@@ -1704,47 +1723,84 @@ async function showHeroes(on){
   if(grid.childElementCount)return;
   var heroes={};
   try{heroes=await dlLoadHeroes();}catch(e){}
-  var list=Object.keys(heroes).map(function(id){return heroes[id];});
+  var list=Object.keys(heroes).map(function(id){return heroes[id];})
+    .filter(function(h){return h.playable!==false;});
   if(!list.length){grid.textContent='Could not load the hero list.';return;}
   list.sort(function(a,b){return a.name.localeCompare(b.name);});
   list.forEach(function(h){
     var cell=document.createElement('div');cell.className='hcell';
     var i=document.createElement('img');i.decoding='async';i.alt='';
     i.src='heroes/icon/'+heroSlug(h.name)+'.png';
-    i.dataset.remote=h.img||'';
-    i.addEventListener('error',function(){
-      if(this.dataset.remote&&this.src!==this.dataset.remote)this.src=this.dataset.remote;
-      else this.style.visibility='hidden';});
+    i.addEventListener('error',function(){cell.remove();});   /* ingen lokal ikon = finns inte */
     var t=document.createElement('span');t.textContent=h.name;
     cell.appendChild(i);cell.appendChild(t);
     cell.addEventListener('click',function(e){e.stopPropagation();showHeroSheet(h);});
     grid.appendChild(cell);
   });
 }
-function showHeroSheet(h){
+function heroAbilities(h){
+  var raw=h.raw||{},out=[];
+  var slots=raw.items||raw.abilities||raw.ability_slots||{};
+  var vals=Array.isArray(slots)?slots:Object.keys(slots).map(function(k){return slots[k];});
+  vals.forEach(function(v){
+    if(typeof v==='string'){
+      var a=dlByClass[v];
+      if(a&&a.img&&out.length<4)out.push(a);
+    }else if(v&&v.name){
+      if(out.length<4)out.push({name:v.name,img:v.image||(v.images&&v.images.icon)||''});
+    }
+  });
+  return out;
+}
+async function showHeroSheet(h){
   var box=el('heroSum');box.innerHTML='';
   el('heroGrid').style.display='none';
-  var side=document.createElement('div');side.className='side';
+  try{await dlLoadItems();}catch(e){}
+
+  /* vänster: figuren mot sin egen bakgrund */
+  var art=document.createElement('div');art.id='hArt';
+  art.appendChild(Object.assign(document.createElement('div'),
+    {className:'bg',style:'background-image:url(heroes/bg/'+heroSlug(h.name)+'.jpg)'}));
+  var render=document.createElement('img');render.className='render';
+  render.src='heroes/'+heroSlug(h.name)+'.png';render.alt='';
+  render.addEventListener('error',function(){this.remove();});
+  art.appendChild(render);
+  box.appendChild(art);
+
+  /* mitten: namnet över statistikbladet */
+  var mid=document.createElement('div');mid.id='hMid';
   var back=document.createElement('button');back.id='heroBack';back.textContent='← All heroes';
   back.addEventListener('click',function(e){e.stopPropagation();
     box.classList.remove('on');el('heroGrid').style.display='';});
-  side.appendChild(back);
-  var logo=document.createElement('img');logo.className='big';
+  mid.appendChild(back);
+  var logo=document.createElement('img');logo.className='nameimg';
   logo.src='heroes/name/'+heroSlug(h.name)+'.svg';logo.alt=h.name;
   logo.addEventListener('error',function(){
-    var t=document.createElement('h2');t.textContent=h.name;this.replaceWith(t);});
-  side.appendChild(logo);
-  var art=document.createElement('img');art.className='big';
-  art.src='heroes/'+heroSlug(h.name)+'.png';art.alt='';
-  art.addEventListener('error',function(){this.remove();});
-  side.appendChild(art);
-  box.appendChild(side);
+    var t=document.createElement('h2');t.textContent=h.name;
+    t.style.fontFamily="'Reaver',serif";t.style.fontSize='var(--artist)';this.replaceWith(t);});
+  mid.appendChild(logo);
   var sheet=document.createElement('img');sheet.className='sheet';
   sheet.src='heroes/summary/'+heroSlug(h.name)+'.png';sheet.alt=h.name+' stats';
   sheet.addEventListener('error',function(){
     this.replaceWith(Object.assign(document.createElement('div'),
       {id:'dlMsg',textContent:'No stat sheet for '+h.name+' yet.'}));});
-  box.appendChild(sheet);
+  mid.appendChild(sheet);
+  box.appendChild(mid);
+
+  /* höger: förmågorna */
+  var ab=heroAbilities(h);
+  if(ab.length){
+    var col=document.createElement('div');col.id='hSkills';
+    col.appendChild(Object.assign(document.createElement('h4'),{textContent:'Abilities'}));
+    ab.forEach(function(a){
+      var row=document.createElement('div');row.className='skill';
+      if(a.img){var im=document.createElement('img');im.src=a.img;im.alt='';im.decoding='async';
+        im.addEventListener('error',function(){this.remove();});row.appendChild(im);}
+      row.appendChild(Object.assign(document.createElement('span'),{textContent:a.name}));
+      col.appendChild(row);
+    });
+    box.appendChild(col);
+  }
   box.classList.add('on');
 }
 el('heroBtn').addEventListener('click',function(e){e.stopPropagation();showHeroes(!heroOpen);});
