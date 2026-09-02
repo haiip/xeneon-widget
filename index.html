@@ -465,11 +465,7 @@ async function wxPoll(){
   .team .row .st{color:var(--ink);opacity:.9;font-variant-numeric:tabular-nums;font-weight:600}
   #matchInfo{font-size:calc(var(--meta) * 1.05);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
   #dlDetail{position:relative}
-  #dlDetail::before{content:"";position:absolute;inset:-1.4em -1.4em 0;z-index:0;
-        background:
-          linear-gradient(180deg, rgba(17,12,8,.25) 0%, rgba(17,12,8,.35) 55%, rgba(15,10,7,1) 97%),
-          url(ui/patrons-bg.jpg) center 22%/cover;
-        pointer-events:none}
+
   #teams{position:relative;z-index:1;contain:layout paint}
   .team{position:relative;overflow:hidden;contain:layout paint;transform:translateZ(0)}
   .patron{position:absolute;right:2%;top:1.5%;width:clamp(38px,9vh,92px);aspect-ratio:1;z-index:0;
@@ -492,6 +488,46 @@ async function wxPoll(){
   .kit .chip{font-size:calc(var(--meta) * .72);color:var(--ink-dim);opacity:.7;
            background:rgba(255,255,255,.08);border-radius:4px;padding:0 .35em}
   #dlMsg{font-size:var(--meta);color:var(--ink-dim);margin:auto;text-align:center;max-width:60ch;line-height:1.5}
+
+
+  /* hjältebakgrund på korten */
+  .cardbg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center 28%;
+        opacity:.5;pointer-events:none}
+  .match .paper{opacity:.14}
+  .nameimg{height:clamp(14px,3vh,30px);width:auto;max-width:86%;object-fit:contain;
+        filter:drop-shadow(0 2px 8px rgba(0,0,0,.85))}
+
+  /* matchvyns bakgrund byts per hjälte */
+  #dlBg{position:absolute;inset:-1.4em -1.4em 0;z-index:0;background-size:cover;
+        background-position:center 25%;pointer-events:none}
+  #dlBg::after{content:"";position:absolute;inset:0;
+        background:linear-gradient(180deg, rgba(17,12,8,.35) 0%, rgba(17,12,8,.55) 50%,
+                   rgba(15,10,7,1) 96%)}
+
+  /* hjältelistan */
+  #heroBtn{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
+        padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
+  #heroBtn:hover{opacity:1;background:rgba(232,184,114,.14)}
+  #heroes{display:none;flex:1;min-height:0;position:relative;z-index:1}
+  #heroes.on{display:flex;flex-direction:column;gap:.5em}
+  #heroGrid{flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;
+        gap:clamp(6px,.9vw,14px);overflow-y:auto;padding-bottom:.5em}
+  .hcell{width:clamp(58px,7.5vh,104px);display:flex;flex-direction:column;align-items:center;
+        gap:.15em;padding:.4em .2em;border-radius:12px;cursor:pointer;
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+        transition:transform .12s,background .15s}
+  .hcell:hover{background:rgba(232,184,114,.16);transform:translateY(-2px)}
+  .hcell img{width:clamp(30px,4.6vh,58px);height:clamp(30px,4.6vh,58px);object-fit:contain}
+  .hcell span{font-size:calc(var(--meta) * .68);text-align:center;line-height:1.15;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--ink-dim)}
+  #heroSum{display:none;flex:1;min-height:0;gap:clamp(14px,2vw,34px);align-items:flex-start}
+  #heroSum.on{display:flex}
+  #heroSum img.sheet{max-height:100%;width:auto;object-fit:contain;
+        border-radius:12px;background:rgba(0,0,0,.25)}
+  #heroSum .side{display:flex;flex-direction:column;gap:.5em;min-width:0}
+  #heroSum .side img.big{width:clamp(120px,26vh,300px);object-fit:contain}
+  #heroBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
+        padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
 
   /* aviseringar */
   #toasts{position:fixed;right:var(--pad);bottom:var(--pad);z-index:6;display:flex;
@@ -621,11 +657,17 @@ async function wxPoll(){
     <span id="dlStreak"></span>
     <span id="dlFresh"></span>
     <button id="dlRefresh" title="Hämta om">Refresh</button>
+    <button id="heroBtn">Heroes</button>
     <span id="dlClose">Swipe up to close</span>
   </div>
   <div id="career"></div>
   <div id="dlBody"><div id="dlMsg">Loading…</div></div>
+  <div id="heroes">
+    <div id="heroGrid"></div>
+    <div id="heroSum"></div>
+  </div>
   <div id="dlDetail">
+    <div id="dlBg"></div>
     <button id="dlBack">← Back to recent matches</button>
     <div id="teams"></div>
   </div>
@@ -1242,6 +1284,8 @@ async function dlPoll(){
       var h=heroes[m.hero_id]||{name:'Hero '+m.hero_id,img:''};
       var v='v'+(Math.abs(Number(String(m.match_id).slice(-6))||0)%6);
       var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss')+' '+v;
+      c.appendChild(Object.assign(document.createElement('div'),{className:'cardbg',
+        style:'background-image:url(heroes/bg/'+heroFile(h.name)+'.jpg)'}));
       c.appendChild(Object.assign(document.createElement('div'),{className:'paper'}));
       c.appendChild(Object.assign(document.createElement('div'),{className:'deco'}));
 
@@ -1262,7 +1306,12 @@ async function dlPoll(){
       c.appendChild(st);
 
       c.appendChild(heroImg(h,'mhero'));
-      var nm=document.createElement('div');nm.className='mname';nm.textContent=h.name;
+      var nm=document.createElement('div');nm.className='mname';
+      var logo=document.createElement('img');logo.className='nameimg';logo.alt=h.name;
+      logo.src='heroes/name/'+heroFile(h.name)+'.svg';
+      logo.addEventListener('error',function(){
+        this.replaceWith(document.createTextNode(h.name));});
+      nm.appendChild(logo);
       c.appendChild(nm);
 
       c.addEventListener('click',function(e){e.stopPropagation();showMatch(m);});
@@ -1289,6 +1338,23 @@ async function dlPoll(){
 }
 /* Hjältebild: lokal fil först, API:ets bild som reserv. */
 function heroFile(name){return String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function heroIcon(hero,cls){
+  var i=document.createElement('img');
+  i.decoding='async';
+  i.addEventListener('load',function(){this.classList.add('in');});
+  i.className=cls||''; i.alt=''; i.title=hero.name||'';
+  i.dataset.remote=hero.img||'';
+  i.dataset.step='icon';
+  i.src='heroes/icon/'+heroFile(hero.name)+'.png';
+  i.addEventListener('error',function(){
+    if(this.dataset.step==='icon'){this.dataset.step='render';
+      this.src='heroes/'+heroFile(hero.name)+'.png';return;}
+    if(this.dataset.remote&&this.src!==this.dataset.remote){this.dataset.step='remote';
+      this.src=this.dataset.remote;return;}
+    this.style.visibility='hidden';
+  });
+  return i;
+}
 function heroImg(hero,cls){
   var i=document.createElement('img');
   i.decoding='async';
@@ -1320,7 +1386,7 @@ var dlFlashTimer=null;
 function flashMatch(m,hero){
   var f=el('dlFlash'),win=dlWon(m);
   f.innerHTML='';
-  f.appendChild(heroImg(hero));
+  f.appendChild(heroIcon(hero));
   var v=document.createElement('span');v.className=win?'w':'l';
   v.textContent=win?'Win':'Loss';f.appendChild(v);
   var n=document.createElement('span');n.textContent=hero.name;f.appendChild(n);
@@ -1429,6 +1495,9 @@ async function showMatch(m){
     var heroes=dlHeroes||{};
     var items={};
     try{items=await dlLoadItems();}catch(e){items={};}
+    var mine0=heroes[m.hero_id];
+    el('dlBg').style.backgroundImage=mine0?
+      'url(heroes/bg/'+heroFile(mine0.name)+'.jpg)':'url(ui/patrons-bg.jpg)';
     var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
     var players=dlPlayers(j);
     if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
@@ -1459,7 +1528,7 @@ async function showMatch(m){
         var hero=heroes[p.hero_id]||{name:'Hero '+p.hero_id,img:''};
         var row=document.createElement('div');row.className='row';
         if(String(p.account_id)===String(CFG.dl))row.className+=' me';
-        row.appendChild(heroImg(hero));
+        row.appendChild(heroIcon(hero));
         var nm=document.createElement('span');nm.className='nm';
         nm.textContent=hero.name+(String(p.account_id)===String(CFG.dl)?' (you)':'');
         row.appendChild(nm);
@@ -1518,11 +1587,72 @@ el('dlRefresh').addEventListener('click',async function(e){
   b.classList.remove('busy');b.textContent='Refresh';
 });
 
+
+/* ---------------- Hjältelistan ---------------- */
+var heroOpen=false;
+function heroSlug(n){return heroFile(n);}
+async function showHeroes(on){
+  heroOpen=!!on;
+  el('heroes').classList.toggle('on',heroOpen);
+  el('dlBody').style.display=heroOpen?'none':'';
+  el('career').style.display=heroOpen?'none':'';
+  el('heroBtn').textContent=heroOpen?'Matches':'Heroes';
+  if(!heroOpen){el('heroSum').classList.remove('on');return;}
+  closeMatch();
+  var grid=el('heroGrid');
+  if(grid.childElementCount)return;
+  var heroes={};
+  try{heroes=await dlLoadHeroes();}catch(e){}
+  var list=Object.keys(heroes).map(function(id){return heroes[id];});
+  if(!list.length){grid.textContent='Could not load the hero list.';return;}
+  list.sort(function(a,b){return a.name.localeCompare(b.name);});
+  list.forEach(function(h){
+    var cell=document.createElement('div');cell.className='hcell';
+    var i=document.createElement('img');i.decoding='async';i.alt='';
+    i.src='heroes/icon/'+heroSlug(h.name)+'.png';
+    i.dataset.remote=h.img||'';
+    i.addEventListener('error',function(){
+      if(this.dataset.remote&&this.src!==this.dataset.remote)this.src=this.dataset.remote;
+      else this.style.visibility='hidden';});
+    var t=document.createElement('span');t.textContent=h.name;
+    cell.appendChild(i);cell.appendChild(t);
+    cell.addEventListener('click',function(e){e.stopPropagation();showHeroSheet(h);});
+    grid.appendChild(cell);
+  });
+}
+function showHeroSheet(h){
+  var box=el('heroSum');box.innerHTML='';
+  el('heroGrid').style.display='none';
+  var side=document.createElement('div');side.className='side';
+  var back=document.createElement('button');back.id='heroBack';back.textContent='← All heroes';
+  back.addEventListener('click',function(e){e.stopPropagation();
+    box.classList.remove('on');el('heroGrid').style.display='';});
+  side.appendChild(back);
+  var logo=document.createElement('img');logo.className='big';
+  logo.src='heroes/name/'+heroSlug(h.name)+'.svg';logo.alt=h.name;
+  logo.addEventListener('error',function(){
+    var t=document.createElement('h2');t.textContent=h.name;this.replaceWith(t);});
+  side.appendChild(logo);
+  var art=document.createElement('img');art.className='big';
+  art.src='heroes/'+heroSlug(h.name)+'.png';art.alt='';
+  art.addEventListener('error',function(){this.remove();});
+  side.appendChild(art);
+  box.appendChild(side);
+  var sheet=document.createElement('img');sheet.className='sheet';
+  sheet.src='heroes/summary/'+heroSlug(h.name)+'.png';sheet.alt=h.name+' stats';
+  sheet.addEventListener('error',function(){
+    this.replaceWith(Object.assign(document.createElement('div'),
+      {id:'dlMsg',textContent:'No stat sheet for '+h.name+' yet.'}));});
+  box.appendChild(sheet);
+  box.classList.add('on');
+}
+el('heroBtn').addEventListener('click',function(e){e.stopPropagation();showHeroes(!heroOpen);});
+
 /* ---------------- Deadlock-luckan ---------------- */
 var sheetOpen=false,gStart=null,sheetTimer=null;
 function openSheet(on){
   sheetOpen=!!on;
-  if(!sheetOpen)closeMatch();
+  if(!sheetOpen){closeMatch();showHeroes(false);}
   el('vDeadlock').classList.toggle('open',sheetOpen);
   document.body.classList.toggle('sheet',sheetOpen);
   clearTimeout(sheetTimer);
