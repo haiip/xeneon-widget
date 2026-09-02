@@ -1210,6 +1210,9 @@ async function dlLoadItems(){
   });
   return dlItems;
 }
+function itemFile(name){
+  return String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+}
 function playerItems(p){
   var raw=p.items||p.item_ids||[];               /* inte abilities — det är hjälteförmågor */
   if(!Array.isArray(raw))return [];
@@ -1282,9 +1285,16 @@ async function showMatch(m){
           ids.slice(-12).forEach(function(id){
             var it=items[id];
             if(!it)return;                        /* okänt id = inte ett shopföremål */
-            if(it.img){var ii=document.createElement('img');ii.src=it.img;ii.title=it.name;kit.appendChild(ii);}
-            else{var sp=document.createElement('span');sp.className='chip';
-                 sp.textContent=it.name;kit.appendChild(sp);}
+            var ii=document.createElement('img');
+            ii.title=it.name;
+            ii.src='items/'+itemFile(it.name)+'.png';
+            ii.dataset.remote=it.img||'';
+            ii.addEventListener('error',function(){   /* saknas lokalt: ta API:ets bild */
+              if(this.dataset.remote&&this.src!==this.dataset.remote){this.src=this.dataset.remote;}
+              else{this.replaceWith(Object.assign(document.createElement('span'),
+                   {className:'chip',textContent:this.title}));}
+            });
+            kit.appendChild(ii);
           });
           col.appendChild(kit);
         }
