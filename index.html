@@ -326,8 +326,9 @@ async function wxPoll(){
   #streak b{color:#fff;font-weight:700}
   body[data-view="discord"] #streak{display:none}
   #dlHead{display:flex;align-items:baseline;gap:.9em;flex:none;flex-wrap:wrap}
-  #dlMark{width:clamp(22px,5.4vh,54px);height:clamp(22px,5.4vh,54px);flex:none;
-          filter:drop-shadow(0 2px 10px rgba(232,184,114,.35))}
+  #dlLogo{height:clamp(30px,9.5vh,96px);width:auto;flex:none;
+          filter:drop-shadow(0 3px 16px rgba(232,184,114,.28))}
+  #dlHead.haslogo h2{display:none}
   #dlHead{align-items:center}
   #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#F0CB93;
              text-shadow:0 2px 20px rgba(0,0,0,.35)}
@@ -500,11 +501,9 @@ async function wxPoll(){
 
 <section id="vDeadlock">
   <div id="dlHead">
-    <svg id="dlMark" viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M24 2 44 13v22L24 46 4 35V13z" fill="none" stroke="#E8B872" stroke-width="2.4" opacity=".75"/>
-      <path d="M24 12 35 18v12l-11 6-11-6V18z" fill="#E8B872" opacity=".18"/>
-      <path d="M24 17v14M17 21v6M31 21v6" stroke="#F0CB93" stroke-width="3" stroke-linecap="round"/>
-    </svg>
+    <img id="dlLogo" src="deadlock-logo.png" alt="Deadlock"
+         onload="document.getElementById('dlHead').classList.add('haslogo')"
+         onerror="this.remove()">
     <h2>Deadlock</h2>
     <span id="dlForm"></span>
     <span id="dlStreak"></span>
