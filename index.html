@@ -233,6 +233,9 @@
   #streak b{color:#fff;font-weight:700}
   body[data-view="discord"] #streak{display:none}
   #dlHead{display:flex;align-items:baseline;gap:.9em;flex:none;flex-wrap:wrap}
+  #dlMark{width:clamp(22px,5.4vh,54px);height:clamp(22px,5.4vh,54px);flex:none;
+          filter:drop-shadow(0 2px 10px rgba(232,184,114,.35))}
+  #dlHead{align-items:center}
   #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#F0CB93;
              text-shadow:0 2px 20px rgba(0,0,0,.35)}
   #dlForm{font-size:var(--meta);color:var(--ink-dim)}
@@ -275,6 +278,13 @@
         object-fit:contain;flex:none}
   .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .team .row .st{color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  #matchInfo{font-size:var(--meta);color:var(--ink-dim);opacity:.75}
+  .team{overflow-y:auto}
+  .kit{display:flex;flex-wrap:wrap;gap:.22em;margin:-.1em 0 .45em calc(clamp(18px,3.2vh,32px) + .55em)}
+  .kit img{width:clamp(15px,2.6vh,26px);height:clamp(15px,2.6vh,26px);border-radius:4px;
+           object-fit:contain;background:rgba(255,255,255,.08)}
+  .kit .chip{font-size:calc(var(--meta) * .72);color:var(--ink-dim);opacity:.7;
+           background:rgba(255,255,255,.08);border-radius:4px;padding:0 .35em}
   #dlMsg{font-size:var(--meta);color:var(--ink-dim);margin:auto;text-align:center;max-width:60ch;line-height:1.5}
 
   /* aviseringar */
@@ -381,6 +391,11 @@
 
 <section id="vDeadlock">
   <div id="dlHead">
+    <svg id="dlMark" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 2 44 13v22L24 46 4 35V13z" fill="none" stroke="#E8B872" stroke-width="2.4" opacity=".75"/>
+      <path d="M24 12 35 18v12l-11 6-11-6V18z" fill="#E8B872" opacity=".18"/>
+      <path d="M24 17v14M17 21v6M31 21v6" stroke="#F0CB93" stroke-width="3" stroke-linecap="round"/>
+    </svg>
     <h2>Deadlock</h2>
     <span id="dlForm"></span>
     <span id="dlStreak"></span>
@@ -926,6 +941,8 @@ async function dlPoll(){
       var sub=document.createElement('div');sub.className='sub';
       var parts=[];
       if(m.net_worth)parts.push(Math.round(m.net_worth/1000)+'k souls');
+      var spm=soulsPerMin(m.net_worth,m.match_duration_s);
+      if(spm)parts.push(spm+'/min');
       if(m.match_duration_s)parts.push(Math.round(m.match_duration_s/60)+' min');
       sub.textContent=parts.join(' · ');c.appendChild(sub);
       c.addEventListener('click',function(e){e.stopPropagation();showMatch(m);});
@@ -943,6 +960,10 @@ async function dlPoll(){
   }catch(e){
     dlMsg('Could not load Deadlock data for account ID '+CFG.dl+'. ('+e.message+')');
   }
+}
+function soulsPerMin(nw,dur){
+  if(!nw||!dur)return '';
+  return Math.round(nw/(dur/60)).toLocaleString('en-US');
 }
 function dlWon(m){
   if(!m)return false;
@@ -982,6 +1003,32 @@ function dlSchedule(){
 
 
 /* ---------------- Enskild match ---------------- */
+var dlItems=null;
+async function dlLoadItems(){
+  if(dlItems)return dlItems;
+  var list=await dlJsonAny(['/v1/assets/items',
+    'https://assets.deadlock-api.com/v1/items','https://assets.deadlock-api.com/v2/items']);
+  var arr=Array.isArray(list)?list:(list&&(list.items||list.data))||[];
+  dlItems={};
+  arr.forEach(function(it){
+    var img=it.image||it.shop_image_small||it.shop_image||'';
+    var imgs=it.images||{};
+    if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
+    dlItems[it.id]={name:it.name||it.class_name||('Item '+it.id),img:img,
+                    cost:it.cost||it.item_tier||0};
+  });
+  return dlItems;
+}
+function playerItems(p){
+  var raw=p.items||p.item_ids||p.abilities||[];
+  if(!Array.isArray(raw))return [];
+  return raw.filter(function(x){
+    if(typeof x==='number')return true;
+    return !x.sold_time_s;                       /* sålda föremål räknas inte */
+  }).map(function(x){return typeof x==='number'?x:(x.item_id||x.id);})
+   .filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+}
+
 var TEAMS=[{key:'amber',name:'Amber Hand'},{key:'sapphire',name:'Sapphire Flame'}];
 function dlPlayers(j){
   if(!j)return [];
@@ -1003,10 +1050,18 @@ async function showMatch(m){
   box.innerHTML='<div id="dlMsg">Loading match '+m.match_id+'…</div>';
   try{
     var heroes=dlHeroes||{};
+    var items={};
+    try{items=await dlLoadItems();}catch(e){items={};}
     var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
     var players=dlPlayers(j);
     if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
     box.innerHTML='';
+    var head=document.createElement('div');head.id='matchInfo';
+    var mins=m.match_duration_s?Math.round(m.match_duration_s/60)+' min':'';
+    var when=m.start_time?new Date(m.start_time*1000).toLocaleString('en-GB',
+      {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    head.textContent='Match '+m.match_id+(mins?'  ·  '+mins:'')+(when?'  ·  '+when:'');
+    el('dlDetail').insertBefore(head,el('teams'));
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
       var h=document.createElement('h5');
@@ -1023,10 +1078,24 @@ async function showMatch(m){
         nm.textContent=hero.name+(String(p.account_id)===String(CFG.dl)?' (you)':'');
         row.appendChild(nm);
         var st=document.createElement('span');st.className='st';
+        var dur=m.match_duration_s||j.match_duration_s||(j.match_info&&j.match_info.duration_s);
+        var spm=soulsPerMin(p.net_worth,dur);
         st.textContent=(p.kills|0)+'/'+(p.deaths|0)+'/'+(p.assists|0)+
-          (p.net_worth?'  ·  '+Math.round(p.net_worth/1000)+'k':'');
+          (p.net_worth?'  ·  '+Math.round(p.net_worth/1000)+'k':'')+
+          (spm?'  ·  '+spm+'/min':'');
         row.appendChild(st);
         col.appendChild(row);
+        var ids=playerItems(p);
+        if(ids.length){
+          var kit=document.createElement('div');kit.className='kit';
+          ids.slice(-10).forEach(function(id){
+            var it=items[id];
+            if(it&&it.img){var ii=document.createElement('img');ii.src=it.img;ii.title=it.name;kit.appendChild(ii);}
+            else{var sp=document.createElement('span');sp.className='chip';
+                 sp.textContent=it?it.name:('#'+id);kit.appendChild(sp);}
+          });
+          col.appendChild(kit);
+        }
       });
       box.appendChild(col);
     });
@@ -1035,6 +1104,7 @@ async function showMatch(m){
   }
 }
 function closeMatch(){
+  var mi=document.getElementById('matchInfo');if(mi)mi.remove();
   el('dlDetail').classList.remove('on');
   el('dlBody').style.display='';
 }
@@ -1086,7 +1156,10 @@ function show(v){
 }
 document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot, #grip'))return;
-  if(sheetOpen){openSheet(false);return;}
+  if(sheetOpen){
+    if(e.target.closest('#vDeadlock'))return;   /* tryck inuti luckan tillhör luckan */
+    openSheet(false);return;
+  }
   show(nextView());
 });
 document.addEventListener('keydown',function(e){
