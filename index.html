@@ -333,6 +333,11 @@ async function wxPoll(){
     background:rgba(255,255,255,.26);transition:background .2s,width .2s}
   #grip:hover::after{background:#E8B872;width:110%}
   body.sheet #grip{top:auto;bottom:0;align-items:start}
+  #dlFresh{font-size:calc(var(--meta) * .85);color:var(--ink-dim);opacity:.7}
+  #dlRefresh{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
+        padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
+  #dlRefresh:hover{opacity:1;background:rgba(232,184,114,.14)}
+  #dlRefresh.busy{opacity:.4}
   #dlClose{margin-left:auto;font-size:var(--meta);color:var(--ink-dim);opacity:.6}
   #streak{position:fixed;left:var(--pad);top:var(--pad);z-index:2;display:none;
     align-items:center;gap:.5em;padding:.35em .85em;border-radius:999px;
@@ -450,8 +455,19 @@ async function wxPoll(){
         mask-image:linear-gradient(180deg,#000,transparent 70%);
         -webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
   #teams{position:relative;z-index:1}
-  .team h5{padding-bottom:.4em;margin-bottom:.15em;
-        border-bottom:1px solid currentColor;opacity:.9}
+  .team{position:relative;overflow:hidden}
+  .patron{position:absolute;right:-6%;top:-4%;width:62%;aspect-ratio:16/9;z-index:0;
+        background-size:contain;background-repeat:no-repeat;background-position:top right;
+        opacity:.22;pointer-events:none;
+        mask-image:linear-gradient(200deg,#000 20%,transparent 78%);
+        -webkit-mask-image:linear-gradient(200deg,#000 20%,transparent 78%)}
+  .team>*:not(.patron){position:relative;z-index:1}
+  .team h5{display:flex;align-items:center;gap:.7em;padding-bottom:.4em;margin-bottom:.15em;
+        border-bottom:1px solid currentColor;opacity:.95}
+  .team h5 .ttl{height:clamp(22px,5.2vh,52px);width:auto}
+  .tres{font-size:calc(var(--meta) * .85);letter-spacing:.12em;text-transform:uppercase;
+        font-weight:700}
+  .tres.w{color:#7CE0A6} .tres.l{color:#E88E86}
   .team.amber h5{color:#E8B872}
   .team.sapphire h5{color:#8FB6E8}
   .team .row .mvp{width:clamp(14px,2.6vh,26px);height:auto;flex:none;opacity:.95}
@@ -589,6 +605,8 @@ async function wxPoll(){
     <h2>Deadlock</h2>
     <span id="dlForm"></span>
     <span id="dlStreak"></span>
+    <span id="dlFresh"></span>
+    <button id="dlRefresh" title="Hämta om">Refresh</button>
     <span id="dlClose">Swipe up to close</span>
   </div>
   <div id="dlBody"><div id="dlMsg">Loading…</div></div>
@@ -1242,6 +1260,11 @@ async function dlPoll(){
       flashMatch(top,hh);
       dlHot=Date.now();
     }
+    if(top&&top.start_time){
+      var age=(Date.now()-top.start_time*1000)/3600000;
+      el('dlFresh').textContent='Latest match '+(age<1?Math.round(age*60)+' min':
+        age<48?Math.round(age)+' h':Math.round(age/24)+' d')+' ago';
+    }
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
   }catch(e){
@@ -1332,7 +1355,8 @@ function playerItems(p){
    .filter(function(v,i,a){return v&&a.indexOf(v)===i;});
 }
 
-var TEAMS=[{key:'amber',name:'Amber Hand'},{key:'sapphire',name:'Sapphire Flame'}];
+var TEAMS=[{key:'amber',name:'The Archmother',art:'archmother'},
+           {key:'sapphire',name:'The Hidden King',art:'hiddenking'}];
 function dlPlayers(j){
   if(!j)return [];
   var cands=[j.players,j.match_info&&j.match_info.players,j.data&&j.data.players,
@@ -1367,10 +1391,18 @@ async function showMatch(m){
     el('dlDetail').insertBefore(head,el('teams'));
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
+      col.appendChild(Object.assign(document.createElement('div'),
+        {className:'patron',style:'background-image:url(ui/patron-'+t.art+'.png)'}));
       var h=document.createElement('h5');
       var mine=players.filter(function(p){return String(p.account_id)===String(CFG.dl);})[0];
       var won=mine&&teamOf(mine)===ti?dlWon(m):(mine?!dlWon(m):false);
-      h.textContent=t.name+(mine?(won?' · Win':' · Loss'):'');
+      var ttl=document.createElement('img');ttl.className='ttl';
+      ttl.src='ui/title-'+t.art+'.png';ttl.alt=t.name;
+      ttl.addEventListener('error',function(){
+        this.replaceWith(Object.assign(document.createElement('span'),{textContent:t.name}));});
+      h.appendChild(ttl);
+      if(mine){var res=document.createElement('span');res.className='tres '+(won?'w':'l');
+        res.textContent=won?'Victory':'Defeat';h.appendChild(res);}
       col.appendChild(h);
       var topNW=players.reduce(function(a,b){return (b.net_worth||0)>(a.net_worth||0)?b:a;},players[0]);
       players.filter(function(p){return teamOf(p)===ti;}).forEach(function(p){
@@ -1425,6 +1457,13 @@ function closeMatch(){
   el('dlBody').style.display='';
 }
 el('dlBack').addEventListener('click',function(e){e.stopPropagation();closeMatch();});
+el('dlRefresh').addEventListener('click',async function(e){
+  e.stopPropagation();
+  var b=this;b.classList.add('busy');b.textContent='…';
+  dlPath=null;                                  /* prova alla varianter igen */
+  await dlPoll();
+  b.classList.remove('busy');b.textContent='Refresh';
+});
 
 /* ---------------- Deadlock-luckan ---------------- */
 var sheetOpen=false,gStart=null,sheetTimer=null;
