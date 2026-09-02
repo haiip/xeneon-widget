@@ -320,11 +320,10 @@ async function wxPoll(){
                rgba(13,9,6,.86) 100%);
     border-bottom:1px solid rgba(232,184,114,.16);
     display:flex;flex-direction:column;gap:.5em;
-    transform:translateY(-100%) translateZ(0);will-change:transform;
-    backface-visibility:hidden;isolation:isolate;
+    transform:translateY(-100%);backface-visibility:hidden;
     transition:transform .34s cubic-bezier(.2,.8,.2,1);
     box-shadow:0 26px 70px rgba(0,0,0,.45)}
-  #vDeadlock.open{transform:translateY(0) translateZ(0)}
+  #vDeadlock.open{transform:translateY(0)}
   #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:5;
     width:clamp(90px,14vw,190px);height:clamp(14px,2.6vh,26px);
     display:grid;place-items:end center;cursor:pointer}
@@ -449,10 +448,10 @@ async function wxPoll(){
   .team{flex:1;min-width:0;max-height:100%;display:flex;flex-direction:column;gap:.34em;
         border-radius:14px;padding:.8em 1em .9em;overflow-y:auto;
         border:1px solid rgba(255,255,255,.12)}
-  .team.king{border-color:rgba(232,184,114,.34);
-        background:linear-gradient(170deg, rgba(78,54,26,.72), rgba(32,21,10,.6))}
-  .team.mother{border-color:rgba(120,170,235,.34);
-        background:linear-gradient(170deg, rgba(28,50,82,.72), rgba(13,22,37,.6))}
+  .team.king{border-color:rgba(232,184,114,.34);background-color:#191108;
+        background-image:linear-gradient(170deg, rgba(96,66,32,.85), rgba(38,25,12,.8))}
+  .team.mother{border-color:rgba(120,170,235,.34);background-color:#0b1220;
+        background-image:linear-gradient(170deg, rgba(34,60,98,.85), rgba(15,26,44,.8))}
   .team.king h5{color:#E8B872}
   .team.mother h5{color:#9DC2F0}
   .team h5{font-size:var(--meta);font-weight:700;letter-spacing:.02em;opacity:.85}
@@ -464,10 +463,10 @@ async function wxPoll(){
   .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .team .row .st{color:var(--ink);opacity:.9;font-variant-numeric:tabular-nums;font-weight:600}
   #matchInfo{font-size:calc(var(--meta) * 1.05);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
-  #dlDetail{position:relative}
+  #dlDetail{position:relative;background:#120c07}
 
-  #teams{position:relative;z-index:1;contain:layout paint}
-  .team{position:relative;overflow:hidden;contain:layout paint;transform:translateZ(0)}
+  #teams{position:relative;z-index:1}
+  .team{position:relative;overflow:hidden}
   .patron{position:absolute;right:2%;top:1.5%;width:clamp(38px,9vh,92px);aspect-ratio:1;z-index:0;
         background-size:contain;background-repeat:no-repeat;background-position:top right;
         opacity:.85;pointer-events:none}
@@ -498,7 +497,7 @@ async function wxPoll(){
         filter:drop-shadow(0 2px 8px rgba(0,0,0,.85))}
 
   /* matchvyns bakgrund byts per hjälte */
-  #dlBg{position:absolute;inset:-1.4em -1.4em 0;z-index:0;background-size:cover;
+  #dlBg{position:absolute;inset:-1.4em -1.4em 0;z-index:0;background-color:#120c07;background-size:cover;
         background-position:center 25%;pointer-events:none}
   #dlBg::after{content:"";position:absolute;inset:0;
         background:linear-gradient(180deg, rgba(17,12,8,.35) 0%, rgba(17,12,8,.55) 50%,
@@ -1485,6 +1484,12 @@ function teamOf(p){
   if(typeof t!=='number'&&typeof p.player_slot==='number')t=p.player_slot<6?0:1;
   return t===1?1:0;
 }
+function setDetailBg(url){
+  var img=new Image();
+  img.onload=function(){el('dlBg').style.backgroundImage='url('+url+')';};
+  img.onerror=function(){el('dlBg').style.backgroundImage='url(ui/patrons-bg.jpg)';};
+  img.src=url;
+}
 async function showMatch(m){
   document.body.classList.add('match');
   el('dlBody').style.display='none';
@@ -1496,8 +1501,7 @@ async function showMatch(m){
     var items={};
     try{items=await dlLoadItems();}catch(e){items={};}
     var mine0=heroes[m.hero_id];
-    el('dlBg').style.backgroundImage=mine0?
-      'url(heroes/bg/'+heroFile(mine0.name)+'.jpg)':'url(ui/patrons-bg.jpg)';
+    setDetailBg(mine0?'heroes/bg/'+heroFile(mine0.name)+'.jpg':'ui/patrons-bg.jpg');
     var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
     var players=dlPlayers(j);
     if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
