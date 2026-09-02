@@ -1896,6 +1896,11 @@ function statVal(v){
   if(typeof v==='number')return Math.round(v*100)/100;
   return v;
 }
+function statSource(h){
+  var raw=h.raw||{},w=weaponRaw(h);
+  var wi=w&&(w.weapon_info||w.weapon_stats||w);
+  return [raw.starting_stats,raw.stats,raw.hero_stats,raw.base_stats,wi,raw].filter(Boolean);
+}
 function collectStats(h){
   var raw=h.raw||{},src={};
   [raw.starting_stats,raw.stats,raw.hero_stats,raw.weapon_stats,raw.base_stats].forEach(function(o){
