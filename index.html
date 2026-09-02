@@ -19,7 +19,11 @@
   body{background:var(--base);color:var(--ink);
     font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;user-select:none}
-  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;outline:none}
+  button:focus{outline:none}
+  button:focus-visible{outline:2px solid rgba(255,255,255,.6);outline-offset:3px;border-radius:50%}
+  *{-webkit-tap-highlight-color:transparent}
 
   /* --- bakgrund: mjuk färgtoning ur omslaget + drivande omslagsbild --- */
   #grad{position:fixed;inset:0;z-index:0;
@@ -50,10 +54,15 @@
   #vSpotify{display:flex;flex-direction:row;align-items:stretch;gap:var(--pad);padding:var(--pad)}
   #artWrap{height:76%;aspect-ratio:1;flex:none;align-self:center}
   #artView{width:100%;height:100%;border-radius:12px;object-fit:contain;
+       opacity:1;
        background:rgba(255,255,255,.05);box-shadow:0 18px 50px rgba(0,0,0,.5);
        transition:transform .9s cubic-bezier(.2,.7,.2,1)}
   body.beat #artView{transform:scale(1.012)}
   #main{flex:1;min-width:0;display:flex;flex-direction:column}
+  #artView,#head{transition:opacity .42s ease, transform .42s ease}
+  body.swap #artView{opacity:0;transform:scale(.965)}
+  body.swap #head{opacity:0;transform:translateY(10px)}
+  #grad{transition:background 1.4s ease}
   #head{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.12em}
   #title{font-size:var(--title);font-weight:800;letter-spacing:-.03em;line-height:1;
          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -119,6 +128,10 @@
   #idleMsg{font-size:var(--meta);color:var(--ink-dim);margin-top:.4em}
 
   /* röstremsa */
+  #now{position:fixed;top:calc(var(--pad) * .55);left:50%;transform:translateX(-50%);z-index:2;
+        font-size:var(--meta);font-weight:600;color:var(--ink);opacity:.55;
+        font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  body.sheet #now{opacity:0}
   #voice{position:fixed;right:var(--pad);top:var(--pad);z-index:2;display:none;
          align-items:center;gap:.7em;padding:.45em .8em;border-radius:999px;
          background:rgba(10,11,16,.4);backdrop-filter:blur(14px);
@@ -311,6 +324,7 @@
   <div id="dlBody"><div id="dlMsg">Hämtar…</div></div>
 </section>
 
+<div id="now"></div>
 <div id="grip" title="Deadlock"></div>
 <div id="streak"></div>
 <div id="toasts"></div>
@@ -460,15 +474,33 @@ async function poll(){
   if(d.device&&typeof d.device.volume_percent==='number'&&Date.now()-volTouched>2500)
     setVolUI(d.device.volume_percent);
   if(d.item.id!==state.id){
+    var first=state.id===null;
     state.id=d.item.id;
     queuePoll();
-    el('title').textContent=d.item.name||'';
-    el('artist').textContent=(d.item.artists||[]).map(function(a){return a.name;}).join(', ');
-    el('album').textContent=d.item.album?d.item.album.name:'';
-    var imgs=(d.item.album&&d.item.album.images)||[];
-    if(imgs.length){el('art').src=imgs[0].url;el('artView').src=imgs[0].url;
-      el('bg').style.backgroundImage='url("'+imgs[0].url+'")';}
+    swapTrack(d.item,first);
   }
+}
+
+/* Tonar ut, byter innehåll, tonar in igen — istället för ett hårt hopp. */
+var swapTimer=null;
+function swapTrack(item,instant){
+  var imgs=(item.album&&item.album.images)||[];
+  var url=imgs.length?imgs[0].url:'';
+  function paint(){
+    el('title').textContent=item.name||'';
+    el('artist').textContent=(item.artists||[]).map(function(a){return a.name;}).join(', ');
+    el('album').textContent=item.album?item.album.name:'';
+    if(url){
+      el('art').src=url;              /* osynlig bild för färgutdrag */
+      el('artView').src=url;
+      el('bg').style.backgroundImage='url("'+url+'")';
+    }
+    document.body.classList.remove('swap');
+  }
+  clearTimeout(swapTimer);
+  if(instant){paint();return;}
+  document.body.classList.add('swap');
+  swapTimer=setTimeout(paint,380);
 }
 function idle(on){
   el('idle').classList.toggle('on',on);
@@ -480,7 +512,9 @@ function idle(on){
 function ms(x){var s=Math.floor(x/1000);return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);}
 function tick(){
   var now=new Date();
-  el('clock').textContent=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+  var hhmm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+  el('clock').textContent=hhmm;
+  el('now').textContent=hhmm;
   if(!state.dur)return;
   var p=state.pos+(state.playing?Date.now()-state.at:0);
   if(p>state.dur)p=state.dur;
