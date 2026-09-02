@@ -356,12 +356,13 @@ async function wxPoll(){
   #dlStreak{font-size:var(--meta);padding:.15em .8em;border-radius:99px;
             background:rgba(232,184,114,.2);color:#F5DCB4;
             border:1px solid rgba(232,184,114,.28)}
+  #listView{flex:1;min-height:0;display:flex;flex-direction:column;gap:.5em}
+  #listView.off{display:none}
   #career{display:none;flex:none;align-items:stretch;align-self:flex-start;
         border-radius:12px;overflow:hidden;
         background:linear-gradient(90deg, rgba(232,184,114,.12), rgba(255,255,255,.045));
         border:1px solid rgba(232,184,114,.18)}
   #career.on{display:flex}
-  #dlDetail.on ~ #career,body.match #career{display:none}
   .stat{display:flex;flex-direction:column;gap:0;padding:.3em 1.1em;
         border-right:1px solid rgba(255,255,255,.08)}
   .stat:last-child{border-right:0}
@@ -462,8 +463,8 @@ async function wxPoll(){
         object-fit:contain;flex:none}
   .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .team .row .st{color:var(--ink);opacity:.9;font-variant-numeric:tabular-nums;font-weight:600}
-  #matchInfo{font-size:calc(var(--meta) * 1.05);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
-  #dlDetail{position:relative;background:#120c07}
+  #matchInfo{flex:none;min-height:1.4em;font-size:calc(var(--meta) * 1.05);color:var(--ink-dim);opacity:.75;position:relative;z-index:1}
+  #dlDetail{position:relative;background:#120c07;flex:1;min-height:0}
 
   #teams{position:relative;z-index:1}
   .team{position:relative;overflow:hidden}
@@ -659,8 +660,10 @@ async function wxPoll(){
     <button id="heroBtn">Heroes</button>
     <span id="dlClose">Swipe up to close</span>
   </div>
-  <div id="career"></div>
-  <div id="dlBody"><div id="dlMsg">Loading…</div></div>
+  <div id="listView">
+    <div id="career"></div>
+    <div id="dlBody"><div id="dlMsg">Loading…</div></div>
+  </div>
   <div id="heroes">
     <div id="heroGrid"></div>
     <div id="heroSum"></div>
@@ -1492,7 +1495,7 @@ function setDetailBg(url){
 }
 async function showMatch(m){
   document.body.classList.add('match');
-  el('dlBody').style.display='none';
+  el('listView').classList.add('off');
   el('dlDetail').classList.add('on');
   var box=el('teams');
   box.innerHTML='<div id="dlMsg">Loading match '+m.match_id+'…</div>';
@@ -1580,7 +1583,7 @@ function closeMatch(){
   document.body.classList.remove('match');
   var mi=document.getElementById('matchInfo');if(mi)mi.remove();
   el('dlDetail').classList.remove('on');
-  el('dlBody').style.display='';
+  if(!window.__heroOpen)el('listView').classList.remove('off');
 }
 el('dlBack').addEventListener('click',function(e){e.stopPropagation();closeMatch();});
 el('dlRefresh').addEventListener('click',async function(e){
@@ -1596,10 +1599,9 @@ el('dlRefresh').addEventListener('click',async function(e){
 var heroOpen=false;
 function heroSlug(n){return heroFile(n);}
 async function showHeroes(on){
-  heroOpen=!!on;
+  heroOpen=!!on; window.__heroOpen=heroOpen;
   el('heroes').classList.toggle('on',heroOpen);
-  el('dlBody').style.display=heroOpen?'none':'';
-  el('career').style.display=heroOpen?'none':'';
+  el('listView').classList.toggle('off',heroOpen);
   el('heroBtn').textContent=heroOpen?'Matches':'Heroes';
   if(!heroOpen){el('heroSum').classList.remove('on');return;}
   closeMatch();
