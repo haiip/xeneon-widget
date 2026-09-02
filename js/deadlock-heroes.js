@@ -34,11 +34,17 @@ async function showHeroes(on){
         {className:'nmtext',textContent:h.name}));});
     cell.appendChild(nm);
 
+    /* porträtt → render → ikon → API-bild. Cellen tas aldrig bort. */
     var por=document.createElement('img');por.className='port';por.alt='';por.decoding='async';
-    por.src='heroes/portrait/'+slug+'.png';
+    var chain=['heroes/portrait/'+slug+'.png','heroes/'+slug+'.png',
+               'heroes/icon/'+slug+'.png',h.img||''];
+    var step=0;
+    por.src=chain[0];
     por.addEventListener('error',function(){
-      this.src='heroes/'+slug+'.png';
-      this.addEventListener('error',function(){cell.remove();});});
+      step++;
+      if(step<chain.length&&chain[step])this.src=chain[step];
+      else this.style.visibility='hidden';
+    });
     cell.appendChild(por);
 
     var src=statSource(h);
@@ -58,6 +64,8 @@ async function showHeroes(on){
     cell.addEventListener('click',function(e){e.stopPropagation();showHeroSheet(h);});
     grid.appendChild(cell);
   });
+  if(!grid.querySelector('.hcell'))
+    grid.textContent='Hittade '+list.length+' hjältar men kunde inte visa dem.';
 }
 
 function heroAbilities(h){
