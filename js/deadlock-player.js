@@ -16,13 +16,19 @@ var STAT_HELP={
   'Damage taken':'Skada du tagit emot under matchen.',
   'Creep kills':'Dödade trupper.',
   'Neutrals':'Dödade neutrala läger.',
+  'Level':'Hjältens nivå vid matchens slut.',
+  'MVP rank':'Placering i matchens sammanställning. 1 är bäst.',
+  'Lane':'Vilken lane du började i.',
+  'Ability points':'Intjänade förmågepoäng. Fler än de tolv du kan lägga, eftersom de tjänas in per nivå.',
+  'Power-ups':'Permanenta bonusar från krukor, Golden Idol och liknande.',
   'Max health':'Hjältens maximala liv vid matchens slut, inklusive köpta föremål.',
   'Self healing':'Läkning du gett dig själv.'
 };
 var PSTATS=[
   ['kills','Kills'],['deaths','Deaths'],['assists','Assists'],
   ['net_worth','Souls'],['last_hits','Last hits'],['denies','Denies'],
-  ['player_level','Level'],['level','Level'],
+  ['level','Level'],['player_level','Level'],['mvp_rank','MVP rank'],
+  ['assigned_lane','Lane'],['ability_points','Ability points'],
   ['player_damage','Hero damage'],['hero_damage','Hero damage'],
   ['boss_damage','Boss damage'],['objective_damage','Objective damage'],
   ['player_healing','Healing'],['hero_healing','Healing'],
@@ -41,13 +47,18 @@ function fmtNum(v){
 function playerDebug(p,host){
   var flat={};
   (function walk(o,path,depth){
-    if(!o||typeof o!=='object'||depth>3)return;
+    if(!o||typeof o!=='object'||depth>4)return;
     for(var k in o){
       var v=o[k];
       if(v===null||v===undefined)continue;
       if(typeof v==='object'){
-        if(Array.isArray(v))flat[(path+k)]='['+v.length+' poster]';
-        else walk(v,path+k+'.',depth+1);
+        if(Array.isArray(v)){
+          flat[path+k]='['+v.length+' poster]';
+          v.slice(0,40).forEach(function(item,i){
+            if(item&&typeof item==='object')walk(item,path+k+'['+i+'].',depth+1);
+            else flat[path+k+'['+i+']']=item;
+          });
+        }else walk(v,path+k+'.',depth+1);
       }else flat[path+k]=v;
     }
   })(p,'',0);
@@ -148,6 +159,8 @@ function showPlayer(p,hero,team,items,dur){
   add((((p.kills|0)+(p.assists|0))/Math.max(p.deaths|0,1)).toFixed(2),'KDA');
   var spm=soulsPerMin(p.net_worth,dur);
   if(spm)add(spm,'Souls / min');
+  if(Array.isArray(p.power_up_buffs)&&p.power_up_buffs.length)
+    add(p.power_up_buffs.length,'Power-ups');
   PSTATS.forEach(function(pair){
     var v=p[pair[0]];
     if(typeof v==='number'&&v>0&&pair[0]!=='kills'&&pair[0]!=='deaths'&&pair[0]!=='assists')
