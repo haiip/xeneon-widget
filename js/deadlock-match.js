@@ -93,7 +93,13 @@ async function showMatch(m){
         res.textContent=won?'Victory':'Defeat';h.appendChild(res);}
       col.appendChild(h);
       var topNW=players.reduce(function(a,b){return (b.net_worth||0)>(a.net_worth||0)?b:a;},players[0]);
-      players.filter(function(p){return teamOf(p)===ti;}).forEach(function(p){
+      players.filter(function(p){return teamOf(p)===ti;})
+        .sort(function(a,b){                       /* jag alltid överst */
+          var am=String(a.account_id)===String(CFG.dl)?0:1;
+          var bm=String(b.account_id)===String(CFG.dl)?0:1;
+          return am-bm||(b.net_worth||0)-(a.net_worth||0);
+        })
+        .forEach(function(p){
         var hero=heroes[p.hero_id]||{name:'Hero '+p.hero_id,img:''};
         var wrap=document.createElement('div');wrap.className='prow';
         if(String(p.account_id)===String(CFG.dl))wrap.className+=' me';

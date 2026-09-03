@@ -318,6 +318,9 @@ async function wxPoll(){
     transition:transform .34s cubic-bezier(.2,.8,.2,1);
     box-shadow:0 26px 70px rgba(0,0,0,.45)}
   #vDeadlock.open{transform:translateY(0)}
+  body.match #vDeadlock{height:100vh}
+  body.match #dlHead{display:none}
+  body.match #grip{top:calc(100vh - 1px)}
   #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:6;
     width:clamp(110px,16vw,230px);height:clamp(22px,4vh,42px);
     display:flex;align-items:center;justify-content:center;gap:.4em;cursor:pointer;
@@ -458,12 +461,10 @@ async function wxPoll(){
         border-radius:14px;padding:.5em .7em .6em;overflow:hidden;
         border:1px solid rgba(255,255,255,.12)}
   .team{box-shadow:0 16px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08)}
-  .team.king{border-color:rgba(232,184,114,.5);background-color:#1b1208;
-        background-image:linear-gradient(160deg, rgba(140,96,42,.75), rgba(52,33,14,.85) 55%,
-                          rgba(26,17,8,.92))}
-  .team.mother{border-color:rgba(130,178,240,.5);background-color:#0b1322;
-        background-image:linear-gradient(160deg, rgba(48,86,142,.75), rgba(20,36,62,.85) 55%,
-                          rgba(11,18,32,.92))}
+  .team{background-color:#12100e;
+        background-image:linear-gradient(160deg, rgba(255,255,255,.07), rgba(0,0,0,.25))}
+  .team.king{border-color:rgba(232,184,114,.55)}
+  .team.mother{border-color:rgba(130,178,240,.55)}
   .team h5{position:relative}
   .team.king h5{border-bottom-color:rgba(232,184,114,.55)}
   .team.mother h5{border-bottom-color:rgba(130,178,240,.55)}
@@ -478,8 +479,9 @@ async function wxPoll(){
         -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 42%,rgba(0,0,0,.55) 74%,transparent 99%)}
   .prow>.row,.prow>.kit{position:relative;z-index:1}
   .team .row{display:flex;align-items:center;gap:.6em;min-width:0;
-        font-size:calc(var(--meta) * 1.18);line-height:1.25}
-  .prow.me{background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+        font-size:calc(var(--meta) * 1.3);line-height:1.25}
+  .prow.me{background:rgba(255,255,255,.1);
+        box-shadow:inset 0 0 0 2px rgba(255,255,255,.32), 0 6px 20px rgba(0,0,0,.4)}
   .team .row img{width:clamp(18px,3.2vh,32px);height:clamp(18px,3.2vh,32px);
         object-fit:contain;flex:none}
   .team .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -506,9 +508,9 @@ async function wxPoll(){
 
   .team .row .mvp{width:clamp(14px,2.6vh,26px);height:auto;flex:none;opacity:.95}
   .team{overflow-y:auto}
-  .kit{display:flex;flex-wrap:nowrap;gap:.22em;overflow:hidden;
-        margin:.05em 0 0 calc(clamp(26px,4.8vh,50px) + .6em)}
-  .kit img{width:clamp(20px,3.9vh,42px);height:clamp(20px,3.9vh,42px);border-radius:5px;
+  .kit{display:flex;flex-wrap:nowrap;gap:.24em;overflow:hidden;
+        margin:.05em 0 0 calc(clamp(30px,5.6vh,62px) + .6em)}
+  .kit img{width:clamp(24px,4.6vh,50px);height:clamp(24px,4.6vh,50px);border-radius:6px;
            object-fit:contain;object-position:center;flex:none;background:none;
            opacity:0;transition:opacity .18s ease}
   .kit img.in{opacity:1}
