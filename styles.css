@@ -739,6 +739,17 @@ async function wxPoll(){
         background:rgba(255,255,255,.05);padding:.4em 1.1em}
   #pStats .stat b{font-size:calc(var(--meta) * 1.6)}
   #pStats .stat span{font-size:calc(var(--meta) * .8)}
+  #branches{display:flex;gap:clamp(10px,1.6vw,30px);flex:none}
+  .branch{flex:1;min-width:0;display:flex;flex-direction:column;gap:.2em;cursor:default}
+  .bhead{display:flex;justify-content:space-between;align-items:baseline;gap:.6em}
+  .bname{font-family:'Reaver',serif;font-size:calc(var(--meta) * .9);letter-spacing:.06em}
+  .bval{font-size:calc(var(--meta) * .8);color:var(--ink-dim);font-variant-numeric:tabular-nums}
+  .btrack{height:clamp(8px,1.6vh,16px);border-radius:99px;background:rgba(255,255,255,.1);
+        overflow:hidden}
+  .bfill{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .branch.weapon .bname{color:#E0913F} .branch.weapon .bfill{background:#E0913F}
+  .branch.vitality .bname{color:#7FC24A} .branch.vitality .bfill{background:#7FC24A}
+  .branch.spirit .bname{color:#B37BD8} .branch.spirit .bfill{background:#B37BD8}
   #pItems{display:flex;flex-wrap:wrap;gap:.6em;overflow-y:auto;align-content:flex-start}
   .bigitem{width:clamp(84px,13vw,170px);display:flex;flex-direction:column;align-items:center;
         gap:.3em;padding:.5em .35em;border-radius:12px;

@@ -34,6 +34,46 @@ function fmtNum(v){
   if(v>=100000)return Math.round(v/1000).toLocaleString('en-US')+'k';
   return Number(v).toLocaleString('en-US');
 }
+
+/* Fördelningen mellan grenarna, som spelets tre staplar. */
+function branchOf(it){
+  var s=it.slot;
+  if(s==='armor')return 'vitality';
+  if(s==='tech')return 'spirit';
+  if(s==='weapon'||s==='vitality'||s==='spirit')return s;
+  return null;
+}
+function buildBranches(p,items){
+  var sum={weapon:0,vitality:0,spirit:0},count={weapon:0,vitality:0,spirit:0},any=false;
+  playerItems(p).forEach(function(id){
+    var it=items[id];if(!it)return;
+    var b=branchOf(it);if(!b)return;
+    sum[b]+=it.cost||0;count[b]++;any=true;
+  });
+  if(!any)return null;
+  var total=sum.weapon+sum.vitality+sum.spirit;
+  var box=document.createElement('div');box.id='branches';
+  var names={weapon:'Weapon',vitality:'Vitality',spirit:'Spirit'};
+  ['weapon','vitality','spirit'].forEach(function(b){
+    var row=document.createElement('div');row.className='branch '+b;
+    var head=document.createElement('div');head.className='bhead';
+    head.appendChild(Object.assign(document.createElement('span'),
+      {className:'bname',textContent:names[b]}));
+    head.appendChild(Object.assign(document.createElement('span'),
+      {className:'bval',textContent:count[b]+(total?'  ·  '+Math.round(sum[b]/1000)+'k':'')}));
+    row.appendChild(head);
+    var track=document.createElement('div');track.className='btrack';
+    var fill=document.createElement('div');fill.className='bfill';
+    fill.style.width=(total?Math.round(sum[b]/total*100):0)+'%';
+    track.appendChild(fill);row.appendChild(track);
+    attachTip(row,names[b],
+      count[b]+' föremål för '+sum[b].toLocaleString('en-US')+' själar'+
+      (total?', '+Math.round(sum[b]/total*100)+' % av allt du köpte':''));
+    box.appendChild(row);
+  });
+  return box;
+}
+
 function showPlayer(p,hero,team,items,dur){
   var box=el('player');
   var L=el('pLeft'),R=el('pRight');
@@ -86,6 +126,9 @@ function showPlayer(p,hero,team,items,dur){
       add(fmtNum(v),pair[1]);
   });
   R.appendChild(grid);
+
+  var br=buildBranches(p,items);
+  if(br)R.appendChild(br);
 
   var kit=document.createElement('div');kit.id='pItems';
   playerItems(p).forEach(function(id){
