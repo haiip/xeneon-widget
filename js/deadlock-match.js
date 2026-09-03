@@ -147,7 +147,11 @@ async function showMatch(m){
     el('mHead').appendChild(head);
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
-      var topNW=players.reduce(function(a,b){return (b.net_worth||0)>(a.net_worth||0)?b:a;},players[0]);
+      /* riktig MVP om matchdatan har det, annars flest själar */
+      var mvp=players.filter(function(x){return Number(x.mvp_rank)===1;})[0]||null;
+      var topNW=mvp||players.reduce(function(a,b){
+        return (b.net_worth||0)>(a.net_worth||0)?b:a;},players[0]);
+      var mvpReal=!!mvp;
       players.filter(function(p){return teamOf(p)===ti;})
         .sort(function(a,b){                       /* jag alltid överst */
           var am=String(a.account_id)===String(CFG.dl)?0:1;
@@ -181,7 +185,7 @@ async function showMatch(m){
         row.appendChild(st);
         if(p===topNW){
           var mv=document.createElement('img');mv.src='ui/mvp.png';mv.className='mvp';
-          mv.title='Most souls in the match';row.appendChild(mv);
+          mv.title=mvpReal?'MVP':'Most souls in the match';row.appendChild(mv);
         }
         main.appendChild(row);
         var ids=playerItems(p);

@@ -14,15 +14,15 @@ async function showHeroes(on){
   var grid=el('heroGrid');
   grid.style.display='';
   if(grid.querySelector('.hcell'))return;      /* redan byggt */
-  grid.textContent='Laddar hjältar…';
+  grid.textContent='Loading heroes…';
   var heroes={};
   try{heroes=await dlLoadHeroes();}catch(e){}
   var list=Object.keys(heroes).map(function(id){return heroes[id];})
     .filter(function(h){return h.playable!==false;});
   if(!list.length){
     grid.textContent=Date.now()<dlWait?
-      'Deadlock-API:et pausade oss en stund. Försök igen om en minut.':
-      'Kunde inte hämta hjältelistan. Tryck igen.';
+      'The Deadlock API paused us. Try again in a minute.':
+      'Could not load the hero list. Tap again.';
     return;
   }
   grid.textContent='';
@@ -73,7 +73,7 @@ async function showHeroes(on){
     grid.appendChild(cell);
   });
   if(!grid.querySelector('.hcell'))
-    grid.textContent='Hittade '+list.length+' hjältar men kunde inte visa dem.';
+    grid.textContent='Found '+list.length+' heroes but could not display them.';
 }
 
 function heroAbilities(h){
@@ -391,12 +391,16 @@ async function showItems(on){
   closeMatch();
   if(itemsBuilt)return;
   var grid=el('itemGrid');
-  grid.textContent='Laddar föremål…';
+  grid.textContent='Loading items…';
   var items={};
   try{items=await dlLoadItems();}catch(e){}
   var groups={weapon:[],vitality:[],spirit:[]};
+  var seenName={};
   Object.keys(items).forEach(function(id){
     var it=items[id];
+    var key=itemFile(it.name);
+    if(seenName[key])return;                    /* samma föremål två gånger i API:et */
+    seenName[key]=1;
     var slot=it.slot;
     if(slot==='armor')slot='vitality';
     if(slot==='tech')slot='spirit';
@@ -404,7 +408,7 @@ async function showItems(on){
     groups[slot].push(it);
   });
   var any=Object.keys(groups).some(function(g){return groups[g].length;});
-  if(!any){grid.textContent='Kunde inte hämta föremålslistan.';return;}
+  if(!any){grid.textContent='Could not load the item list.';return;}
   grid.innerHTML='';
   var titles={weapon:'Weapon',vitality:'Vitality',spirit:'Spirit'};
   ['weapon','vitality','spirit'].forEach(function(g){
@@ -420,8 +424,11 @@ async function showItems(on){
         cell.appendChild(im);
         cell.appendChild(Object.assign(document.createElement('span'),{textContent:it.name}));
         var body=tipText(it.raw)||'';
-        if(it.cost)body=(body?body+'  ':'')+'('+it.cost+' själar)';
-        attachTip(cell,it.name,body||'Föremål i butiken.');
+        var meta=[];
+        if(it.slot)meta.push(it.slot.charAt(0).toUpperCase()+it.slot.slice(1));
+        if(it.cost)meta.push(it.cost.toLocaleString('en-US')+' souls');
+        attachTip(cell,it.name,body?body+(meta.length?'  ·  '+meta.join('  ·  '):''):
+          (meta.join('  ·  ')||'Shop item.'));
         list.appendChild(cell);
       });
     col.appendChild(list);

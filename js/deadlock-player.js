@@ -2,27 +2,27 @@
 
 /* Förklaringar till siffrorna i spelarvyn. */
 var STAT_HELP={
-  'K / D / A':'Kills, deaths och assists — dödade fiender, egna dödsfall och assisterade dödar.',
-  'KDA':'(Kills + assists) delat med deaths. Över 3 räknas som starkt.',
-  'Souls / min':'Själar per minut. Måttet på hur snabbt du samlar resurser.',
-  'Souls':'Totalt insamlade själar, spelets valuta för föremål.',
-  'Last hits':'Antal trupper du gett dödsstöten och därmed fått själar för.',
-  'Denies':'Egna trupper du nekat fienden själar från.',
-  'Level':'Hjältens nivå vid matchens slut.',
-  'Hero damage':'Total skada gjord mot fiendehjältar.',
-  'Boss damage':'Skada mot Patron, Walkers och andra objektiv.',
-  'Objective damage':'Skada mot torn och objektiv.',
-  'Healing':'Läkning given till dig själv och lagkamrater.',
-  'Damage taken':'Skada du tagit emot under matchen.',
-  'Creep kills':'Dödade trupper.',
-  'Neutrals':'Dödade neutrala läger.',
-  'Level':'Hjältens nivå vid matchens slut.',
-  'MVP rank':'Placering i matchens sammanställning. 1 är bäst.',
-  'Lane':'Vilken lane du började i.',
-  'Ability points':'Intjänade förmågepoäng. Fler än de tolv du kan lägga, eftersom de tjänas in per nivå.',
-  'Power-ups':'Permanenta bonusar från krukor, Golden Idol och liknande.',
-  'Max health':'Hjältens maximala liv vid matchens slut, inklusive köpta föremål.',
-  'Self healing':'Läkning du gett dig själv.'
+  'K / D / A':'Kills, deaths and assists.',
+  'KDA':'(Kills + assists) divided by deaths. Above 3 is strong.',
+  'Souls / min':'Souls per minute — how fast you farmed.',
+  'Souls':'Total souls earned.',
+  'Last hits':'Troopers you last-hit for souls.',
+  'Denies':'Your troopers denied to the enemy.',
+  'Level':'Hero level at the end of the match.',
+  'Hero damage':'Total damage dealt to enemy heroes.',
+  'Boss damage':'Damage to Patron, Walkers and other objectives.',
+  'Objective damage':'Damage to towers and objectives.',
+  'Healing':'Healing given to yourself and teammates.',
+  'Damage taken':'Damage taken during the match.',
+  'Creep kills':'Troopers killed.',
+  'Neutrals':'Neutral camps killed.',
+  'Level':'Hero level at the end of the match.',
+  'MVP rank':'Placement in the match summary. 1 is best.',
+  'Lane':'The lane you started in.',
+  'Ability points':'Ability points earned. More than the twelve you can spend, since they are earned per level.',
+  'Power-ups':'Permanent buffs from urns, Golden Idol and similar pickups.',
+  'Max health':'Max health at the end of the match, items included.',
+  'Self healing':'Healing you gave yourself.'
 };
 var PSTATS=[
   ['kills','Kills'],['deaths','Deaths'],['assists','Assists'],
@@ -104,15 +104,21 @@ function playerDebug(p,host){
 }
 
 /* Permanenta bonusar från krukor och pickups, uppdelade per typ. */
-var PU_LABEL=[
-  [/^hp_/,'Health','vitality'],[/^wp_/,'Weapon','weapon'],[/^spirit_/,'Spirit','spirit'],
-  [/^cd_/,'Cooldown','spirit'],[/^ammo_/,'Ammo','weapon'],
-  [/^gun_/,'Gun powerup','weapon'],[/^casting_/,'Casting powerup','spirit']
-];
+var PU_LABEL={
+  hp:['Health','vitality'], wp:['Weapon','weapon'], spirit:['Spirit','spirit'],
+  cd:['Cooldown','spirit'], ammo:['Ammo','weapon'], firerate:['Fire rate','weapon'],
+  movement:['Movement','vitality'], gun:['Gun','weapon'], casting:['Casting','spirit'],
+  stamina:['Stamina','vitality'], health:['Health','vitality']
+};
 function puLabel(type){
-  for(var i=0;i<PU_LABEL.length;i++)
-    if(PU_LABEL[i][0].test(type))return PU_LABEL[i];
-  return [null,String(type).replace(/_/g,' '),''];
+  var t=String(type||'').toLowerCase()
+    .replace(/_lv\d+$/,'')                       /* nivå spelar ingen roll för etiketten */
+    .replace(/_permanent_pickup$/,'')
+    .replace(/_powerup_pickup$/,'')
+    .replace(/_pickup$/,'');
+  var m=PU_LABEL[t];
+  if(m)return [t,m[0],m[1]];
+  return [t,t.replace(/_/g,' ').replace(/^./,function(c){return c.toUpperCase();}),''];
 }
 function buildPowerups(p){
   var list=p.power_up_buffs;
@@ -140,12 +146,12 @@ function buildPowerups(p){
   if(temp){
     var c2=document.createElement('div');c2.className='pu temp';
     c2.appendChild(Object.assign(document.createElement('b'),{textContent:'×'+temp}));
-    c2.appendChild(Object.assign(document.createElement('span'),{textContent:'Tillfälliga'}));
+    c2.appendChild(Object.assign(document.createElement('span'),{textContent:'Temporary'}));
     row.appendChild(c2);
   }
   box.appendChild(row);
   attachTip(box,'Permanent pickups',
-    'Bonusar från krukor och Golden Idol som gäller resten av matchen. Tillfälliga är de som bara varar en stund.');
+    'Buffs from urns and Golden Idol that last the rest of the match. Temporary ones expire.');
   return box;
 }
 
@@ -176,11 +182,11 @@ var ADV_STATS=[
   ['gold_death_loss','Souls lost on death'],['ability_points','Ability points']
 ];
 var ADV_HELP={
-  'Accuracy':'Andel skott som träffade något. Räknas som träffar delat med avlossade skott.',
-  'Possible creeps':'Hur många trupper som gick att sista-slå. Jämför med Last hits.',
-  'Damage mitigated':'Skada dina motstånd tog bort innan den nådde livmätaren.',
-  'Healing prevented':'Fiendens läkning som du hindrade, till exempel med Healbane.',
-  'Souls denied':'Själar du nekade fienden genom att sista-slå deras trupper.'
+  'Accuracy':'Share of shots that hit. Hits divided by shots fired.',
+  'Possible creeps':'How many troopers were available to last-hit. Compare with Last hits.',
+  'Damage mitigated':'Damage removed by your resistances before it reached your health.',
+  'Healing prevented':'Enemy healing you prevented, for example with Healbane.',
+  'Souls denied':'Souls denied to the enemy by last-hitting their troopers.'
 };
 
 function branchOf(it){
@@ -214,8 +220,8 @@ function buildBranches(p,items){
     fill.style.width=(total?Math.round(sum[b]/total*100):0)+'%';
     track.appendChild(fill);row.appendChild(track);
     attachTip(row,names[b],
-      count[b]+' föremål för '+sum[b].toLocaleString('en-US')+' själar'+
-      (total?', '+Math.round(sum[b]/total*100)+' % av allt du köpte':''));
+      count[b]+' items for '+sum[b].toLocaleString('en-US')+' souls'+
+      (total?', '+Math.round(sum[b]/total*100)+'% of everything you bought':''));
     box.appendChild(row);
   });
   return box;
@@ -236,7 +242,7 @@ function fillAdvanced(box,p){
     var v=pick(pair[0]);
     if(v!==null&&v!==0)rows.push([pair[1],fmtNum(v)]);
   });
-  if(!rows.length){box.textContent='Ingen utökad statistik i den här matchen.';return;}
+  if(!rows.length){box.textContent='No advanced stats for this match.';return;}
   rows.forEach(function(r){
     var c=document.createElement('div');c.className='astat';
     c.appendChild(Object.assign(document.createElement('b'),{textContent:r[1]}));
@@ -340,8 +346,11 @@ function showPlayer(p,hero,team,items,dur){
     cell.appendChild(im);
     cell.appendChild(Object.assign(document.createElement('span'),{textContent:it.name}));
     var body=tipText(it.raw)||'';
-    if(it.cost)body=(body?body+'  ':'')+'('+it.cost+' själar)';
-    attachTip(cell,it.name,body||'Föremål köpt under matchen.');
+    var meta=[];
+    if(it.slot)meta.push(it.slot.charAt(0).toUpperCase()+it.slot.slice(1));
+    if(it.cost)meta.push(it.cost.toLocaleString('en-US')+' souls');
+    attachTip(cell,it.name,body?body+(meta.length?'  ·  '+meta.join('  ·  '):''):
+      (meta.join('  ·  ')||'Item bought during the match.'));
     kit.appendChild(cell);
   });
   R.appendChild(kit);

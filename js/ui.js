@@ -31,9 +31,12 @@ document.addEventListener('pointerdown',function(e){
 function gestureFire(x,y){
   if(!gStart||uiLocked())return false;
   var dy=y-gStart.y,dx=x-gStart.x,start=gStart;
-  /* vågrätt svep inne i luckan byter sektion */
+  /* vågrätt svep: i en öppen match går det tillbaka, annars byter det sektion */
   if(sheetOpen&&Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){
-    gStart=null;stepSection(dx<0?1:-1);return true;
+    gStart=null;
+    if(document.body.classList.contains('match')){closeMatch();lockUI(500);}
+    else stepSection(dx<0?1:-1);
+    return true;
   }
   if(Math.abs(dy)<45||Math.abs(dy)<Math.abs(dx))return false;
   if(!CFG.dl)return false;
@@ -120,19 +123,19 @@ el('btnClose').addEventListener('click',function(){el('setup').classList.remove(
 el('btnTest').addEventListener('click',async function(){
   var g=el('inGuild').value.trim(),s=el('dcState');
   if(!g){s.textContent='Fyll i server-ID först.';s.className='warn';return;}
-  s.textContent='Testar…';s.className='';
+  s.textContent='Testing…';s.className='';
   try{
     var r=await fetch('https://discord.com/api/guilds/'+g+'/widget.json',{cache:'no-store'});
-    if(r.status===403){s.textContent='Widgeten är avstängd i Discord. Serverinställningar → Engagemang.';s.className='warn';return;}
+    if(r.status===403){s.textContent='The widget is disabled in Discord. Server Settings → Engagement.';s.className='warn';return;}
     if(!r.ok){s.textContent='Discord svarade '+r.status+'.';s.className='warn';return;}
     var j=await r.json();
     s.textContent='Ansluten till '+j.name+' — '+(j.presence_count||0)+' online.';s.className='ok';
-  }catch(e){s.textContent='Kunde inte nå Discord.';s.className='warn';}
+  }catch(e){s.textContent='Could not reach Discord.';s.className='warn';}
 });
 el('btnDlTest').addEventListener('click',async function(){
   var st=el('dlState'),raw=el('inDl').value;
   if(!String(raw).replace(/\D/g,'')){st.textContent='Fyll i ditt Steam-ID först.';st.className='warn';return;}
-  st.textContent='Testar alla varianter…';st.className='';
+  st.textContent='Testing all variants…';st.className='';
   var rows=await dlProbe(raw);
   st.innerHTML=rows.map(esc).join('<br>');
   st.className=rows.join(' ').indexOf(': 0 matcher')<rows.join(' ').length&&/[1-9]\d* matcher/.test(rows.join(' '))?'ok':'warn';
