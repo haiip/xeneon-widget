@@ -76,7 +76,7 @@ async function showMatch(m){
     var when=m.start_time?new Date(m.start_time*1000).toLocaleString('en-GB',
       {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
     head.textContent='Match '+m.match_id+(mins?'  ·  '+mins:'')+(when?'  ·  '+when:'');
-    el('dlDetail').insertBefore(head,el('teams'));
+    el('mHead').appendChild(head);
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
       var h=document.createElement('h5');
