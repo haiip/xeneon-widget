@@ -144,7 +144,7 @@ async function dlPoll(){
     if(w&&streak>=2){pill.innerHTML='<b>'+streak+'</b> win streak';pill.classList.add('on');}
     else pill.classList.remove('on');
     var body=el('dlBody');body.innerHTML='';
-    recent.slice(0,8).forEach(function(m){
+    recent.slice(0,20).forEach(function(m){
       var h=heroes[m.hero_id]||{name:'Hero '+m.hero_id,img:''};
       var v='v'+(Math.abs(Number(String(m.match_id).slice(-6))||0)%6);
       var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss')+' '+v;
