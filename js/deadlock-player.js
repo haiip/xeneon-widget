@@ -77,6 +77,53 @@ function playerDebug(p,host){
   box.addEventListener('click',function(e){e.stopPropagation();this.remove();});
   host.appendChild(box);
 }
+
+/* Permanenta bonusar från krukor och pickups, uppdelade per typ. */
+var PU_LABEL=[
+  [/^hp_/,'Health','vitality'],[/^wp_/,'Weapon','weapon'],[/^spirit_/,'Spirit','spirit'],
+  [/^cd_/,'Cooldown','spirit'],[/^ammo_/,'Ammo','weapon'],
+  [/^gun_/,'Gun powerup','weapon'],[/^casting_/,'Casting powerup','spirit']
+];
+function puLabel(type){
+  for(var i=0;i<PU_LABEL.length;i++)
+    if(PU_LABEL[i][0].test(type))return PU_LABEL[i];
+  return [null,String(type).replace(/_/g,' '),''];
+}
+function buildPowerups(p){
+  var list=p.power_up_buffs;
+  if(!Array.isArray(list)||!list.length)return null;
+  var perm={},temp=0;
+  list.forEach(function(b){
+    var t=b&&b.type?b.type:'';
+    var v=b&&typeof b.value==='number'?b.value:1;
+    if(b&&b.is_permanent===false){temp+=v;return;}
+    var lab=puLabel(t);
+    var key=lab[1];
+    if(!perm[key])perm[key]={n:0,cls:lab[2]};
+    perm[key].n+=v;
+  });
+  var box=document.createElement('div');box.id='powerups';
+  box.appendChild(Object.assign(document.createElement('h4'),
+    {textContent:'Permanent pickups'}));
+  var row=document.createElement('div');row.className='purow';
+  Object.keys(perm).sort().forEach(function(k){
+    var c=document.createElement('div');c.className='pu '+(perm[k].cls||'');
+    c.appendChild(Object.assign(document.createElement('b'),{textContent:'×'+perm[k].n}));
+    c.appendChild(Object.assign(document.createElement('span'),{textContent:k}));
+    row.appendChild(c);
+  });
+  if(temp){
+    var c2=document.createElement('div');c2.className='pu temp';
+    c2.appendChild(Object.assign(document.createElement('b'),{textContent:'×'+temp}));
+    c2.appendChild(Object.assign(document.createElement('span'),{textContent:'Tillfälliga'}));
+    row.appendChild(c2);
+  }
+  box.appendChild(row);
+  attachTip(box,'Permanent pickups',
+    'Bonusar från krukor och Golden Idol som gäller resten av matchen. Tillfälliga är de som bara varar en stund.');
+  return box;
+}
+
 function branchOf(it){
   var s=it.slot;
   if(s==='armor')return 'vitality';
@@ -161,14 +208,16 @@ function showPlayer(p,hero,team,items,dur){
   add((((p.kills|0)+(p.assists|0))/Math.max(p.deaths|0,1)).toFixed(2),'KDA');
   var spm=soulsPerMin(p.net_worth,dur);
   if(spm)add(spm,'Souls / min');
-  if(Array.isArray(p.power_up_buffs)&&p.power_up_buffs.length)
-    add(p.power_up_buffs.length,'Power-ups');
+
   PSTATS.forEach(function(pair){
     var v=p[pair[0]];
     if(typeof v==='number'&&v>0&&pair[0]!=='kills'&&pair[0]!=='deaths'&&pair[0]!=='assists')
       add(fmtNum(v),pair[1]);
   });
   R.appendChild(grid);
+
+  var pu=buildPowerups(p);
+  if(pu)R.appendChild(pu);
 
   var br=buildBranches(p,items);
   if(br)R.appendChild(br);

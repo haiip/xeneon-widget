@@ -739,6 +739,16 @@ async function wxPoll(){
         background:rgba(255,255,255,.05);padding:.4em 1.1em}
   #pStats .stat b{font-size:calc(var(--meta) * 1.6)}
   #pStats .stat span{font-size:calc(var(--meta) * .8)}
+  #powerups{flex:none;display:flex;flex-direction:column;gap:.25em}
+  #powerups h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .85);color:#F0CB93;
+        letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+  .purow{display:flex;flex-wrap:wrap;gap:.4em}
+  .pu{display:flex;align-items:baseline;gap:.35em;padding:.25em .7em;border-radius:8px;
+        background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+  .pu b{font-family:'Reaver',serif;font-size:calc(var(--meta) * 1.05);font-variant-numeric:tabular-nums}
+  .pu span{font-size:calc(var(--meta) * .78);color:var(--ink-dim)}
+  .pu.weapon b{color:#E0913F} .pu.vitality b{color:#7FC24A} .pu.spirit b{color:#B37BD8}
+  .pu.temp{opacity:.65}
   #branches{display:flex;gap:clamp(10px,1.6vw,30px);flex:none}
   .branch{flex:1;min-width:0;display:flex;flex-direction:column;gap:.2em;cursor:default}
   .bhead{display:flex;justify-content:space-between;align-items:baseline;gap:.6em}
