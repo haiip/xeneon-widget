@@ -3,10 +3,11 @@ var heroOpen=false;
 function heroSlug(n){return heroFile(n);}
 async function showHeroes(on){
   heroOpen=!!on; window.__heroOpen=heroOpen;
+  document.body.classList.toggle('hero',heroOpen);
   el('heroes').classList.toggle('on',heroOpen);
   el('listView').classList.toggle('off',heroOpen);
   el('heroBtn').textContent=heroOpen?'Matches':'Heroes';
-  if(!heroOpen){el('heroSum').classList.remove('on');return;}
+  if(!heroOpen){el('heroSum').classList.remove('on');document.body.classList.remove('hero');return;}
   closeMatch();
   /* alltid tillbaka till rutnätet när vyn öppnas på nytt */
   el('heroSum').classList.remove('on');
@@ -280,6 +281,9 @@ async function showHeroSheet(h){
   }
 
   var src=statSource(h),wrap=document.createElement('div');wrap.id='hStats';
+  var colA=document.createElement('div');colA.className='scol';
+  var colB=document.createElement('div');colB.className='scol';
+  wrap.appendChild(colA);wrap.appendChild(colB);
   var titles={weapon:'Weapon Stats',vitality:'Vitality Stats',spirit:'Spirit Stats'};
   ['weapon','vitality','spirit'].forEach(function(g){
     var col=document.createElement('div');col.className='sgroup '+g;
@@ -294,7 +298,6 @@ async function showHeroSheet(h){
         if(def[0]==='Bullets per sec'&&cyc)v=round(1/cyc,2);
         if(def[0]==='Damage Per Second'&&cyc&&dmg)v=round(dmg*pel/cyc,1);
       }
-      /* Spirit Power visas alltid, som i spelet, även när den är noll */
       if(v===null&&def[0]==='Spirit Power')v=0;
       if(v===null)return;
       if(typeof v==='number'){
@@ -311,8 +314,9 @@ async function showHeroSheet(h){
       r.appendChild(Object.assign(document.createElement('span'),{className:'v',textContent:v}));
       col.appendChild(r);
     });
-    if(n)wrap.appendChild(col);
+    if(n)(g==='weapon'?colA:colB).appendChild(col);
   });
+
   card.appendChild(wrap);
 
   /* dubbelklick listar alla fältnamn API:et har för hjälten */

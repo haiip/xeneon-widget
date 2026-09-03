@@ -318,9 +318,9 @@ async function wxPoll(){
     transition:transform .34s cubic-bezier(.2,.8,.2,1);
     box-shadow:0 26px 70px rgba(0,0,0,.45)}
   #vDeadlock.open{transform:translateY(0)}
-  body.match #vDeadlock{height:100vh}
-  body.match #dlHead{display:none}
-  body.match #grip{top:calc(100vh - 1px)}
+  body.match #vDeadlock,body.hero #vDeadlock{height:100vh}
+  body.match #dlHead,body.hero #dlHead{display:none}
+  body.match #grip,body.hero #grip{top:calc(100vh - 1px)}
   #grip{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:6;
     width:clamp(110px,16vw,230px);height:clamp(22px,4vh,42px);
     display:flex;align-items:center;justify-content:center;gap:.4em;cursor:pointer;
@@ -595,13 +595,13 @@ async function wxPoll(){
         mask-image:radial-gradient(75% 90% at 50% 40%,#000,transparent 82%);
         -webkit-mask-image:radial-gradient(75% 90% at 50% 40%,#000,transparent 82%)}
   #hCard{position:relative;z-index:1;height:100%;flex:none;
-        width:clamp(230px,24%,400px);display:flex;flex-direction:column;align-items:center;
+        width:clamp(300px,32%,560px);display:flex;flex-direction:column;align-items:center;
         border-radius:14px;overflow:hidden;
         border:1px solid rgba(255,255,255,.14);
         background:linear-gradient(180deg,#221a12,#15100b 55%,#100c08)}
   #hCard .nameimg{flex:none;height:clamp(16px,4.2vh,44px);max-width:80%;object-fit:contain;
         margin:.35em 0 .25em}
-  #hPortrait{position:relative;flex:none;width:82%;height:clamp(60px,20vh,210px);
+  #hPortrait{position:relative;flex:none;width:58%;height:clamp(60px,22vh,230px);
         border-radius:8px;overflow:hidden;margin-bottom:.3em;
         border:1px solid rgba(255,255,255,.14);
         display:flex;align-items:flex-end;justify-content:center;background:#0d0a07}
@@ -620,15 +620,17 @@ async function wxPoll(){
         text-overflow:ellipsis;min-width:0}
 
   /* statistiken staplad i kortet, kompakt nog att rymmas */
-  #hStats{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;overflow:hidden}
-  .sgroup{display:flex;flex-direction:column;flex:none}
+  #hStats{flex:1;min-height:0;width:100%;display:flex;gap:.3em;padding:0 .3em .3em;
+        overflow:hidden}
+  .scol{flex:1;min-width:0;display:flex;flex-direction:column;gap:.3em}
+  .sgroup{display:flex;flex-direction:column;flex:none;border-radius:8px;overflow:hidden}
   .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .74);
         letter-spacing:.04em;text-align:center;padding:.1em;color:#17100a;font-weight:700}
   .sgroup.weapon h4{background:#E0913F}
   .sgroup.vitality h4{background:#7FC24A}
   .sgroup.spirit h4{background:#B37BD8}
-  .srow{display:flex;align-items:center;gap:.3em;padding:.02em .6em;
-        font-size:calc(var(--meta) * .68);line-height:1.2;background:#171310}
+  .srow{display:flex;align-items:center;gap:.3em;padding:.04em .55em;
+        font-size:calc(var(--meta) * .72);line-height:1.25;background:#171310}
   .srow:nth-child(even){background:#1e1815}
   .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.82);text-align:right;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
