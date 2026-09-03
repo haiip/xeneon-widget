@@ -160,8 +160,13 @@ async function showMatch(m){
         if(String(p.account_id)===String(CFG.dl))wrap.className+=' me';
         wrap.appendChild(Object.assign(document.createElement('div'),
           {className:'rowbg',style:'background-image:url(heroes/bg/'+heroFile(hero.name)+'.jpg)'}));
+
+        /* hjältebilden står för sig och centreras i hela raden */
+        var pic=heroIcon(hero,'phero');
+        wrap.appendChild(pic);
+
+        var main=document.createElement('div');main.className='pmain';
         var row=document.createElement('div');row.className='row';
-        row.appendChild(heroIcon(hero));
         var nm=document.createElement('span');nm.className='nm';
         nm.dataset.acct=String(p.account_id||'');
         nm.dataset.hero=hero.name;
@@ -178,34 +183,34 @@ async function showMatch(m){
           var mv=document.createElement('img');mv.src='ui/mvp.png';mv.className='mvp';
           mv.title='Most souls in the match';row.appendChild(mv);
         }
+        main.appendChild(row);
+        var ids=playerItems(p);
+        if(ids.length){
+          var kit=document.createElement('div');kit.className='kit';
+          ids.slice(-12).forEach(function(id){
+            var it=items[id];
+            if(!it)return;
+            var shop=(it.type==='upgrade')||
+                     ['weapon','vitality','spirit','armor','tech'].indexOf(it.slot)>=0;
+            if(!shop)return;
+            var ii=document.createElement('img');
+            ii.decoding='async';
+            ii.addEventListener('load',function(){this.classList.add('in');});
+            ii.title=it.name;
+            ii.src='items/'+itemFile(it.name)+'.png';
+            ii.addEventListener('error',function(){this.remove();});
+            kit.appendChild(ii);
+          });
+          main.appendChild(kit);
+        }
+        wrap.appendChild(main);
         wrap.style.cursor='pointer';
         wrap.addEventListener('click',function(e){
           e.stopPropagation();
           showPlayer(p,hero,t,items,m.match_duration_s||
             (j.match_info&&j.match_info.duration_s)||j.duration_s);
         });
-        wrap.appendChild(row);
         col.appendChild(wrap);
-        var ids=playerItems(p);
-        if(ids.length){
-          var kit=document.createElement('div');kit.className='kit';
-          ids.slice(-12).forEach(function(id){
-            var it=items[id];
-            if(!it)return;                        /* okänt id */
-            var shop=(it.type==='upgrade')||
-                     ['weapon','vitality','spirit','armor','tech'].indexOf(it.slot)>=0;
-            if(!shop)return;                      /* hjälteförmågor hör inte hit */
-            var ii=document.createElement('img');
-            ii.decoding='async';
-            ii.addEventListener('load',function(){this.classList.add('in');});
-            ii.title=it.name;
-            ii.src='items/'+itemFile(it.name)+'.png';
-            /* saknas filen lokalt är det ingen shopvara — då ritas den inte alls */
-            ii.addEventListener('error',function(){this.remove();});
-            kit.appendChild(ii);
-          });
-          wrap.appendChild(kit);
-        }
       });
       box.appendChild(col);
     });
