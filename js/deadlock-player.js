@@ -16,7 +16,6 @@ var STAT_HELP={
   'Damage taken':'Skada du tagit emot under matchen.',
   'Creep kills':'Dödade trupper.',
   'Neutrals':'Dödade neutrala läger.',
-  'Ability points':'Poäng lagda på att uppgradera hjältens fyra förmågor. De tjänas in med själar under matchen, inte från krukor.',
   'Max health':'Hjältens maximala liv vid matchens slut, inklusive köpta föremål.',
   'Self healing':'Läkning du gett dig själv.'
 };
@@ -29,7 +28,7 @@ var PSTATS=[
   ['player_healing','Healing'],['hero_healing','Healing'],
   ['damage_taken','Damage taken'],['self_healing','Self healing'],
   ['creep_kills','Creep kills'],['neutral_kills','Neutrals'],
-  ['max_health','Max health'],['ability_points','Ability points']
+  ['max_health','Max health']
 ];
 function fmtNum(v){
   if(v>=100000)return Math.round(v/1000).toLocaleString('en-US')+'k';
