@@ -623,6 +623,23 @@ async function wxPoll(){
   .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
         min-width:4.5ch;color:#fff}
 
+  /* hjältetaggar */
+  .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:.28em;padding:.1em .4em .3em}
+  .tag{position:relative;overflow:hidden;font-size:calc(var(--meta) * .62);font-weight:800;
+        letter-spacing:.08em;text-transform:uppercase;color:#0e0c09;
+        padding:.16em .55em;border-radius:4px;
+        background:var(--tag,#4aa3c7);
+        box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .tag::after{content:"";position:absolute;top:0;bottom:0;width:45%;
+        background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+        transform:skewX(-18deg);animation:tagSheen 3.6s ease-in-out infinite}
+  .tag:nth-child(2)::after{animation-delay:.5s}
+  .tag:nth-child(3)::after{animation-delay:1s}
+  @keyframes tagSheen{
+    0%,55%{left:-60%}
+    85%,100%{left:120%}
+  }
+
   /* dina matcher med hjälten */
   #hMatches{position:relative;z-index:1;flex:1;min-width:0;display:flex;
         flex-direction:column;gap:.4em}

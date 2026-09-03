@@ -65,3 +65,28 @@ function attachTip(node,title,body){
   node.addEventListener('click',function(e){e.stopPropagation();showTip(node,title,body);});
   return node;
 }
+
+/* Hjältarnas etiketter från spelets hjältesida. Fyll på allteftersom. */
+var HERO_TAGS={
+  abrams:['Tank','Brawler','Bull-headed'],
+  apollo:['Finesse','Mobility','A cut above'],
+  bebop:['Hook','Bomb','Punch'],
+  billy:['Punk','Chaotic','G.O.A.T.'],
+  calico:['Tricksy','Slippery','Burst damage'],
+  celeste:['Performer','Disruptive','Dazzling'],
+  holliday:['Crackshot','Explosive','Apprehender'],
+  pocket:['Trickster','Burst damage','Frogs']
+};
+function tagsFor(name){
+  return HERO_TAGS[String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'')]||[];
+}
+function buildTags(name){
+  var list=tagsFor(name);
+  if(!list.length)return null;
+  var box=document.createElement('div');box.className='tags';
+  list.forEach(function(t){
+    box.appendChild(Object.assign(document.createElement('span'),
+      {className:'tag',textContent:t}));
+  });
+  return box;
+}

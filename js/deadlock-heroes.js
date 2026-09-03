@@ -47,6 +47,9 @@ async function showHeroes(on){
     });
     cell.appendChild(por);
 
+    var tg=buildTags(h.name);
+    if(tg){cell.appendChild(tg);tintFrom('heroes/bg/'+slug+'.jpg',cell,'--tag');}
+
     var src=statSource(h);
     var dps=pickStat(src,['dps','damage_per_second','weapon_dps']);
     if(dps===null){
@@ -167,7 +170,7 @@ function pickStat(srcs,keys){
 }
 function round(v,n){var p=Math.pow(10,n||2);return Math.round(v*p)/p;}
 /* hjältens egen färg plockas ur bakgrundsbilden */
-function tintFrom(url,el){
+function tintFrom(url,node,varName){
   var im=new Image();
   im.onload=function(){
     try{
@@ -180,7 +183,13 @@ function tintFrom(url,el){
         var s2=mx-mn;
         if(s2>sat){sat=s2;best=[r,g,b];}
       }
-      el.style.setProperty('--hcol','rgb('+best.join(',')+')');
+      if(varName==='--tag'){
+        /* etiketterna har mörk text, så tonen lyfts till en läsbar nivå */
+        var lum=best[0]*.299+best[1]*.587+best[2]*.114;
+        if(lum<120){var k=140/Math.max(lum,1);
+          best=best.map(function(v){return Math.min(255,Math.round(v*k));});}
+      }
+      node.style.setProperty(varName||'--hcol','rgb('+best.join(',')+')');
     }catch(e){}
   };
   im.src=url;
@@ -250,6 +259,9 @@ async function showHeroSheet(h){
     this.addEventListener('error',function(){this.remove();});});
   por.appendChild(render);
   card.appendChild(por);
+
+  var tg=buildTags(h.name);
+  if(tg){card.appendChild(tg);tintFrom('heroes/bg/'+slug+'.jpg',card,'--tag');}
 
   var ab=heroAbilities(h);
   if(ab.length){
