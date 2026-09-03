@@ -170,6 +170,10 @@ async function dlPoll(){
       c.appendChild(st);
 
       c.appendChild(heroImg(h,'mhero'));
+      var tg=buildTags(h.name);
+      if(tg){tg.className='tags mtags';c.appendChild(tg);
+        tintFrom('heroes/bg/'+heroFile(h.name)+'.jpg',c,'--tag');}
+
       var nm=document.createElement('div');nm.className='mname';
       var logo=document.createElement('img');logo.className='nameimg';logo.alt=h.name;
       logo.src='heroes/name/'+heroFile(h.name)+'.svg';

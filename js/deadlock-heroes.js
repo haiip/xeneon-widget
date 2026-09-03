@@ -8,7 +8,10 @@ async function showHeroes(on){
   el('heroBtn').textContent=heroOpen?'Matches':'Heroes';
   if(!heroOpen){el('heroSum').classList.remove('on');return;}
   closeMatch();
+  /* alltid tillbaka till rutnätet när vyn öppnas på nytt */
+  el('heroSum').classList.remove('on');
   var grid=el('heroGrid');
+  grid.style.display='';
   if(grid.querySelector('.hcell'))return;      /* redan byggt */
   grid.textContent='Laddar hjältar…';
   var heroes={};
