@@ -10,7 +10,7 @@ function openSheet(on){
   gStart=null;                       /* samma beröring ska inte räknas som gest igen */
   sheetOpen=!!on;
   var gt=el('gripText'); if(gt)gt.textContent=sheetOpen?'Stäng':'Deadlock';
-  if(!sheetOpen){closeMatch();showHeroes(false);}
+  if(!sheetOpen){closeMatch();showHeroes(false);showItems(false);}
   el('vDeadlock').classList.toggle('open',sheetOpen);
   document.body.classList.toggle('sheet',sheetOpen);
   clearTimeout(sheetTimer);
@@ -31,6 +31,10 @@ document.addEventListener('pointerdown',function(e){
 function gestureEnd(x,y){
   if(!gStart||uiLocked())return;
   var dy=y-gStart.y,dx=x-gStart.x,start=gStart;gStart=null;
+  /* vågrätt svep inne i luckan byter sektion */
+  if(sheetOpen&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4){
+    stepSection(dx<0?1:-1);return;
+  }
   if(Math.abs(dy)<40||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
   if(!CFG.dl)return;
   if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.35)openSheet(true);

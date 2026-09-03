@@ -377,4 +377,78 @@ async function showHeroSheet(h){
 
   box.classList.add('on');
 }
-el('heroBtn').addEventListener('click',function(e){e.stopPropagation();showHeroes(!heroOpen);});
+el('heroBtn').addEventListener('click',function(e){e.stopPropagation();
+  goSection(heroOpen?'matches':'heroes');});
+
+/* ---------------- Föremålssektionen ---------------- */
+var itemsOpen=false,itemsBuilt=false;
+async function showItems(on){
+  itemsOpen=!!on;
+  el('items').classList.toggle('on',itemsOpen);
+  document.body.classList.toggle('items',itemsOpen);
+  el('listView').classList.toggle('off',itemsOpen||heroOpen);
+  if(!itemsOpen)return;
+  closeMatch();
+  if(itemsBuilt)return;
+  var grid=el('itemGrid');
+  grid.textContent='Laddar föremål…';
+  var items={};
+  try{items=await dlLoadItems();}catch(e){}
+  var groups={weapon:[],vitality:[],spirit:[]};
+  Object.keys(items).forEach(function(id){
+    var it=items[id];
+    var slot=it.slot;
+    if(slot==='armor')slot='vitality';
+    if(slot==='tech')slot='spirit';
+    if(!groups[slot])return;
+    groups[slot].push(it);
+  });
+  var any=Object.keys(groups).some(function(g){return groups[g].length;});
+  if(!any){grid.textContent='Kunde inte hämta föremålslistan.';return;}
+  grid.innerHTML='';
+  var titles={weapon:'Weapon',vitality:'Vitality',spirit:'Spirit'};
+  ['weapon','vitality','spirit'].forEach(function(g){
+    var col=document.createElement('div');col.className='icol '+g;
+    col.appendChild(Object.assign(document.createElement('h4'),{textContent:titles[g]}));
+    var list=document.createElement('div');list.className='ilist';
+    groups[g].sort(function(a,b){return (a.cost||0)-(b.cost||0)||a.name.localeCompare(b.name);})
+      .forEach(function(it){
+        var cell=document.createElement('div');cell.className='icell';
+        var im=document.createElement('img');im.decoding='async';im.alt='';
+        im.src='items/'+itemFile(it.name)+'.png';
+        im.addEventListener('error',function(){cell.remove();});   /* inte ett shopföremål */
+        cell.appendChild(im);
+        cell.appendChild(Object.assign(document.createElement('span'),{textContent:it.name}));
+        var body=tipText(it.raw)||'';
+        if(it.cost)body=(body?body+'  ':'')+'('+it.cost+' själar)';
+        attachTip(cell,it.name,body||'Föremål i butiken.');
+        list.appendChild(cell);
+      });
+    col.appendChild(list);
+    grid.appendChild(col);
+  });
+  itemsBuilt=true;
+}
+
+/* ---------------- Sektioner: matcher · hjältar · föremål ---------------- */
+var SECTIONS=['matches','heroes','items'];
+function currentSection(){
+  if(itemsOpen)return 'items';
+  if(heroOpen)return 'heroes';
+  return 'matches';
+}
+function goSection(name){
+  showItems(name==='items');
+  showHeroes(name==='heroes');
+  if(name==='matches'){el('listView').classList.remove('off');}
+  var label=el('secName');
+  if(label)label.textContent=name==='items'?'Items':(name==='heroes'?'Heroes':'Matches');
+  lockUI(500);
+}
+function stepSection(dir){
+  var i=SECTIONS.indexOf(currentSection())+dir;
+  if(i<0)i=0; if(i>=SECTIONS.length)i=SECTIONS.length-1;
+  goSection(SECTIONS[i]);
+}
+el('navPrev').addEventListener('click',function(e){e.stopPropagation();stepSection(-1);});
+el('navNext').addEventListener('click',function(e){e.stopPropagation();stepSection(1);});
