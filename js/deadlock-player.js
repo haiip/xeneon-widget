@@ -54,9 +54,16 @@ function showPlayer(p,hero,team,items,dur){
   t.textContent=team.name+(who?' · '+who:'');
   t.style.color=team.key==='king'?'#E8B872':'#9DC2F0';
   L.appendChild(t);
-  var art=document.createElement('img');art.className='render';
-  art.src='heroes/'+heroFile(hero.name)+'.png';art.alt='';
-  art.addEventListener('error',function(){this.remove();});
+  /* porträtt → render → ikon, så ingen hjälte står tom */
+  var art=document.createElement('img');art.className='render';art.alt='';
+  var chain=['heroes/portrait/'+heroFile(hero.name)+'.png',
+             'heroes/'+heroFile(hero.name)+'.png',
+             'heroes/icon/'+heroFile(hero.name)+'.png'];
+  var step=0;art.src=chain[0];
+  art.addEventListener('error',function(){
+    step++;
+    if(step<chain.length)this.src=chain[step];else this.remove();
+  });
   L.appendChild(art);
 
   var grid=document.createElement('div');grid.id='pStats';
