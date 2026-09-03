@@ -432,7 +432,7 @@ async function wxPoll(){
                     rgba(10,8,6,0) 48%, rgba(10,8,6,.5) 78%, rgba(10,8,6,.9) 100%)}
 
   .mstats{position:relative;z-index:4;display:flex;flex-direction:column;gap:.18em;
-        align-items:flex-end;text-align:right}
+        align-items:flex-start;text-align:left}
   .mres{align-self:center;font-size:calc(var(--meta) * 1.05);font-weight:800;
         letter-spacing:.12em;text-transform:uppercase;color:#fff;
         padding:.3em 1.3em;background-size:100% 100%;background-repeat:no-repeat;
