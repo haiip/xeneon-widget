@@ -18,17 +18,26 @@ function uiLocked(){return Date.now()<uiLock;}
 /* ---- Tooltip som fungerar med både mus och touch ---- */
 var tipHideTimer=null;
 function tipText(o){
-  /* plockar första begripliga beskrivningen ur ett API-objekt */
-  if(!o)return '';
-  var keys=['description','desc','tooltip','tooltip_details','flavor','summary'];
-  for(var i=0;i<keys.length;i++){
-    var v=o[keys[i]];
-    if(typeof v==='string'&&v.trim())return stripTags(v);
-    if(v&&typeof v==='object'){
-      for(var k in v)if(typeof v[k]==='string'&&v[k].trim())return stripTags(v[k]);
+  /* letar igenom hela objektet efter en riktig beskrivning */
+  if(!o||typeof o!=='object')return '';
+  var best='',bestScore=-1;
+  (function walk(node,keyPath,depth){
+    if(!node||depth>4)return;
+    if(typeof node==='string'){
+      var txt=stripTags(node);
+      if(txt.length<12||txt.indexOf(' ')<0)return;
+      var score=txt.length;
+      if(/desc/i.test(keyPath))score+=400;
+      if(/tooltip/i.test(keyPath))score+=250;
+      if(/flavor|lore/i.test(keyPath))score+=60;
+      if(/name|class|image|url|icon|path/i.test(keyPath))score-=500;
+      if(score>bestScore){bestScore=score;best=txt;}
+      return;
     }
-  }
-  return '';
+    if(typeof node!=='object')return;
+    for(var k in node)walk(node[k],keyPath+'.'+k,depth+1);
+  })(o,'',0);
+  return best;
 }
 function stripTags(s){
   return String(s).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();

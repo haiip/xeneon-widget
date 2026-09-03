@@ -15,7 +15,10 @@ var STAT_HELP={
   'Healing':'Läkning given till dig själv och lagkamrater.',
   'Damage taken':'Skada du tagit emot under matchen.',
   'Creep kills':'Dödade trupper.',
-  'Neutrals':'Dödade neutrala läger.'
+  'Neutrals':'Dödade neutrala läger.',
+  'Ability points':'Poäng lagda på att uppgradera hjältens fyra förmågor. De tjänas in med själar under matchen, inte från krukor.',
+  'Max health':'Hjältens maximala liv vid matchens slut, inklusive köpta föremål.',
+  'Self healing':'Läkning du gett dig själv.'
 };
 var PSTATS=[
   ['kills','Kills'],['deaths','Deaths'],['assists','Assists'],

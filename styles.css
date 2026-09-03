@@ -490,8 +490,9 @@ async function wxPoll(){
   #scoreBar{display:flex;align-items:center;gap:clamp(10px,1.6vw,32px);flex:none;
         position:relative;z-index:1;padding:.35em clamp(10px,1.4vw,26px);
         border-radius:12px;margin-bottom:.4em;
-        background:linear-gradient(90deg, rgba(232,184,114,.1), rgba(0,0,0,.22) 34%,
-                   rgba(0,0,0,.22) 66%, rgba(130,178,240,.1))}
+        background:linear-gradient(90deg, rgba(232,184,114,.42) 0%, rgba(176,132,66,.2) 22%,
+                   rgba(0,0,0,.3) 44%, rgba(0,0,0,.3) 56%,
+                   rgba(96,140,206,.2) 78%, rgba(130,178,240,.42) 100%)}
   .sbSide{display:flex;align-items:center;gap:clamp(8px,1vw,18px);flex:none;min-width:0}
   .sbSide.right{flex-direction:row-reverse;margin-left:auto}
   .sbSide .patron{width:clamp(34px,7vh,72px);height:clamp(34px,7vh,72px);flex:none;
