@@ -450,5 +450,7 @@ function stepSection(dir){
   if(i<0)i=0; if(i>=SECTIONS.length)i=SECTIONS.length-1;
   goSection(SECTIONS[i]);
 }
+el('itemsBtn').addEventListener('click',function(e){e.stopPropagation();
+  goSection(itemsOpen?'matches':'items');});
 el('navPrev').addEventListener('click',function(e){e.stopPropagation();stepSection(-1);});
 el('navNext').addEventListener('click',function(e){e.stopPropagation();stepSection(1);});

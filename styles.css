@@ -568,9 +568,9 @@ async function wxPoll(){
                    rgba(14,10,7,1) 96%)}
 
   /* hjältelistan */
-  #heroBtn{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
+  #heroBtn,#itemsBtn{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
         padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
-  #heroBtn:hover{opacity:1;background:rgba(232,184,114,.14)}
+  #heroBtn:hover,#itemsBtn:hover{opacity:1;background:rgba(232,184,114,.14)}
   #heroes{display:none;flex:1;min-height:0;position:relative;z-index:1}
   #heroes.on{display:flex;flex-direction:column;gap:.5em}
   #heroGrid{flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;
@@ -588,7 +588,7 @@ async function wxPoll(){
   .hcell .dps b{color:#fff;font-family:'Reaver',serif;font-size:calc(var(--meta) * 1.05);
         margin-right:.35em}
   #heroSum{display:none;flex:1;min-height:0;position:relative;
-        align-items:stretch;gap:clamp(10px,1.4vw,28px);padding-top:1.6em}
+        align-items:stretch;gap:clamp(10px,1.4vw,28px)}
   #heroSum.on{display:flex}
   #hBackdrop{position:absolute;inset:0;z-index:0;background-size:cover;
         background-position:center 20%;opacity:.2;
@@ -640,8 +640,8 @@ async function wxPoll(){
         min-width:3.5ch;color:#fff}
 
   /* sektionsnavigering */
-  #secNav{display:none;position:absolute;top:-2.2em;left:0;right:0;z-index:3;
-        align-items:center;gap:.7em}
+  #secNav{display:none;flex:none;position:relative;z-index:3;
+        align-items:center;gap:.7em;padding:.15em 0 .35em}
   body.hero #secNav,body.items #secNav{display:flex}
   #secNav button{font-size:calc(var(--meta) * 1.05);color:#F0CB93;line-height:1;
         padding:.05em .7em;border-radius:99px;border:1px solid rgba(232,184,114,.35)}
@@ -714,7 +714,7 @@ async function wxPoll(){
   .hm .kda{font-size:calc(var(--meta) * .95);font-weight:700;font-variant-numeric:tabular-nums}
   .hm .sub{font-size:calc(var(--meta) * .72);color:var(--ink-dim)}
   #hmEmpty{font-size:var(--meta);color:var(--ink-dim);opacity:.7}
-  #heroBack{position:absolute;top:-2.4em;left:0;z-index:2;
+  #heroBack{position:absolute;top:-1.9em;right:0;z-index:2;
         font-size:calc(var(--meta) * .9);color:#F0CB93;opacity:.85;
         padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
   #heroBack:hover{opacity:1;background:rgba(232,184,114,.14)}
