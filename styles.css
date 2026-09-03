@@ -431,25 +431,24 @@ async function wxPoll(){
          background:linear-gradient(180deg, rgba(10,8,6,.55) 0%, rgba(10,8,6,.06) 30%,
                     rgba(10,8,6,0) 48%, rgba(10,8,6,.5) 78%, rgba(10,8,6,.9) 100%)}
 
-  .mstats{position:relative;z-index:4;display:flex;flex-direction:column;gap:.15em}
-  .v2 .mstats,.v5 .mstats{align-items:flex-end;text-align:right}
-  .mres{align-self:flex-start;font-size:calc(var(--meta) * .8);font-weight:800;
-        letter-spacing:.1em;text-transform:uppercase;color:#fff;
-        padding:.28em .85em;background-size:100% 100%;background-repeat:no-repeat;
-        text-shadow:0 1px 4px rgba(0,0,0,.6)}
-  .v2 .mres,.v5 .mres{align-self:flex-end}
+  .mstats{position:relative;z-index:4;display:flex;flex-direction:column;gap:.18em;
+        align-items:flex-end;text-align:right}
+  .mres{align-self:center;font-size:calc(var(--meta) * 1.05);font-weight:800;
+        letter-spacing:.12em;text-transform:uppercase;color:#fff;
+        padding:.3em 1.3em;background-size:100% 100%;background-repeat:no-repeat;
+        text-shadow:0 1px 5px rgba(0,0,0,.7);margin-bottom:.15em}
   .win .mres{background-image:url(ui/stamp-win.png);transform:rotate(-3deg)}
   .loss .mres{background-image:url(ui/stamp-loss.png);transform:rotate(2.5deg)}
   .v1 .mres,.v4 .mres{transform:rotate(4deg)}
-  .mkda{font-size:clamp(15px,3.8vh,40px);font-weight:800;letter-spacing:-.025em;
+  .mkda{font-size:clamp(17px,4.6vh,50px);font-weight:800;letter-spacing:-.025em;
         font-variant-numeric:tabular-nums;line-height:1.02;
         text-shadow:0 2px 14px rgba(0,0,0,.6)}
-  .msub{font-size:calc(var(--meta) * .78);color:var(--ink-dim);opacity:.9;
+  .msub{font-size:calc(var(--meta) * .92);color:var(--ink-dim);opacity:.92;
         font-variant-numeric:tabular-nums;line-height:1.35;
         text-shadow:0 1px 8px rgba(0,0,0,.7)}
-  .mtags{position:absolute;left:0;right:0;bottom:3.1em;z-index:4;padding:0 .5em;
-        gap:.22em .3em}
-  .mtags .tag{font-size:calc(var(--meta) * .55);padding:.1em .45em}
+  .mtags{position:absolute;left:0;right:0;bottom:3.2em;z-index:4;padding:0 .4em;
+        gap:.26em .3em}
+  .mtags .tag{font-size:calc(var(--meta) * .78);padding:.16em .6em;letter-spacing:.05em}
   .mplayer{display:block;font-family:'Radiance',sans-serif;font-weight:600;
         font-size:calc(var(--meta) * .62);color:var(--ink-dim);opacity:.85;
         letter-spacing:.02em;margin-top:.1em;text-shadow:0 1px 6px rgba(0,0,0,.9)}
