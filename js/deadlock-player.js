@@ -1,4 +1,22 @@
 /* ---------------- Enskild spelare ---------------- */
+
+/* Förklaringar till siffrorna i spelarvyn. */
+var STAT_HELP={
+  'K / D / A':'Kills, deaths och assists — dödade fiender, egna dödsfall och assisterade dödar.',
+  'KDA':'(Kills + assists) delat med deaths. Över 3 räknas som starkt.',
+  'Souls / min':'Själar per minut. Måttet på hur snabbt du samlar resurser.',
+  'Souls':'Totalt insamlade själar, spelets valuta för föremål.',
+  'Last hits':'Antal trupper du gett dödsstöten och därmed fått själar för.',
+  'Denies':'Egna trupper du nekat fienden själar från.',
+  'Level':'Hjältens nivå vid matchens slut.',
+  'Hero damage':'Total skada gjord mot fiendehjältar.',
+  'Boss damage':'Skada mot Patron, Walkers och andra objektiv.',
+  'Objective damage':'Skada mot torn och objektiv.',
+  'Healing':'Läkning given till dig själv och lagkamrater.',
+  'Damage taken':'Skada du tagit emot under matchen.',
+  'Creep kills':'Dödade trupper.',
+  'Neutrals':'Dödade neutrala läger.'
+};
 var PSTATS=[
   ['kills','Kills'],['deaths','Deaths'],['assists','Assists'],
   ['net_worth','Souls'],['last_hits','Last hits'],['denies','Denies'],
@@ -45,6 +63,7 @@ function showPlayer(p,hero,team,items,dur){
     var c=document.createElement('div');c.className='stat';
     c.appendChild(Object.assign(document.createElement('b'),{textContent:v}));
     c.appendChild(Object.assign(document.createElement('span'),{textContent:label}));
+    attachTip(c,label,STAT_HELP[label]||'');
     grid.appendChild(c);
   }
   add((p.kills|0)+' / '+(p.deaths|0)+' / '+(p.assists|0),'K / D / A');
@@ -69,6 +88,9 @@ function showPlayer(p,hero,team,items,dur){
     im.addEventListener('error',function(){cell.remove();});
     cell.appendChild(im);
     cell.appendChild(Object.assign(document.createElement('span'),{textContent:it.name}));
+    var body=tipText(it.raw)||'';
+    if(it.cost)body=(body?body+'  ':'')+'('+it.cost+' själar)';
+    attachTip(cell,it.name,body||'Föremål köpt under matchen.');
     kit.appendChild(cell);
   });
   R.appendChild(kit);
