@@ -760,6 +760,18 @@ async function wxPoll(){
   .branch.weapon .bname{color:#E0913F} .branch.weapon .bfill{background:#E0913F}
   .branch.vitality .bname{color:#7FC24A} .branch.vitality .bfill{background:#7FC24A}
   .branch.spirit .bname{color:#B37BD8} .branch.spirit .bfill{background:#B37BD8}
+  #advBtn{align-self:flex-start;flex:none;font-size:calc(var(--meta) * .85);color:#F0CB93;
+        padding:.2em .9em;border-radius:99px;border:1px solid rgba(232,184,114,.35)}
+  #advBtn:hover{background:rgba(232,184,114,.14)}
+  #advStats{display:none;flex-wrap:wrap;gap:.4em;overflow-y:auto;touch-action:pan-y;
+        align-content:flex-start;flex:1;min-height:0}
+  #advStats.on{display:flex}
+  .astat{display:flex;flex-direction:column;padding:.3em .8em;border-radius:9px;
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);cursor:default}
+  .astat b{font-family:'Reaver',serif;font-size:calc(var(--meta) * 1.05);
+        font-variant-numeric:tabular-nums}
+  .astat span{font-size:calc(var(--meta) * .7);color:var(--ink-dim);letter-spacing:.04em;
+        text-transform:uppercase}
   #pItems{touch-action:pan-y;display:flex;flex-wrap:wrap;gap:.6em;overflow-y:auto;align-content:flex-start}
   .bigitem{width:clamp(84px,13vw,170px);display:flex;flex-direction:column;align-items:center;
         gap:.3em;padding:.5em .35em;border-radius:12px;

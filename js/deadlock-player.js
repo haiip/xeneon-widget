@@ -149,6 +149,40 @@ function buildPowerups(p){
   return box;
 }
 
+
+/* Sista mätpunkten i tidsserien innehåller matchens sluttotaler. */
+function lastSnap(p){
+  var s=p.stats;
+  return (Array.isArray(s)&&s.length&&typeof s[s.length-1]==='object')?s[s.length-1]:{};
+}
+var MAIN_STATS=[
+  ['player_damage','Hero damage'],['player_healing','Healing'],['boss_damage','Objective damage'],
+  ['player_damage_taken','Damage taken'],['last_hits','Last hits'],['denies','Denies']
+];
+var ADV_STATS=[
+  ['creep_damage','Creep damage'],['neutral_damage','Neutral damage'],
+  ['creep_kills','Creep kills'],['neutral_kills','Neutral kills'],
+  ['possible_creeps','Possible creeps'],['shots_hit','Shots hit'],['shots_missed','Shots missed'],
+  ['hero_bullets_hit','Bullets on heroes'],['hero_bullets_hit_crit','Crit hits'],
+  ['headshot_kills','Headshot kills'],['bullet_kills','Gun kills'],
+  ['ability_kills','Ability kills'],['melee_kills','Melee kills'],
+  ['damage_mitigated','Damage mitigated'],['damage_absorbed','Damage absorbed'],
+  ['self_healing','Self healing'],['teammate_healing','Healing given'],
+  ['heal_prevented','Healing prevented'],['heal_lost','Healing lost'],
+  ['max_health','Max health'],['weapon_power','Weapon power'],['tech_power','Spirit power'],
+  ['gold_player','Souls from players'],['gold_lane_creep','Souls from lane creeps'],
+  ['gold_neutral_creep','Souls from neutrals'],['gold_boss','Souls from objectives'],
+  ['gold_treasure','Souls from treasure'],['gold_denied','Souls denied'],
+  ['gold_death_loss','Souls lost on death'],['ability_points','Ability points']
+];
+var ADV_HELP={
+  'Accuracy':'Andel skott som träffade något. Räknas som träffar delat med avlossade skott.',
+  'Possible creeps':'Hur många trupper som gick att sista-slå. Jämför med Last hits.',
+  'Damage mitigated':'Skada dina motstånd tog bort innan den nådde livmätaren.',
+  'Healing prevented':'Fiendens läkning som du hindrade, till exempel med Healbane.',
+  'Souls denied':'Själar du nekade fienden genom att sista-slå deras trupper.'
+};
+
 function branchOf(it){
   var s=it.slot;
   if(s==='armor')return 'vitality';
@@ -185,6 +219,31 @@ function buildBranches(p,items){
     box.appendChild(row);
   });
   return box;
+}
+
+
+function fillAdvanced(box,p){
+  var snap=lastSnap(p);
+  function pick(k){
+    if(typeof snap[k]==='number')return snap[k];
+    if(typeof p[k]==='number')return p[k];
+    return null;
+  }
+  var hit=pick('shots_hit'),miss=pick('shots_missed');
+  var rows=[];
+  if(hit&&(hit+miss))rows.push(['Accuracy',Math.round(hit/(hit+miss)*100)+'%']);
+  ADV_STATS.forEach(function(pair){
+    var v=pick(pair[0]);
+    if(v!==null&&v!==0)rows.push([pair[1],fmtNum(v)]);
+  });
+  if(!rows.length){box.textContent='Ingen utökad statistik i den här matchen.';return;}
+  rows.forEach(function(r){
+    var c=document.createElement('div');c.className='astat';
+    c.appendChild(Object.assign(document.createElement('b'),{textContent:r[1]}));
+    c.appendChild(Object.assign(document.createElement('span'),{textContent:r[0]}));
+    if(ADV_HELP[r[0]])attachTip(c,r[0],ADV_HELP[r[0]]);
+    box.appendChild(c);
+  });
 }
 
 function showPlayer(p,hero,team,items,dur){
@@ -234,10 +293,21 @@ function showPlayer(p,hero,team,items,dur){
   var spm=soulsPerMin(p.net_worth,dur);
   if(spm)add(spm,'Souls / min');
 
-  PSTATS.forEach(function(pair){
-    var v=p[pair[0]];
-    if(typeof v==='number'&&v>0&&pair[0]!=='kills'&&pair[0]!=='deaths'&&pair[0]!=='assists')
-      add(fmtNum(v),pair[1]);
+  var snap=lastSnap(p);
+  function pick(k){
+    if(typeof snap[k]==='number')return snap[k];
+    if(typeof p[k]==='number')return p[k];
+    return null;
+  }
+  MAIN_STATS.forEach(function(pair){
+    var v=pick(pair[0]);
+    if(v!==null&&v>0)add(fmtNum(v),pair[1]);
+  });
+  var hit=pick('shots_hit'),miss=pick('shots_missed');
+  if(hit&&(hit+miss))add(Math.round(hit/(hit+miss)*100)+'%','Accuracy');
+  ['level','mvp_rank'].forEach(function(k){
+    var v=pick(k);
+    if(v!==null&&v>0)add(fmtNum(v),k==='level'?'Level':'MVP rank');
   });
   R.appendChild(grid);
 
@@ -246,6 +316,17 @@ function showPlayer(p,hero,team,items,dur){
 
   var br=buildBranches(p,items);
   if(br)R.appendChild(br);
+
+  var advBtn=document.createElement('button');advBtn.id='advBtn';
+  advBtn.textContent='Advanced stats';
+  var advBox=document.createElement('div');advBox.id='advStats';
+  advBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var open=advBox.classList.toggle('on');
+    advBtn.textContent=open?'Hide advanced':'Advanced stats';
+    if(open&&!advBox.childElementCount)fillAdvanced(advBox,p);
+  });
+  R.appendChild(advBtn);R.appendChild(advBox);
 
   var kit=document.createElement('div');kit.id='pItems';
   playerItems(p).forEach(function(id){
