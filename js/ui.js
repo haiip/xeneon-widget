@@ -10,7 +10,7 @@ function openSheet(on){
   gStart=null;                       /* samma beröring ska inte räknas som gest igen */
   sheetOpen=!!on;
   var gt=el('gripText'); if(gt)gt.textContent=sheetOpen?'Stäng':'Deadlock';
-  if(!sheetOpen){closeMatch();showHeroes(false);showItems(false);}
+  if(!sheetOpen){closeMatch();showHeroes(false);showItems(false);showPatch(false);}
   el('vDeadlock').classList.toggle('open',sheetOpen);
   document.body.classList.toggle('sheet',sheetOpen);
   clearTimeout(sheetTimer);

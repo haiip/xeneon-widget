@@ -5,7 +5,7 @@ async function showHeroes(on){
   heroOpen=!!on; window.__heroOpen=heroOpen;
   document.body.classList.toggle('hero',heroOpen);
   el('heroes').classList.toggle('on',heroOpen);
-  el('listView').classList.toggle('off',heroOpen||itemsOpen);
+  el('listView').classList.toggle('off',heroOpen||itemsOpen||!!window.__patchOpen);
   el('heroBtn').textContent=heroOpen?'Matches':'Heroes';
   if(!heroOpen){el('heroSum').classList.remove('on');document.body.classList.remove('hero');return;}
   closeMatch();
@@ -386,7 +386,7 @@ async function showItems(on){
   itemsOpen=!!on; window.__itemsOpen=itemsOpen;
   el('items').classList.toggle('on',itemsOpen);
   document.body.classList.toggle('items',itemsOpen);
-  el('listView').classList.toggle('off',itemsOpen||heroOpen);
+  el('listView').classList.toggle('off',itemsOpen||heroOpen||!!window.__patchOpen);
   if(!itemsOpen)return;
   closeMatch();
   if(itemsBuilt)return;
@@ -423,12 +423,7 @@ async function showItems(on){
         im.addEventListener('error',function(){cell.remove();});   /* inte ett shopföremål */
         cell.appendChild(im);
         cell.appendChild(Object.assign(document.createElement('span'),{textContent:it.name}));
-        var body=tipText(it.raw)||'';
-        var meta=[];
-        if(it.slot)meta.push(it.slot.charAt(0).toUpperCase()+it.slot.slice(1));
-        if(it.cost)meta.push(it.cost.toLocaleString('en-US')+' souls');
-        attachTip(cell,it.name,body?body+(meta.length?'  ·  '+meta.join('  ·  '):''):
-          (meta.join('  ·  ')||'Shop item.'));
+        attachTip(cell,it.name,it.desc||'Shop item.',itemMeta(it));
         list.appendChild(cell);
       });
     col.appendChild(list);
@@ -438,8 +433,10 @@ async function showItems(on){
 }
 
 /* ---------------- Sektioner: matcher · hjältar · föremål ---------------- */
-var SECTIONS=['matches','heroes','items'];
+var SECTIONS=['matches','heroes','items','patch'];
+var SECTION_NAMES={matches:'Matches',heroes:'Heroes',items:'Items',patch:'Patch notes'};
 function currentSection(){
+  if(window.__patchOpen)return 'patch';
   if(itemsOpen)return 'items';
   if(heroOpen)return 'heroes';
   return 'matches';
@@ -447,11 +444,13 @@ function currentSection(){
 function goSection(name){
   if(name!=='items')showItems(false);
   if(name!=='heroes')showHeroes(false);
+  if(name!=='patch')showPatch(false);
   if(name==='items')showItems(true);
   if(name==='heroes')showHeroes(true);
+  if(name==='patch')showPatch(true);
   if(name==='matches')el('listView').classList.remove('off');
   var label=el('secName');
-  if(label)label.textContent=name==='items'?'Items':(name==='heroes'?'Heroes':'Matches');
+  if(label)label.textContent=SECTION_NAMES[name]||'Matches';
   lockUI(500);
 }
 function stepSection(dir){

@@ -42,27 +42,62 @@ function tipText(o){
 function stripTags(s){
   return String(s).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
 }
-function showTip(target,title,body){
+function showTip(target,title,body,meta){
   var t=el('tip');if(!t)return;
   t.innerHTML='';
   if(title)t.appendChild(Object.assign(document.createElement('b'),{textContent:title}));
   if(body)t.appendChild(document.createTextNode(body));
+  if(meta)t.appendChild(Object.assign(document.createElement('i'),{textContent:meta}));
+  /* nollställ läget före mätningen — ett gammalt left nära högerkanten
+     klämmer ihop bredden och ger en hög, smal ruta */
+  t.style.left='0px';t.style.top='0px';
   t.classList.add('on');
   var r=target.getBoundingClientRect(),tr=t.getBoundingClientRect();
   var x=Math.min(Math.max(8,r.left+r.width/2-tr.width/2),window.innerWidth-tr.width-8);
   var y=r.top-tr.height-10;
   if(y<8)y=Math.min(r.bottom+10,window.innerHeight-tr.height-8);
-  t.style.left=x+'px';t.style.top=y+'px';
+  t.style.left=Math.max(8,x)+'px';t.style.top=Math.max(8,y)+'px';
   clearTimeout(tipHideTimer);
-  tipHideTimer=setTimeout(hideTip,4000);
+  tipHideTimer=setTimeout(hideTip,6000);
 }
 function hideTip(){var t=el('tip');if(t)t.classList.remove('on');}
-/* fäster förklaring på ett element: hovring för mus, tryck för touch */
-function attachTip(node,title,body){
-  if(!body&&!title)return node;
-  node.addEventListener('pointerenter',function(){showTip(node,title,body);});
-  node.addEventListener('pointerleave',hideTip);
-  node.addEventListener('click',function(e){e.stopPropagation();showTip(node,title,body);});
+
+/* Ett tryck som blir ett drag ska rulla listan, inte lämna en ruta hängande. */
+var tipDown=null;
+document.addEventListener('pointermove',function(e){
+  if(!tipDown)return;
+  if(Math.abs(e.clientX-tipDown.x)>12||Math.abs(e.clientY-tipDown.y)>12){tipDown=null;hideTip();}
+},true);
+document.addEventListener('pointerup',function(){tipDown=null;},true);
+document.addEventListener('pointercancel',function(){tipDown=null;hideTip();},true);
+document.addEventListener('scroll',function(){hideTip();},true);
+
+/* fäster förklaring på ett element: hovring för mus, tryck för pekskärm.
+   pointerenter/leave gäller bara mus — på touch kommer leave direkt vid
+   släpp och tog bort rutan innan man hann läsa den. */
+function attachTip(node,title,body,meta){
+  if(!body&&!title&&!meta)return node;
+  node.classList.add('hastip');
+  node.addEventListener('pointerenter',function(e){
+    if(e.pointerType&&e.pointerType!=='mouse')return;
+    showTip(node,title,body,meta);
+  });
+  node.addEventListener('pointerleave',function(e){
+    if(e.pointerType&&e.pointerType!=='mouse')return;
+    hideTip();
+  });
+  node.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse')return;
+    tipDown={x:e.clientX,y:e.clientY};
+    showTip(node,title,body,meta);
+  });
+  /* iCUE:s webview skickar inte alltid pointer-händelser för fingret */
+  node.addEventListener('touchstart',function(e){
+    var p=e.touches&&e.touches[0];
+    if(p)tipDown={x:p.clientX,y:p.clientY};
+    showTip(node,title,body,meta);
+  },{passive:true});
+  node.addEventListener('click',function(e){e.stopPropagation();showTip(node,title,body,meta);});
   return node;
 }
 

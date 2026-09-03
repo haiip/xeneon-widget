@@ -15,9 +15,70 @@ async function dlLoadItems(){
         type:(it.type||'').toLowerCase(),raw:it};
     dlItems[it.id]={name:it.name||it.class_name||('Item '+it.id),img:img,
                     type:(it.type||'').toLowerCase(),slot:String(slot).toLowerCase(),
-                    cost:it.cost||it.item_tier||0};
+                    cost:it.cost||it.item_tier||0,
+                    tier:it.item_tier||0,
+                    active:!!(it.is_active_item||it.activation==='instant_cast'),
+                    raw:it,desc:itemDesc(it)};
   });
   return dlItems;
+}
+
+/* ---- Föremålens förklaringstext ----
+   Spelets strängar innehåller HTML och platshållare av typen {s:bonus_clip_size}
+   som ska bytas mot värdet i properties. Utan raw-objektet fanns ingen text alls
+   att visa, vilket var därför rutorna bara innehöll slot och pris. */
+function itemProp(raw,key){
+  var p=raw&&(raw.properties||raw.props||raw.property_values);
+  if(!p)return null;
+  var v=p[key];
+  if(v===undefined||v===null)return null;
+  if(typeof v==='number'||typeof v==='string')return String(v);
+  if(typeof v!=='object')return null;
+  var n=(v.value!==undefined&&v.value!==null)?v.value:
+        (v.m_strValue!==undefined?v.m_strValue:null);
+  if(n===undefined||n===null)return null;
+  var post=String(v.postfix||v.postfix_type||v.units||'');
+  if(/percent/i.test(post))post='%';
+  else if(/second/i.test(post))post='s';
+  else if(/meter/i.test(post))post='m';
+  else post='';
+  return String(n)+post;
+}
+function cleanDesc(html,raw){
+  var s=String(html||'');
+  s=s.replace(/\{s:([A-Za-z0-9_]+)[^}]*\}/g,function(m,key){
+    var v=itemProp(raw,key);
+    return v===null?'':v;
+  });
+  s=s.replace(/<\s*br\s*\/?>/gi,' ').replace(/<\/(p|li|div|h\d)>/gi,'  ·  ');
+  s=s.replace(/<[^>]*>/g,'');
+  s=s.replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<')
+     .replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,'\u2019');
+  s=s.replace(/\s*·\s*(·\s*)+/g,'  ·  ').replace(/\s+/g,' ').trim();
+  s=s.replace(/^[·\s]+|[·\s]+$/g,'').trim();
+  return s;
+}
+function itemDesc(raw){
+  if(!raw||typeof raw!=='object')return '';
+  var d=raw.description||raw.desc||null,parts=[];
+  if(typeof d==='string')parts.push(d);
+  else if(d&&typeof d==='object')
+    ['desc','innate','passive','active','conditional'].forEach(function(k){
+      if(typeof d[k]==='string'&&d[k].trim())parts.push(d[k]);
+    });
+  var out=cleanDesc(parts.join('  ·  '),raw);
+  if(!out)out=cleanDesc(tipText(raw),raw);   /* reserv: leta upp valfri beskrivning */
+  if(out.length>340)out=out.slice(0,337).replace(/\s+\S*$/,'')+'…';
+  return out;
+}
+/* Slot, pris och nivå som en egen rad under texten. */
+function itemMeta(it){
+  var m=[];
+  if(it.slot)m.push(it.slot.charAt(0).toUpperCase()+it.slot.slice(1));
+  if(it.tier)m.push('Tier '+it.tier);
+  if(it.cost)m.push(it.cost.toLocaleString('en-US')+' souls');
+  if(it.active)m.push('Active');
+  return m.join('  ·  ');
 }
 function itemFile(name){
   return String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');

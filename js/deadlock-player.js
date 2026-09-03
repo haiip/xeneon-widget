@@ -345,12 +345,7 @@ function showPlayer(p,hero,team,items,dur){
     im.addEventListener('error',function(){cell.remove();});
     cell.appendChild(im);
     cell.appendChild(Object.assign(document.createElement('span'),{textContent:it.name}));
-    var body=tipText(it.raw)||'';
-    var meta=[];
-    if(it.slot)meta.push(it.slot.charAt(0).toUpperCase()+it.slot.slice(1));
-    if(it.cost)meta.push(it.cost.toLocaleString('en-US')+' souls');
-    attachTip(cell,it.name,body?body+(meta.length?'  ·  '+meta.join('  ·  '):''):
-      (meta.join('  ·  ')||'Item bought during the match.'));
+    attachTip(cell,it.name,it.desc||'Item bought during the match.',itemMeta(it));
     kit.appendChild(cell);
   });
   R.appendChild(kit);
