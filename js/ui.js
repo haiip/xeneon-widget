@@ -30,7 +30,7 @@ function gestureEnd(x,y){
   if(Math.abs(dy)<40||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
   if(!CFG.dl)return;
   if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.35)openSheet(true);
-  else if(dy<0&&sheetOpen)openSheet(false);
+  else if(sheetOpen&&(dy<0||start.y>window.innerHeight*0.75))openSheet(false);
 }
 document.addEventListener('pointerup',function(e){gestureEnd(e.clientX,e.clientY);},true);
 document.addEventListener('pointercancel',function(){gStart=null;},true);

@@ -66,14 +66,14 @@ async function dlLoadHeroes(){
       if(!img&&typeof imgs[k]==='string')img=imgs[k];
     });
     if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
-    dlHeroes[h.id]={name:h.name||('Hero '+h.id),img:img,raw:h,
+    dlHeroes[h.id]={id:h.id,name:h.name||('Hero '+h.id),img:img,raw:h,
       playable:!(h.in_development||h.disabled||h.is_disabled)};
   });
   return dlHeroes;
 }
 
 /* Provar flera varianter av historik-anropet och kommer ihåg vilken som gav träff. */
-var dlPath=null;
+var dlPath=null,dlAll=[];
 function dlCandidates(id){return [
   '/v1/players/'+id+'/match-history?only_stored_history=false',   /* hämtar färskt från Valve */
   '/v1/players/'+id+'/match-history?force_refetch=true',
@@ -131,6 +131,7 @@ async function dlPoll(){
     var arr=got.arr;
     if(!arr.length){dlMsg('The API responded but has no matches for account ID '+CFG.dl+'. Check the ID in settings.');return;}
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
+    dlAll=arr;                                  /* används av hjältevyn */
     renderCareer(arr);
     var recent=arr.slice(0,20);
     var wins=recent.filter(dlWon).length;
@@ -143,7 +144,7 @@ async function dlPoll(){
     if(w&&streak>=2){pill.innerHTML='<b>'+streak+'</b> win streak';pill.classList.add('on');}
     else pill.classList.remove('on');
     var body=el('dlBody');body.innerHTML='';
-    recent.slice(0,14).forEach(function(m){
+    recent.slice(0,8).forEach(function(m){
       var h=heroes[m.hero_id]||{name:'Hero '+m.hero_id,img:''};
       var v='v'+(Math.abs(Number(String(m.match_id).slice(-6))||0)%6);
       var c=document.createElement('div');c.className='match '+(dlWon(m)?'win':'loss')+' '+v;

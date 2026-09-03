@@ -318,6 +318,43 @@ async function showHeroSheet(h){
   });
 
   box.appendChild(card);
+
+  /* dina senaste matcher med hjälten */
+  var mine=(dlAll||[]).filter(function(m){return m.hero_id===h.id;});
+  var col=document.createElement('div');col.id='hMatches';
+  var head=document.createElement('h4');
+  head.textContent=mine.length?
+    'Your matches · '+mine.length+' played · '+
+      Math.round(mine.filter(dlWon).length/mine.length*100)+'% winrate':
+    'Your matches';
+  col.appendChild(head);
+  var listBox=document.createElement('div');listBox.id='hmList';
+  if(!mine.length){
+    listBox.appendChild(Object.assign(document.createElement('div'),
+      {id:'hmEmpty',textContent:'No tracked matches with '+h.name+' yet.'}));
+  } else mine.slice(0,12).forEach(function(m){
+    var c=document.createElement('div');c.className='hm '+(dlWon(m)?'win':'loss');
+    c.appendChild(Object.assign(document.createElement('div'),
+      {className:'r',textContent:dlWon(m)?'Win':'Loss'}));
+    c.appendChild(Object.assign(document.createElement('div'),{className:'kda',
+      textContent:(m.player_kills|0)+' / '+(m.player_deaths|0)+' / '+(m.player_assists|0)}));
+    var bits=[];
+    if(m.net_worth)bits.push(Math.round(m.net_worth/1000)+'k souls');
+    var spm=soulsPerMin(m.net_worth,m.match_duration_s);
+    if(spm)bits.push(spm+'/min');
+    if(m.match_duration_s)bits.push(Math.round(m.match_duration_s/60)+' min');
+    c.appendChild(Object.assign(document.createElement('div'),
+      {className:'sub',textContent:bits.join(' \u00b7 ')}));
+    c.addEventListener('click',function(e){
+      e.stopPropagation();
+      showHeroes(false);
+      showMatch(m);
+    });
+    listBox.appendChild(c);
+  });
+  col.appendChild(listBox);
+  box.appendChild(col);
+
   box.classList.add('on');
 }
 el('heroBtn').addEventListener('click',function(e){e.stopPropagation();showHeroes(!heroOpen);});
