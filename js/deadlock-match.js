@@ -43,6 +43,57 @@ function dlPlayers(j){
   for(var i=0;i<cands.length;i++)if(Array.isArray(cands[i])&&cands[i].length)return cands[i];
   return [];
 }
+
+/* Resultatlist överst: lagens summor, som i spelets egen vy. */
+function teamTotals(players,ti){
+  var t={kills:0,souls:0,dmg:0};
+  players.filter(function(p){return teamOf(p)===ti;}).forEach(function(p){
+    t.kills+=p.kills|0;
+    t.souls+=p.net_worth|0;
+    t.dmg+=(p.player_damage||p.hero_damage||p.damage_dealt||0);
+  });
+  return t;
+}
+function big(n){return n>=1000?Math.round(n/1000)+'K':String(Math.round(n));}
+function buildScoreBar(players,m){
+  var bar=el('scoreBar');bar.innerHTML='';
+  var mine=players.filter(function(p){return String(p.account_id)===String(CFG.dl);})[0];
+  function side(ti,right){
+    var t=TEAMS[ti],d=document.createElement('div');
+    d.className='sbSide'+(right?' right':'');
+    d.appendChild(Object.assign(document.createElement('div'),
+      {className:'patron',style:'background-image:url(ui/patron-'+t.icon+'.png)'}));
+    var ttl=document.createElement('img');ttl.className='ttl';ttl.alt=t.name;
+    ttl.src='ui/title-'+t.title+'.png';
+    ttl.addEventListener('error',function(){
+      this.replaceWith(Object.assign(document.createElement('span'),
+        {className:'res',textContent:t.name}));});
+    d.appendChild(ttl);
+    if(mine){
+      var won=teamOf(mine)===ti?dlWon(m):!dlWon(m);
+      d.appendChild(Object.assign(document.createElement('span'),
+        {className:'res '+(won?'w':'l'),textContent:won?'Victory':'Defeat'}));
+    }
+    return d;
+  }
+  function group(ti){
+    var t=teamTotals(players,ti),g=document.createElement('div');g.className='sbGroup';
+    [[String(t.kills),'Kills'],[big(t.souls),'Souls'],[big(t.dmg),'Damage']].forEach(function(pair){
+      if(pair[0]==='0')return;
+      var c=document.createElement('div');c.className='sbStat';
+      c.appendChild(Object.assign(document.createElement('b'),{textContent:pair[0]}));
+      c.appendChild(Object.assign(document.createElement('span'),{textContent:pair[1]}));
+      g.appendChild(c);
+    });
+    return g;
+  }
+  bar.appendChild(side(0,false));
+  var mid=document.createElement('div');mid.id='sbMid';
+  mid.appendChild(group(0));mid.appendChild(group(1));
+  bar.appendChild(mid);
+  bar.appendChild(side(1,true));
+}
+
 function teamOf(p){
   var t=p.team;
   if(typeof t!=='number')t=p.player_team;
@@ -71,6 +122,7 @@ async function showMatch(m){
     var players=dlPlayers(j);
     if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
     box.innerHTML='';
+    buildScoreBar(players,m);
     var head=document.createElement('div');head.id='matchInfo';
     var mins=m.match_duration_s?Math.round(m.match_duration_s/60)+' min':'';
     var when=m.start_time?new Date(m.start_time*1000).toLocaleString('en-GB',
@@ -79,19 +131,6 @@ async function showMatch(m){
     el('mHead').appendChild(head);
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
-      var h=document.createElement('h5');
-      h.appendChild(Object.assign(document.createElement('div'),
-        {className:'patron',style:'background-image:url(ui/patron-'+t.icon+'.png)'}));
-      var mine=players.filter(function(p){return String(p.account_id)===String(CFG.dl);})[0];
-      var won=mine&&teamOf(mine)===ti?dlWon(m):(mine?!dlWon(m):false);
-      var ttl=document.createElement('img');ttl.className='ttl';
-      ttl.src='ui/title-'+t.title+'.png';ttl.alt=t.name;
-      ttl.addEventListener('error',function(){
-        this.replaceWith(Object.assign(document.createElement('span'),{textContent:t.name}));});
-      h.appendChild(ttl);
-      if(mine){var res=document.createElement('span');res.className='tres '+(won?'w':'l');
-        res.textContent=won?'Victory':'Defeat';h.appendChild(res);}
-      col.appendChild(h);
       var topNW=players.reduce(function(a,b){return (b.net_worth||0)>(a.net_worth||0)?b:a;},players[0]);
       players.filter(function(p){return teamOf(p)===ti;})
         .sort(function(a,b){                       /* jag alltid överst */
