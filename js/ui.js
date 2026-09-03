@@ -28,21 +28,30 @@ document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot'))return;
   gStart={x:e.clientX,y:e.clientY,t:Date.now()};
 },true);
-function gestureEnd(x,y){
-  if(!gStart||uiLocked())return;
-  var dy=y-gStart.y,dx=x-gStart.x,start=gStart;gStart=null;
+function gestureFire(x,y){
+  if(!gStart||uiLocked())return false;
+  var dy=y-gStart.y,dx=x-gStart.x,start=gStart;
   /* vågrätt svep inne i luckan byter sektion */
-  if(sheetOpen&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4){
-    stepSection(dx<0?1:-1);return;
+  if(sheetOpen&&Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.3){
+    gStart=null;stepSection(dx<0?1:-1);return true;
   }
-  if(Math.abs(dy)<40||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
-  if(!CFG.dl)return;
-  if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.35)openSheet(true);
-  else if(sheetOpen&&(dy<0||start.y>window.innerHeight*0.75))openSheet(false);
+  if(Math.abs(dy)<45||Math.abs(dy)<Math.abs(dx))return false;
+  if(!CFG.dl)return false;
+  if(dy>0&&!sheetOpen&&start.y<window.innerHeight*0.4){gStart=null;openSheet(true);return true;}
+  if(dy<0&&sheetOpen){gStart=null;openSheet(false);return true;}
+  return false;
 }
+function gestureEnd(x,y){gestureFire(x,y);gStart=null;}
+/* utlöses redan under rörelsen — vissa pekskärmar skickar aldrig ett rent släpp */
+document.addEventListener('pointermove',function(e){
+  if(gStart&&(e.buttons||e.pointerType==='touch'))gestureFire(e.clientX,e.clientY);
+},true);
+document.addEventListener('touchmove',function(e){
+  var t=e.touches&&e.touches[0];
+  if(t&&gStart)gestureFire(t.clientX,t.clientY);
+},true);
 document.addEventListener('pointerup',function(e){gestureEnd(e.clientX,e.clientY);},true);
 document.addEventListener('pointercancel',function(){gStart=null;},true);
-/* vissa pekskärmar skickar inte pointerup — lyssna på touch också */
 document.addEventListener('touchend',function(e){
   var t=e.changedTouches&&e.changedTouches[0];
   if(t)gestureEnd(t.clientX,t.clientY);
