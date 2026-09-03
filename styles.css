@@ -380,7 +380,7 @@ async function wxPoll(){
   #dlBody::-webkit-scrollbar{height:4px}
   #dlBody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:2px}
   .match{flex:0 0 auto;scroll-snap-align:start;
-         width:calc((100% - 5 * var(--gap)) / 6);min-width:170px;border-radius:14px;
+         width:calc((100% - 7 * var(--gap)) / 8);min-width:150px;border-radius:14px;
          position:relative;overflow:hidden;display:block;padding:.7em .85em 0;
          background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
          box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer;
@@ -406,27 +406,27 @@ async function wxPoll(){
         pointer-events:none}
   .v0 .deco{width:52%;aspect-ratio:1;right:-10%;top:4%;opacity:.16;
         background-image:url(ui/sigil1.png);transform:rotate(-9deg)}
-  .v1 .deco{width:46%;aspect-ratio:1;left:-8%;bottom:26%;opacity:.2;
+  .v1 .deco{width:46%;aspect-ratio:1;left:-8%;top:16%;opacity:.2;
         background-image:url(ui/graf1.png);transform:rotate(6deg)}
-  .v2 .deco{width:34%;aspect-ratio:1;right:6%;top:38%;opacity:.14;
+  .v2 .deco{width:34%;aspect-ratio:1;right:6%;top:18%;opacity:.14;
         background-image:url(ui/symbol1.png)}
   .v3 .deco{width:26%;aspect-ratio:.8;right:9%;top:8%;opacity:.5;
         background-image:url(ui/bullet2.png)}
   .v4 .deco{width:56%;aspect-ratio:1;left:-14%;top:2%;opacity:.15;
         background-image:url(ui/sigil3.png);transform:rotate(14deg)}
-  .v5 .deco{width:48%;aspect-ratio:1;right:-8%;bottom:30%;opacity:.18;
+  .v5 .deco{width:48%;aspect-ratio:1;right:-8%;top:22%;opacity:.18;
         background-image:url(ui/graf3.png);transform:rotate(-5deg)}
 
-  .mhero{opacity:.96!important;position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-         width:118%;max-height:74%;object-fit:contain;object-position:bottom;
+  .mhero{opacity:.98!important;position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+         width:132%;max-height:88%;object-fit:contain;object-position:bottom;
          z-index:2;opacity:.96;pointer-events:none;
          transition:transform .25s ease;backface-visibility:hidden}
-  .match:hover .mhero{transform:translateX(-50%) scale(1.06)}
+  .match:hover .mhero{transform:translateX(-50%) scale(1.04)}
   .v1 .mhero,.v4 .mhero{left:56%}
   .v2 .mhero{left:44%}
   .match::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
-         background:linear-gradient(180deg, rgba(10,8,6,.42) 0%, rgba(10,8,6,0) 34%,
-                    rgba(10,8,6,.18) 70%, rgba(10,8,6,.6) 100%)}
+         background:linear-gradient(180deg, rgba(10,8,6,.55) 0%, rgba(10,8,6,.06) 30%,
+                    rgba(10,8,6,0) 52%, rgba(10,8,6,.55) 88%, rgba(10,8,6,.86) 100%)}
 
   .mstats{position:relative;z-index:4;display:flex;flex-direction:column;gap:.15em}
   .v2 .mstats,.v5 .mstats{align-items:flex-end;text-align:right}
