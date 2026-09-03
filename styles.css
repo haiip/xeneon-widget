@@ -274,6 +274,7 @@
   #dlClose{margin-left:auto;font-size:var(--meta);color:var(--ink-dim);opacity:.6;cursor:pointer}
   #dlClose:hover{opacity:1;color:#F0CB93}
   #dlFresh{font-size:calc(var(--meta) * .85);color:var(--ink-dim);opacity:.7}
+  #dlFresh.stale{color:#E8B872;opacity:.9}
   #dlRefresh{font-size:calc(var(--meta) * .85);color:#F0CB93;opacity:.8;
         padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
   #dlRefresh:hover{opacity:1;background:rgba(232,184,114,.14)}

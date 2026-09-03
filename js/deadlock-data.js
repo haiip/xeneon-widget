@@ -21,15 +21,39 @@ function dlAccountId(v){
 /* Direktanrop först. Blockerar webbläsaren dem går resten via en öppen proxy. */
 var dlViaProxy=false;
 function dlProxyUrl(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}
+/* Senaste anropets utfall, för raden längst upp i Deadlock-luckan.
+   steam===false betyder att API:et svarade ur sin egen databas utan att
+   fråga Valve — det gör den för konton som inte är vän med någon av
+   deras bottar, och det är därför historiken kan ligga ett dygn efter. */
+var dlNet={proxy:false,steam:null,status:0,ms:0,at:0};
+/* Proxyn var förr ett enkelriktat beslut: ett enda misslyckat direktanrop
+   satte dlViaProxy och sedan gick allt via allorigins resten av sessionen.
+   Den är en gratis publik proxy och långsam, så en tillfällig hicka kunde
+   göra widgeten trög ända till nästa omladdning. Nu provar vi direkt igen
+   efter fem minuter. */
+var dlProxyUntil=0;
 async function dlFetch(path){
   var url=/^https?:/.test(path)?path:DL+path;
-  if(!dlViaProxy){
+  var t0=Date.now();
+  if(!dlViaProxy||Date.now()>dlProxyUntil){
     try{
       var r=await fetch(url,{cache:'no-store'});
-      if(r.ok||r.status<500)return r;
-    }catch(e){dlViaProxy=true;}
+      if(r.ok||r.status<500){dlViaProxy=false;dlNote(r,false,t0);return r;}
+    }catch(e){dlViaProxy=true;dlProxyUntil=Date.now()+5*60*1000;}
   }
-  return fetch(dlProxyUrl(url),{cache:'no-store'});
+  var p=await fetch(dlProxyUrl(url),{cache:'no-store'});
+  dlNote(p,true,t0);
+  return p;
+}
+function dlNote(r,viaProxy,t0){
+  dlNet.proxy=!!viaProxy;
+  dlNet.status=r.status;
+  dlNet.ms=Date.now()-t0;
+  dlNet.at=Date.now();
+  /* proxyn sväljer svarshuvudena, då vet vi inget */
+  var h=null;
+  if(!viaProxy){try{h=r.headers.get('Called-Steam');}catch(e){h=null;}}
+  dlNet.steam=h===null?null:(h==='true');
 }
 var dlWait=0;
 async function dlJson(path){
@@ -38,6 +62,12 @@ async function dlJson(path){
   if(r.status===429){
     var ra=parseInt(r.headers.get('Retry-After')||'60',10);
     dlWait=Date.now()+(isNaN(ra)?60:ra+2)*1000;
+    /* match-history svarar 429 med den lagrade historiken i kroppen —
+       hellre lite gammal data än ingen alls medan vi väntar ut spärren */
+    try{
+      var body=await r.json();
+      if(body&&(Array.isArray(body)?body.length:Object.keys(body).length))return body;
+    }catch(e){}
     throw new Error('HTTP 429 — väntar '+(isNaN(ra)?60:ra)+' s');
   }
   if(!r.ok)throw new Error('HTTP '+r.status+' på '+String(path).split('?')[0]);
@@ -149,9 +179,13 @@ async function dlLoadName(){
   return '';
 }
 
+/* only_stored_history=false fanns med här förr och såg ut att hämta färskt
+   från Valve. Parametern finns inte längre i API:et — MatchHistoryQuery har
+   bara force_refetch — och okända query-parametrar ignoreras tyst, så det var
+   ett helt vanligt anrop som dessutom låste fast dlPath.
+   force_refetch är också borta: bot-vän-kollen i API:et ligger före den
+   flaggan, så den gör ingenting för oss, och den kostar 1 anrop i timmen. */
 function dlCandidates(id){return [
-  '/v1/players/'+id+'/match-history?only_stored_history=false',   /* hämtar färskt från Valve */
-  '/v1/players/'+id+'/match-history?force_refetch=true',
   '/v1/players/'+id+'/match-history',
   '/v1/players/'+id+'/matches'
 ];}
@@ -194,6 +228,16 @@ async function dlProbe(raw){
     }
   }
   return out;
+}
+/* Kort etikett om varifrån senaste svaret kom. */
+function dlSource(){
+  var bits=[];
+  if(dlNet.steam===true)bits.push('live from Steam');
+  else if(dlNet.steam===false)bits.push('stored only');
+  else bits.push(dlNet.proxy?'via proxy':'unknown source');
+  if(dlNet.status===429)bits.push('rate limited');
+  if(dlNet.ms)bits.push(dlNet.ms+' ms');
+  return bits.join('  ·  ');
 }
 function dlMsg(t){el('dlBody').innerHTML='';
   var d=document.createElement('div');d.id='dlMsg';d.textContent=t;el('dlBody').appendChild(d);}
@@ -275,7 +319,8 @@ async function dlPoll(){
     if(top&&top.start_time){
       var age=(Date.now()-top.start_time*1000)/3600000;
       el('dlFresh').textContent='Latest match '+(age<1?Math.round(age*60)+' min':
-        age<48?Math.round(age)+' h':Math.round(age/24)+' d')+' ago';
+        age<48?Math.round(age)+' h':Math.round(age/24)+' d')+' ago  ·  '+dlSource();
+      el('dlFresh').className=dlNet.steam===false?'stale':'';
     }
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
