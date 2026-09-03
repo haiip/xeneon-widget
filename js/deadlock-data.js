@@ -178,7 +178,8 @@ async function dlPoll(){
       nm.appendChild(logo);
       c.appendChild(nm);
 
-      c.addEventListener('click',function(e){e.stopPropagation();showMatch(m);});
+      c.addEventListener('click',function(e){
+        e.stopPropagation();if(uiLocked())return;showMatch(m);});
       body.appendChild(c);
     });
 

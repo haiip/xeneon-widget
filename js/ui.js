@@ -6,6 +6,8 @@ function sheetIdle(){
   if(sheetOpen)sheetTimer=setTimeout(function(){openSheet(false);},SHEET_IDLE);
 }
 function openSheet(on){
+  lockUI(700);
+  gStart=null;                       /* samma beröring ska inte räknas som gest igen */
   sheetOpen=!!on;
   var gt=el('gripText'); if(gt)gt.textContent=sheetOpen?'Stäng':'Deadlock';
   if(!sheetOpen){closeMatch();showHeroes(false);}
@@ -18,14 +20,16 @@ function openSheet(on){
 ['pointerdown','pointermove','wheel','scroll','click'].forEach(function(ev){
   el('vDeadlock').addEventListener(ev,function(){if(sheetOpen)sheetIdle();},true);
 });
-el('grip').addEventListener('pointerdown',function(e){e.stopPropagation();openSheet(!sheetOpen);});
+el('grip').addEventListener('pointerdown',function(e){
+  e.stopPropagation();e.preventDefault();openSheet(!sheetOpen);});
+el('grip').addEventListener('click',function(e){e.stopPropagation();e.preventDefault();});
 el('dlClose').addEventListener('click',function(e){e.stopPropagation();openSheet(false);});
 document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot'))return;
   gStart={x:e.clientX,y:e.clientY,t:Date.now()};
 },true);
 function gestureEnd(x,y){
-  if(!gStart)return;
+  if(!gStart||uiLocked())return;
   var dy=y-gStart.y,dx=x-gStart.x,start=gStart;gStart=null;
   if(Math.abs(dy)<40||Math.abs(dx)>Math.abs(dy))return;   /* inte ett lodrätt drag */
   if(!CFG.dl)return;
@@ -63,6 +67,7 @@ function show(v){
 }
 document.addEventListener('pointerdown',function(e){
   if(e.target.closest('#gear, #setup, #foot, #grip'))return;
+  if(uiLocked())return;
   if(sheetOpen){
     if(e.target.closest('#vDeadlock'))return;   /* tryck inuti luckan tillhör luckan */
     openSheet(false);return;

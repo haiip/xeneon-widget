@@ -61,7 +61,8 @@ async function showHeroes(on){
       cell.appendChild(d);
     }
 
-    cell.addEventListener('click',function(e){e.stopPropagation();showHeroSheet(h);});
+    cell.addEventListener('click',function(e){
+      e.stopPropagation();if(uiLocked())return;showHeroSheet(h);});
     grid.appendChild(cell);
   });
   if(!grid.querySelector('.hcell'))

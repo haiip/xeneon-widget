@@ -9,3 +9,8 @@ var SCOPES='user-read-playback-state user-modify-playback-state user-read-curren
 var el=function(id){return document.getElementById(id);};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* Kort spärr efter vyväxling, så samma tryck inte går vidare till nästa vy. */
+var uiLock=0;
+function lockUI(ms){uiLock=Date.now()+(ms||650);}
+function uiLocked(){return Date.now()<uiLock;}
