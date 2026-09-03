@@ -5,7 +5,7 @@ async function showHeroes(on){
   heroOpen=!!on; window.__heroOpen=heroOpen;
   document.body.classList.toggle('hero',heroOpen);
   el('heroes').classList.toggle('on',heroOpen);
-  el('listView').classList.toggle('off',heroOpen);
+  el('listView').classList.toggle('off',heroOpen||itemsOpen);
   el('heroBtn').textContent=heroOpen?'Matches':'Heroes';
   if(!heroOpen){el('heroSum').classList.remove('on');document.body.classList.remove('hero');return;}
   closeMatch();
@@ -383,7 +383,7 @@ el('heroBtn').addEventListener('click',function(e){e.stopPropagation();
 /* ---------------- Föremålssektionen ---------------- */
 var itemsOpen=false,itemsBuilt=false;
 async function showItems(on){
-  itemsOpen=!!on;
+  itemsOpen=!!on; window.__itemsOpen=itemsOpen;
   el('items').classList.toggle('on',itemsOpen);
   document.body.classList.toggle('items',itemsOpen);
   el('listView').classList.toggle('off',itemsOpen||heroOpen);
@@ -438,9 +438,11 @@ function currentSection(){
   return 'matches';
 }
 function goSection(name){
-  showItems(name==='items');
-  showHeroes(name==='heroes');
-  if(name==='matches'){el('listView').classList.remove('off');}
+  if(name!=='items')showItems(false);
+  if(name!=='heroes')showHeroes(false);
+  if(name==='items')showItems(true);
+  if(name==='heroes')showHeroes(true);
+  if(name==='matches')el('listView').classList.remove('off');
   var label=el('secName');
   if(label)label.textContent=name==='items'?'Items':(name==='heroes'?'Heroes':'Matches');
   lockUI(500);

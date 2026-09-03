@@ -223,7 +223,7 @@ function closeMatch(){
   document.body.classList.remove('match');
   var mi=document.getElementById('matchInfo');if(mi)mi.remove();
   el('dlDetail').classList.remove('on');
-  if(!window.__heroOpen)el('listView').classList.remove('off');
+  if(!window.__heroOpen&&!window.__itemsOpen)el('listView').classList.remove('off');
 }
 el('dlBack').addEventListener('click',function(e){e.stopPropagation();closeMatch();});
 el('dlRefresh').addEventListener('click',async function(e){
