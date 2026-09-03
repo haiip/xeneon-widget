@@ -576,55 +576,51 @@ async function wxPoll(){
   .hcell .dps b{color:#fff;font-family:'Reaver',serif;font-size:calc(var(--meta) * 1.05);
         margin-right:.35em}
   #heroSum{display:none;flex:1;min-height:0;position:relative;
-        align-items:stretch;gap:clamp(12px,1.8vw,34px);padding-top:.2em}
+        align-items:stretch;gap:clamp(10px,1.4vw,28px);padding-top:1.6em}
   #heroSum.on{display:flex}
   #hBackdrop{position:absolute;inset:0;z-index:0;background-size:cover;
         background-position:center 20%;opacity:.2;
         mask-image:radial-gradient(75% 90% at 50% 40%,#000,transparent 82%);
         -webkit-mask-image:radial-gradient(75% 90% at 50% 40%,#000,transparent 82%)}
   #hCard{position:relative;z-index:1;height:100%;flex:none;
-        width:clamp(240px,27%,420px);display:flex;flex-direction:column;
+        width:clamp(170px,17%,300px);display:flex;flex-direction:column;align-items:center;
         border-radius:14px;overflow:hidden;
-        border:1px solid rgba(255,255,255,.16);
-        background:linear-gradient(180deg,#221a12,#15100b 60%,#100c08);
-        box-shadow:0 14px 40px rgba(0,0,0,.5)}
-  #hCard .nameimg{height:clamp(18px,5vh,52px);max-width:70%;object-fit:contain;
-        align-self:center;margin:.35em 0 .25em}
-  #hPortrait{position:relative;align-self:center;flex:none;
-        height:clamp(70px,22vh,230px);aspect-ratio:280/380;
-        border-radius:8px;overflow:hidden;margin-bottom:.35em;
-        border:1px solid rgba(255,255,255,.14);display:flex;align-items:flex-end;
-        justify-content:center;background:#0d0a07}
+        border:1px solid rgba(255,255,255,.14);
+        background:linear-gradient(180deg,#221a12,#15100b 60%,#100c08)}
+  #hCard .nameimg{height:clamp(16px,4.4vh,46px);max-width:82%;object-fit:contain;
+        margin:.4em 0 .3em}
+  #hPortrait{position:relative;flex:1;min-height:0;width:100%;
+        display:flex;align-items:flex-end;justify-content:center;overflow:hidden;
+        background:#0d0a07}
   #hPortrait .bg{position:absolute;inset:0;background-size:cover;background-position:center 22%}
-  #hPortrait .render{position:relative;width:104%;height:100%;object-fit:contain;
+  #hPortrait .render{position:relative;max-width:104%;max-height:100%;object-fit:contain;
         object-position:bottom}
-  #hSkills{display:flex;gap:.3em;flex-wrap:wrap;justify-content:center;
-        padding:0 .5em .35em;flex:none}
-  .skill{display:flex;align-items:center;gap:.3em;padding:.16em .5em;border-radius:99px;
-        background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
-  .skill img{width:clamp(14px,2.4vh,26px);height:clamp(14px,2.4vh,26px);
-        object-fit:contain;flex:none}
-  .skill span{font-size:calc(var(--meta) * .66);white-space:nowrap}
 
-  #hStats{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-  .sgroup{display:flex;flex-direction:column}
-  .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .8);
-        letter-spacing:.06em;text-align:center;padding:.12em;color:#17100a;font-weight:700}
+  /* statistiken i tre spalter i stället för staplad */
+  #hStats{position:relative;z-index:1;flex:none;height:100%;
+        width:clamp(300px,36%,700px);display:flex;gap:.5em}
+  .sgroup{flex:1;min-width:0;display:flex;flex-direction:column;
+        border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.1);
+        background:#15110e}
+  .sgroup.spirit{flex:.55}
+  .sgroup h4{font-family:'Reaver',serif;font-size:calc(var(--meta) * .82);
+        letter-spacing:.05em;text-align:center;padding:.2em;color:#17100a;font-weight:700}
   .sgroup.weapon h4{background:#E0913F}
   .sgroup.vitality h4{background:#7FC24A}
   .sgroup.spirit h4{background:#B37BD8}
-  .srow{display:flex;align-items:center;gap:.4em;padding:.06em .7em;
-        font-size:calc(var(--meta) * .72);line-height:1.25;background:#171310}
+  .srow{display:flex;align-items:center;gap:.35em;padding:.1em .6em;
+        font-size:calc(var(--meta) * .74);line-height:1.25;background:#171310}
   .srow:nth-child(even){background:#1e1815}
-  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.86);text-align:right;
+  .srow .k{flex:1;min-width:0;color:rgba(255,255,255,.82);text-align:right;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .srow .ico{width:clamp(11px,1.7vh,16px);height:clamp(11px,1.7vh,16px);
+  .srow .ico{width:clamp(11px,1.8vh,18px);height:clamp(11px,1.8vh,18px);
         object-fit:contain;flex:none;opacity:.95}
   .srow .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
-        min-width:4.5ch;color:#fff}
+        min-width:4ch;color:#fff}
 
   /* hjältetaggar */
-  .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:.28em;padding:.1em .4em .3em}
+  .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:.24em;padding:.25em .4em .35em;
+        flex:none}
   .tag{position:relative;overflow:hidden;font-size:calc(var(--meta) * .62);font-weight:800;
         letter-spacing:.08em;text-transform:uppercase;color:#0e0c09;
         padding:.16em .55em;border-radius:4px;
@@ -642,7 +638,7 @@ async function wxPoll(){
 
   /* dina matcher med hjälten */
   #hMatches{position:relative;z-index:1;flex:1;min-width:0;display:flex;
-        flex-direction:column;gap:.4em}
+        flex-direction:column;gap:.3em;height:100%}
   #hMatches h4{font-family:'Reaver',serif;font-size:var(--meta);color:#F0CB93;
         letter-spacing:.06em;text-transform:uppercase;flex:none}
   #hmList{flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;
@@ -661,8 +657,10 @@ async function wxPoll(){
   .hm .kda{font-size:calc(var(--meta) * .95);font-weight:700;font-variant-numeric:tabular-nums}
   .hm .sub{font-size:calc(var(--meta) * .72);color:var(--ink-dim)}
   #hmEmpty{font-size:var(--meta);color:var(--ink-dim);opacity:.7}
-  #heroBack{align-self:flex-start;font-size:var(--meta);color:#F0CB93;opacity:.85;
-        padding:.2em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
+  #heroBack{position:absolute;top:-2.4em;left:0;z-index:2;
+        font-size:calc(var(--meta) * .9);color:#F0CB93;opacity:.85;
+        padding:.15em .8em;border-radius:99px;border:1px solid rgba(232,184,114,.3)}
+  #heroBack:hover{opacity:1;background:rgba(232,184,114,.14)}
 
 
   #player{position:absolute;inset:0;z-index:5;display:none;

@@ -310,7 +310,7 @@ async function showHeroSheet(h){
     });
     if(n)wrap.appendChild(col);
   });
-  card.appendChild(wrap);
+  /* statistiken ligger bredvid kortet, inte inuti */
 
   /* dubbelklick listar alla fältnamn API:et har för hjälten */
   card.addEventListener('dblclick',function(e){
@@ -331,6 +331,7 @@ async function showHeroSheet(h){
   });
 
   box.appendChild(card);
+  box.appendChild(wrap);
 
   /* dina senaste matcher med hjälten */
   var mine=(dlAll||[]).filter(function(m){return m.hero_id===h.id;});
