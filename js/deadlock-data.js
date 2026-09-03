@@ -74,6 +74,81 @@ async function dlLoadHeroes(){
 
 /* Provar flera varianter av historik-anropet och kommer ihåg vilken som gav träff. */
 var dlPath=null,dlAll=[];
+
+/* ---- Spelarnamn: cachas hårt, eftersom det är tolv konton per match ---- */
+var nameCache={},namePath=null,nameDead=false;
+try{nameCache=JSON.parse(localStorage.getItem('xe_names')||'{}');}catch(e){nameCache={};}
+function saveNames(){try{localStorage.setItem('xe_names',JSON.stringify(nameCache));}catch(e){}}
+function pickName(o){
+  if(!o||typeof o!=='object')return '';
+  var keys=['personaname','persona_name','display_name','name','nickname','steam_name'];
+  for(var i=0;i<keys.length;i++)if(typeof o[keys[i]]==='string'&&o[keys[i]].trim())return o[keys[i]];
+  for(var k in o)if(o[k]&&typeof o[k]==='object'){
+    var n=pickName(o[k]); if(n)return n;
+  }
+  return '';
+}
+async function fetchNames(ids){
+  if(nameDead||!ids.length)return;
+  var need=ids.filter(function(id){return !(id in nameCache);});
+  if(!need.length)return;
+  /* först ett samlat anrop, sedan ett per konto */
+  var batch=['/v1/players/steam?account_ids='+need.join(','),
+             '/v1/players/steam-profiles?account_ids='+need.join(',')];
+  for(var b=0;b<batch.length;b++){
+    try{
+      var j=await dlJson(batch[b]);
+      var arr=Array.isArray(j)?j:(j&&(j.players||j.profiles))||[];
+      if(arr.length){
+        arr.forEach(function(o){
+          var id=String(o.account_id||o.accountid||o.id||'');
+          var n=pickName(o);
+          if(id&&n)nameCache[id]=n;
+        });
+        need.forEach(function(id){if(!(id in nameCache))nameCache[id]='';});
+        saveNames();return;
+      }
+    }catch(e){}
+  }
+  var singles=['/v1/players/{id}/steam','/v1/players/{id}/profile','/v1/players/{id}'];
+  for(var s=0;s<singles.length;s++){
+    try{
+      var probe=await dlJson(singles[s].replace('{id}',need[0]));
+      var nm=pickName(Array.isArray(probe)?probe[0]:probe);
+      if(nm){namePath=singles[s];break;}
+    }catch(e){}
+  }
+  if(!namePath){nameDead=true;return;}          /* ingen endpoint fungerar */
+  for(var i=0;i<need.length;i++){
+    try{
+      var one=await dlJson(namePath.replace('{id}',need[i]));
+      nameCache[need[i]]=pickName(Array.isArray(one)?one[0]:one)||'';
+    }catch(e){nameCache[need[i]]='';}
+  }
+  saveNames();
+}
+function nameOf(id){return nameCache[String(id)]||'';}
+
+
+/* Steam-namnet: hämtas om API:et kan, annars det du skrivit in i setup. */
+var dlName='';
+async function dlLoadName(){
+  if(CFG.nm){dlName=CFG.nm;return dlName;}
+  var tries=['/v1/players/'+CFG.dl+'/steam',
+             '/v1/players/steam?account_ids='+CFG.dl,
+             '/v1/players/'+CFG.dl+'/profile'];
+  for(var i=0;i<tries.length;i++){
+    try{
+      var j=await dlJson(tries[i]);
+      var o=Array.isArray(j)?j[0]:j;
+      var n=o&&(o.personaname||o.persona_name||o.name||o.display_name||
+                (o.profile&&(o.profile.personaname||o.profile.name)));
+      if(n){dlName=String(n);return dlName;}
+    }catch(e){}
+  }
+  return '';
+}
+
 function dlCandidates(id){return [
   '/v1/players/'+id+'/match-history?only_stored_history=false',   /* hämtar färskt från Valve */
   '/v1/players/'+id+'/match-history?force_refetch=true',
@@ -132,6 +207,7 @@ async function dlPoll(){
     if(!arr.length){dlMsg('The API responded but has no matches for account ID '+CFG.dl+'. Check the ID in settings.');return;}
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
     dlAll=arr;                                  /* används av hjältevyn */
+    if(!dlName)dlLoadName().then(function(){});
     renderCareer(arr);
     var recent=arr.slice(0,20);
     var wins=recent.filter(dlWon).length;
@@ -180,6 +256,8 @@ async function dlPoll(){
       logo.addEventListener('error',function(){
         this.replaceWith(document.createTextNode(h.name));});
       nm.appendChild(logo);
+      if(dlName)nm.appendChild(Object.assign(document.createElement('span'),
+        {className:'mplayer',textContent:dlName}));
       c.appendChild(nm);
 
       c.addEventListener('click',function(e){

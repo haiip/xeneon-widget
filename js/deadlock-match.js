@@ -94,6 +94,20 @@ function buildScoreBar(players,m){
   bar.appendChild(side(1,true));
 }
 
+
+function playerLabel(heroName,acct){
+  var mine=String(acct)===String(CFG.dl);
+  var n=mine?(CFG.nm||dlName||'you'):nameOf(acct);
+  return n?heroName+' ('+n+')':heroName;
+}
+/* fyller i namnen när uppslagningen är klar */
+function paintNames(){
+  var nodes=document.querySelectorAll('#teams .nm[data-acct]');
+  for(var i=0;i<nodes.length;i++){
+    nodes[i].textContent=playerLabel(nodes[i].dataset.hero,nodes[i].dataset.acct);
+  }
+}
+
 function teamOf(p){
   var t=p.team;
   if(typeof t!=='number')t=p.player_team;
@@ -123,6 +137,8 @@ async function showMatch(m){
     if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
     box.innerHTML='';
     buildScoreBar(players,m);
+    var ids=players.map(function(p){return String(p.account_id||'');}).filter(Boolean);
+    fetchNames(ids).then(function(){paintNames();});
     var head=document.createElement('div');head.id='matchInfo';
     var mins=m.match_duration_s?Math.round(m.match_duration_s/60)+' min':'';
     var when=m.start_time?new Date(m.start_time*1000).toLocaleString('en-GB',
@@ -147,7 +163,9 @@ async function showMatch(m){
         var row=document.createElement('div');row.className='row';
         row.appendChild(heroIcon(hero));
         var nm=document.createElement('span');nm.className='nm';
-        nm.textContent=hero.name+(String(p.account_id)===String(CFG.dl)?' (you)':'');
+        nm.dataset.acct=String(p.account_id||'');
+        nm.dataset.hero=hero.name;
+        nm.textContent=playerLabel(hero.name,p.account_id);
         row.appendChild(nm);
         var st=document.createElement('span');st.className='st';
         var dur=m.match_duration_s||j.match_duration_s||(j.match_info&&j.match_info.duration_s);

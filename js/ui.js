@@ -98,7 +98,7 @@ function note(t,cls){var n=el('authState');n.textContent=t;n.className=cls||'';}
 function openSetup(){
   el('setup').classList.add('on');
   el('redir').textContent=REDIRECT;
-  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
+  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;if(el('inNm'))el('inNm').value=CFG.nm||'';el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
   if(CFG.rt)note('Spotify är redan ansluten.','ok');
 }
 el('gear').addEventListener('click',function(e){e.stopPropagation();openSetup();});
@@ -123,7 +123,7 @@ el('btnDlTest').addEventListener('click',async function(){
   var rows=await dlProbe(raw);
   st.innerHTML=rows.map(esc).join('<br>');
   st.className=rows.join(' ').indexOf(': 0 matcher')<rows.join(' ').length&&/[1-9]\d* matcher/.test(rows.join(' '))?'ok':'warn';
-  if(dlPath){ls('xe_dl',CFG.dl);el('inDl').value=CFG.dl;el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
+  if(dlPath){ls('xe_dl',CFG.dl);el('inDl').value=CFG.dl;if(el('inNm'))el('inNm').value=CFG.nm||'';el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
     st.innerHTML+='<br><b>Använder: '+esc(dlPath)+'</b>';}
 });
 el('btnWx').addEventListener('click',async function(){
@@ -147,11 +147,13 @@ el('btnMake').addEventListener('click',function(){
   CFG.guild=el('inGuild').value.trim();ls('xe_guild',CFG.guild);
   CFG.back=parseInt(el('inBack').value,10)||0;ls('xe_back',String(CFG.back));
   CFG.dl=dlAccountId(el('inDl').value);ls('xe_dl',CFG.dl);
+  CFG.nm=(el('inNm')?el('inNm').value:'').trim();ls('xe_nm',CFG.nm);
   if(!CFG.rt){el('out').textContent='Logga in på Spotify i steg 1 först.';return;}
   var p=new URLSearchParams({cid:CFG.cid,rt:CFG.rt});
   if(CFG.guild)p.set('guild',CFG.guild);
   if(CFG.back)p.set('back',String(CFG.back));
   if(CFG.dl)p.set('dl',CFG.dl);
+  if(CFG.nm)p.set('nm',CFG.nm);
   if(CFG.wx)p.set('wx',CFG.wx);
   el('out').textContent='<iframe src="'+REDIRECT+'?'+p.toString()+'" width="100%" height="100%" frameborder="0"></iframe>';
 });

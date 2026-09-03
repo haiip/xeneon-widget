@@ -450,6 +450,9 @@ async function wxPoll(){
   .mtags{position:absolute;left:0;right:0;bottom:3.1em;z-index:4;padding:0 .5em;
         gap:.22em .3em}
   .mtags .tag{font-size:calc(var(--meta) * .55);padding:.1em .45em}
+  .mplayer{display:block;font-family:'Radiance',sans-serif;font-weight:600;
+        font-size:calc(var(--meta) * .62);color:var(--ink-dim);opacity:.85;
+        letter-spacing:.02em;margin-top:.1em;text-shadow:0 1px 6px rgba(0,0,0,.9)}
   .mname{position:absolute;left:0;right:0;bottom:.5em;z-index:5;text-align:center;
          font-size:var(--meta);font-weight:800;letter-spacing:.01em;
          text-shadow:0 2px 12px rgba(0,0,0,.9);

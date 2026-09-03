@@ -49,8 +49,9 @@ function showPlayer(p,hero,team,items,dur){
     var h=document.createElement('h2');h.textContent=hero.name;
     h.style.fontFamily="'Reaver',serif";h.style.fontSize='var(--artist)';this.replaceWith(h);});
   L.appendChild(logo);
-  var t=document.createElement('div');t.id='pTeam';t.textContent=team.name+
-    (String(p.account_id)===String(CFG.dl)?' · you':'');
+  var who=String(p.account_id)===String(CFG.dl)?(CFG.nm||dlName||'you'):nameOf(p.account_id);
+  var t=document.createElement('div');t.id='pTeam';
+  t.textContent=team.name+(who?' · '+who:'');
   t.style.color=team.key==='king'?'#E8B872':'#9DC2F0';
   L.appendChild(t);
   var art=document.createElement('img');art.className='render';
