@@ -45,36 +45,38 @@ function fmtNum(v){
 
 /* Dubbelklick i spelarvyn listar varenda fält matchdatan har för spelaren. */
 function playerDebug(p,host){
-  var flat={};
-  (function walk(o,path,depth){
-    if(!o||typeof o!=='object'||depth>4)return;
-    for(var k in o){
-      var v=o[k];
-      if(v===null||v===undefined)continue;
-      if(typeof v==='object'){
-        if(Array.isArray(v)){
-          flat[path+k]='['+v.length+' poster]';
-          v.slice(0,40).forEach(function(item,i){
-            if(item&&typeof item==='object')walk(item,path+k+'['+i+'].',depth+1);
-            else flat[path+k+'['+i+']']=item;
-          });
-        }else walk(v,path+k+'.',depth+1);
-      }else flat[path+k]=v;
-    }
-  })(p,'',0);
+  var lines=[];
+  function show(v){
+    if(v===null||v===undefined)return '';
+    if(typeof v==='object')return Array.isArray(v)?'['+v.length+' poster]':'{objekt}';
+    return String(v);
+  }
+  /* toppnivån, som en översikt */
+  Object.keys(p).sort().forEach(function(k){
+    lines.push(k+' = '+show(p[k]));
+  });
+  /* och de tre listor vi faktiskt vill titta i, med index */
+  ['stats_type_stat','power_up_buffs','accolades'].forEach(function(key){
+    var a=p[key];
+    if(!Array.isArray(a)||!a.length)return;
+    lines.push('','--- '+key+' ('+a.length+') ---');
+    a.forEach(function(v,i){
+      if(v&&typeof v==='object'){
+        var bits=[];
+        for(var k in v)if(typeof v[k]!=='object')bits.push(k+'='+v[k]);
+        lines.push('  ['+i+'] '+bits.join(' '));
+      }else lines.push('  ['+i+'] '+v);
+    });
+  });
   var box=document.createElement('div');
   box.style.cssText='position:absolute;inset:5%;z-index:12;overflow:auto;padding:1em 1.4em;'+
     'background:rgba(8,6,4,.98);border-radius:12px;border:1px solid rgba(232,184,114,.3);'+
-    'font-family:Consolas,monospace;font-size:13px;line-height:1.55;white-space:pre-wrap';
-  var keys=Object.keys(flat).sort();
-  box.textContent=keys.length?
-    keys.map(function(k){return k+' = '+flat[k];}).join('\n')+
-      '\n\n('+keys.length+' fält · klicka för att stänga)':
-    'Inga fält hittades.';
+    'font-family:Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;'+
+    'column-width:22em;column-gap:2em';
+  box.textContent=lines.join('\n')+'\n\n(klicka för att stänga)';
   box.addEventListener('click',function(e){e.stopPropagation();this.remove();});
   host.appendChild(box);
 }
-
 function branchOf(it){
   var s=it.slot;
   if(s==='armor')return 'vitality';
