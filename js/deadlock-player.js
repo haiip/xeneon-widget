@@ -36,6 +36,34 @@ function fmtNum(v){
 }
 
 /* Fördelningen mellan grenarna, som spelets tre staplar. */
+
+/* Dubbelklick i spelarvyn listar varenda fält matchdatan har för spelaren. */
+function playerDebug(p,host){
+  var flat={};
+  (function walk(o,path,depth){
+    if(!o||typeof o!=='object'||depth>3)return;
+    for(var k in o){
+      var v=o[k];
+      if(v===null||v===undefined)continue;
+      if(typeof v==='object'){
+        if(Array.isArray(v))flat[(path+k)]='['+v.length+' poster]';
+        else walk(v,path+k+'.',depth+1);
+      }else flat[path+k]=v;
+    }
+  })(p,'',0);
+  var box=document.createElement('div');
+  box.style.cssText='position:absolute;inset:5%;z-index:12;overflow:auto;padding:1em 1.4em;'+
+    'background:rgba(8,6,4,.98);border-radius:12px;border:1px solid rgba(232,184,114,.3);'+
+    'font-family:Consolas,monospace;font-size:13px;line-height:1.55;white-space:pre-wrap';
+  var keys=Object.keys(flat).sort();
+  box.textContent=keys.length?
+    keys.map(function(k){return k+' = '+flat[k];}).join('\n')+
+      '\n\n('+keys.length+' fält · klicka för att stänga)':
+    'Inga fält hittades.';
+  box.addEventListener('click',function(e){e.stopPropagation();this.remove();});
+  host.appendChild(box);
+}
+
 function branchOf(it){
   var s=it.slot;
   if(s==='armor')return 'vitality';
@@ -147,5 +175,13 @@ function showPlayer(p,hero,team,items,dur){
     kit.appendChild(cell);
   });
   R.appendChild(kit);
+  box.addEventListener('dblclick',function(e){
+    e.stopPropagation();
+    if(!box.querySelector('[data-dbg]')){
+      var before=box.childElementCount;
+      playerDebug(p,box);
+      var added=box.lastChild;if(added)added.dataset.dbg='1';
+    }
+  });
   box.classList.add('on');
 }
