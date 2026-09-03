@@ -55,6 +55,12 @@ function playerDebug(p,host){
   Object.keys(p).sort().forEach(function(k){
     lines.push(k+' = '+show(p[k]));
   });
+  /* kända värden som borde återfinnas bland de 98 talen */
+  var known={};
+  ['net_worth','kills','deaths','assists','last_hits','denies','level','ability_points',
+   'hero_id','player_slot','assigned_lane','team'].forEach(function(k){
+    if(typeof p[k]==='number')known[p[k]]=(known[p[k]]?known[p[k]]+'/':'')+k;
+  });
   /* och de tre listor vi faktiskt vill titta i, med index */
   ['stats_type_stat','power_up_buffs','accolades'].forEach(function(key){
     var a=p[key];
@@ -65,7 +71,10 @@ function playerDebug(p,host){
         var bits=[];
         for(var k in v)if(typeof v[k]!=='object')bits.push(k+'='+v[k]);
         lines.push('  ['+i+'] '+bits.join(' '));
-      }else lines.push('  ['+i+'] '+v);
+      }else{
+        var hit=(key==='stats_type_stat'&&known[v])?'   <-- '+known[v]:'';
+        lines.push('  ['+i+'] '+v+hit);
+      }
     });
   });
   var box=document.createElement('div');
