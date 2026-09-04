@@ -69,7 +69,11 @@ var dlWaits={};
 function dlBucket(path){
   var p=String(path);
   if(p.indexOf('force_refetch=true')>=0)return 'refetch';
-  if(p.indexOf('/match-history')>=0||p.indexOf('/matches')>=0)return 'history';
+  if(p.indexOf('/match-history')>=0||p.indexOf('/players/')>=0&&p.indexOf('/matches')>=0)return 'history';
+  /* Matchdetaljerna har sin egen spärr. Ligger repay-metadatan i deras
+     objektlagring är den generös, men måste de hämta från Steam är det
+     3 anrop i timmen per IP — några gamla matcher i rad räcker för att slå i den. */
+  if(p.indexOf('/v1/matches/')>=0)return 'matches';
   if(p.indexOf('/assets')>=0||p.indexOf('assets.deadlock-api.com')>=0)return 'assets';
   if(p.indexOf('/patches')>=0)return 'patches';
   return 'other';

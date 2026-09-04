@@ -280,7 +280,12 @@ async function showMatch(m){
       box.appendChild(col);
     });
   }catch(e){
-    box.innerHTML='<div id="dlMsg">Could not load match details. ('+esc(e.message)+')</div>';
+    var held=dlHeld('matches');
+    box.innerHTML='<div id="dlMsg">'+(held?
+      'Deadlock-API har spärrat matchdetaljer i '+Math.ceil(held/60)+' min till. '+
+      'Detaljerna hämtas från Steam för matcher som inte redan ligger i deras lager, '+
+      'och det taket är 3 i timmen.':
+      'Could not load match details. ('+esc(e.message)+')')+'</div>';
   }
 }
 function closeMatch(){
