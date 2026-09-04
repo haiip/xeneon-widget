@@ -295,6 +295,6 @@ el('dlRefresh').addEventListener('click',async function(e){
   e.stopPropagation();
   var b=this;b.classList.add('busy');b.textContent='…';
   dlPath=null;                                  /* prova alla varianter igen */
-  await dlPoll();
+  await dlPoll(true);                           /* knappen får kosta ett force_refetch */
   b.classList.remove('busy');b.textContent='Refresh';
 });

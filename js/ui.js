@@ -114,7 +114,7 @@ function note(t,cls){var n=el('authState');n.textContent=t;n.className=cls||'';}
 function openSetup(){
   el('setup').classList.add('on');
   el('redir').textContent=REDIRECT;
-  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;if(el('inNm'))el('inNm').value=CFG.nm||'';el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
+  el('inCid').value=CFG.cid;el('inGuild').value=CFG.guild;el('inBack').value=CFG.back||'';el('inDl').value=CFG.dl;if(el('inNm'))el('inNm').value=CFG.nm||'';if(el('inKey'))el('inKey').value=CFG.key||'';el('inWx').value=CFG.wx?decodeURIComponent(CFG.wx.split(',')[2]||''):'';
   if(CFG.rt)note('Spotify är redan ansluten.','ok');
 }
 el('gear').addEventListener('click',function(e){e.stopPropagation();openSetup();});
@@ -164,12 +164,14 @@ el('btnMake').addEventListener('click',function(){
   CFG.back=parseInt(el('inBack').value,10)||0;ls('xe_back',String(CFG.back));
   CFG.dl=dlAccountId(el('inDl').value);ls('xe_dl',CFG.dl);
   CFG.nm=(el('inNm')?el('inNm').value:'').trim();ls('xe_nm',CFG.nm);
+  CFG.key=(el('inKey')?el('inKey').value:'').trim();ls('xe_key',CFG.key);
   if(!CFG.rt){el('out').textContent='Logga in på Spotify i steg 1 först.';return;}
   var p=new URLSearchParams({cid:CFG.cid,rt:CFG.rt});
   if(CFG.guild)p.set('guild',CFG.guild);
   if(CFG.back)p.set('back',String(CFG.back));
   if(CFG.dl)p.set('dl',CFG.dl);
   if(CFG.nm)p.set('nm',CFG.nm);
+  if(CFG.key)p.set('key',CFG.key);
   if(CFG.wx)p.set('wx',CFG.wx);
   el('out').textContent='<iframe src="'+REDIRECT+'?'+p.toString()+'" width="100%" height="100%" frameborder="0"></iframe>';
 });

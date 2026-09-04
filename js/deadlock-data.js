@@ -32,12 +32,17 @@ var dlNet={proxy:false,steam:null,status:0,ms:0,at:0};
    göra widgeten trög ända till nästa omladdning. Nu provar vi direkt igen
    efter fem minuter. */
 var dlProxyUntil=0;
+/* Med en giltig X-API-Key byter API:et ut IP-kvoten mot nyckelkvoten,
+   10 anrop i timmen blir 300. Nyckeln följer inte med genom proxyn. */
+function dlHeaders(){
+  return CFG.key?{'X-API-Key':CFG.key}:undefined;
+}
 async function dlFetch(path){
   var url=/^https?:/.test(path)?path:DL+path;
   var t0=Date.now();
   if(!dlViaProxy||Date.now()>dlProxyUntil){
     try{
-      var r=await fetch(url,{cache:'no-store'});
+      var r=await fetch(url,{cache:'no-store',headers:dlHeaders()});
       if(r.ok||r.status<500){dlViaProxy=false;dlNote(r,false,t0);return r;}
     }catch(e){dlViaProxy=true;dlProxyUntil=Date.now()+5*60*1000;}
   }
@@ -185,19 +190,25 @@ async function dlLoadName(){
    ett helt vanligt anrop som dessutom låste fast dlPath.
    force_refetch är också borta: bot-vän-kollen i API:et ligger före den
    flaggan, så den gör ingenting för oss, och den kostar 1 anrop i timmen. */
-function dlCandidates(id){return [
-  '/v1/players/'+id+'/match-history',
-  '/v1/players/'+id+'/matches'
-];}
+function dlCandidates(id,force){
+  var base='/v1/players/'+id+'/match-history';
+  /* force_refetch hämtar om hela historiken från Steam och är hårt spärrad:
+     1/h per IP, 5/h med nyckel, och den faller inte tillbaka på lagrad data
+     vid 429 utan svarar fel. Därför bara på knappen, aldrig i pollningen. */
+  return (force?[base+'?force_refetch=true']:[]).concat([
+    base,
+    '/v1/players/'+id+'/matches'
+  ]);
+}
 function dlRows(j){
   if(Array.isArray(j))return j;
   if(j&&Array.isArray(j.matches))return j.matches;
   if(j&&Array.isArray(j.data))return j.data;
   return [];
 }
-async function dlHistory(id){
-  var paths=dlCandidates(id);
-  if(dlPath&&paths.indexOf(dlPath)>0)paths=[dlPath].concat(paths);
+async function dlHistory(id,force){
+  var paths=dlCandidates(id,force);
+  if(!force&&dlPath&&paths.indexOf(dlPath)>0)paths=[dlPath].concat(paths);
   var lastErr=null;
   for(var i=0;i<paths.length;i++){
     try{
@@ -241,12 +252,13 @@ function dlSource(){
 }
 function dlMsg(t){el('dlBody').innerHTML='';
   var d=document.createElement('div');d.id='dlMsg';d.textContent=t;el('dlBody').appendChild(d);}
-async function dlPoll(){
+async function dlPoll(force){
   if(!CFG.dl){dlMsg('No Steam ID set. Open settings in the top left corner.');return;}
   try{
     var heroes={};
     try{heroes=await dlLoadHeroes();}catch(e){heroes={};}
-    var got=await dlHistory(CFG.dl);
+    dlLastPoll=Date.now();
+    var got=await dlHistory(CFG.dl,force);
     var arr=got.arr;
     if(!arr.length){dlMsg('The API responded but has no matches for account ID '+CFG.dl+'. Check the ID in settings.');return;}
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
@@ -393,13 +405,20 @@ function flashMatch(m,hero){
 }
 
 /* Hämtar tätt en kvart efter en ny match, glest annars. */
-var dlHot=0,dlTick=null;
+var dlHot=0,dlTick=null,dlLastPoll=0;
+/* Så länge kontot inte var prioriterat svarade API:et ur sin egen databas och
+   rörde aldrig någon kvot — då kostade det inget att fråga varannan minut.
+   För ett prioriterat konto räknas varje match-history-anrop: 10 i timmen per
+   IP, eller 300 med API-nyckel. Utan nyckel måste vi alltså ner till ett anrop
+   var sjunde minut, annars får vi 429 och faller tillbaka på lagrad data. */
+function dlMinGap(){return CFG.key?30000:400000;}
 function dlSchedule(){
   clearTimeout(dlTick);
   var hot=Date.now()-dlHot<15*60*1000;
   var wait=document.hidden?300000:(hot?30000:120000);
+  wait=Math.max(wait,dlMinGap()-(Date.now()-dlLastPoll));
   if(Date.now()<dlWait)wait=Math.max(wait,dlWait-Date.now());
-  dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},wait);
+  dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},Math.max(wait,1000));
 }
 
 

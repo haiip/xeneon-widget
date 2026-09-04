@@ -3,7 +3,7 @@ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorag
   catch(e){if(v===undefined)return mem[k]||null;mem[k]=v;return v;}}
 var qs=new URLSearchParams(location.search);
 var CFG={cid:qs.get('cid')||ls('xe_cid')||'', rt:qs.get('rt')||ls('xe_rt')||'',
-  guild:qs.get('guild')||ls('xe_guild')||'', dl:qs.get('dl')||ls('xe_dl')||'', nm:qs.get('nm')||ls('xe_nm')||'', wx:qs.get('wx')||ls('xe_wx')||'', back:parseInt(qs.get('back')||ls('xe_back')||'0',10)||0};
+  guild:qs.get('guild')||ls('xe_guild')||'', dl:qs.get('dl')||ls('xe_dl')||'', nm:qs.get('nm')||ls('xe_nm')||'', wx:qs.get('wx')||ls('xe_wx')||'', key:qs.get('key')||ls('xe_key')||'', back:parseInt(qs.get('back')||ls('xe_back')||'0',10)||0};
 var REDIRECT=location.origin+location.pathname;
 var SCOPES='user-read-playback-state user-modify-playback-state user-read-currently-playing';
 var el=function(id){return document.getElementById(id);};
