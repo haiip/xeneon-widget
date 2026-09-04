@@ -399,6 +399,7 @@ async function dlPoll(force){
     }
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
+    prefetchMatch(recent);
   }catch(e){
     /* Har vi redan matcher på skärmen är det bättre att låta dem stå kvar
        än att byta ut dem mot en felruta vid en tillfällig spärr. */
@@ -572,6 +573,28 @@ function flashMatch(m,hero){
   f.classList.add('on');
   clearTimeout(dlFlashTimer);
   dlFlashTimer=setTimeout(function(){f.classList.remove('on');},25000);
+}
+
+/* Hämtar hem detaljerna för den nyaste matchen vi inte redan har sparad, så
+   den ligger i cachen innan du öppnar den. En match per poll räcker — du
+   spelar inte fler än så på sju minuter — och det håller oss långt under
+   taket på 3 i timmen. Gamla matcher hämtas inte i förväg; de kostar bara
+   om du faktiskt bläddrar dit. */
+var PREFETCH_MAX_AGE=36*3600*1000;
+async function prefetchMatch(recent){
+  if(dlHeld('matches'))return;
+  for(var i=0;i<recent.length&&i<5;i++){
+    var m=recent[i];
+    if(!m||!m.match_id)continue;
+    if(m.start_time&&Date.now()-m.start_time*1000>PREFETCH_MAX_AGE)return;
+    if(mcHas(m.match_id))continue;
+    try{
+      var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata',
+                             '/v1/matches/'+m.match_id]);
+      if(j&&dlPlayers(j).length)mcPut(m.match_id,j);
+    }catch(e){}
+    return;                                   /* en per poll, oavsett utfall */
+  }
 }
 
 /* Hämtar tätt en kvart efter en ny match, glest annars. */
