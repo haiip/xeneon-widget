@@ -20,7 +20,7 @@ async function showHeroes(on){
   var list=Object.keys(heroes).map(function(id){return heroes[id];})
     .filter(function(h){return h.playable!==false;});
   if(!list.length){
-    grid.textContent=Date.now()<dlWait?
+    grid.textContent=dlHeld('assets')?
       'The Deadlock API paused us. Try again in a minute.':
       'Could not load the hero list. Tap again.';
     return;

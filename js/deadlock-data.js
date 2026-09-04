@@ -60,20 +60,40 @@ function dlNote(r,viaProxy,t0){
   if(!viaProxy){try{h=r.headers.get('Called-Steam');}catch(e){h=null;}}
   dlNet.steam=h===null?null:(h==='true');
 }
-var dlWait=0;
+/* Spärrarna räknas var för sig hos API:et — force_refetch har en egen hink
+   med 1 anrop i timmen, historiken en med 10, och assets och patches ligger
+   utanför båda. En enda global väntetid gjorde att ett 429 på force_refetch
+   låste hela widgeten i upp till en timme, inklusive hjältar och föremål.
+   Nu väntar bara den hink som faktiskt blev spärrad. */
+var dlWaits={};
+function dlBucket(path){
+  var p=String(path);
+  if(p.indexOf('force_refetch=true')>=0)return 'refetch';
+  if(p.indexOf('/match-history')>=0||p.indexOf('/matches')>=0)return 'history';
+  if(p.indexOf('/assets')>=0||p.indexOf('assets.deadlock-api.com')>=0)return 'assets';
+  if(p.indexOf('/patches')>=0)return 'patches';
+  return 'other';
+}
+function dlHeld(bucket){
+  var t=dlWaits[bucket]||0;
+  return t>Date.now()?Math.ceil((t-Date.now())/1000):0;
+}
 async function dlJson(path){
-  if(Date.now()<dlWait)throw new Error('väntar på Deadlock-API');
+  var bucket=dlBucket(path),left=dlHeld(bucket);
+  if(left)throw new Error('rate limited, '+left+' s left');
   var r=await dlFetch(path);
   if(r.status===429){
     var ra=parseInt(r.headers.get('Retry-After')||'60',10);
-    dlWait=Date.now()+(isNaN(ra)?60:ra+2)*1000;
+    if(isNaN(ra))ra=60;
+    dlWaits[bucket]=Date.now()+(ra+2)*1000;
     /* match-history svarar 429 med den lagrade historiken i kroppen —
-       hellre lite gammal data än ingen alls medan vi väntar ut spärren */
+       hellre lite gammal data än ingen alls medan vi väntar ut spärren.
+       force_refetch gör inte det, den svarar med ett fel. */
     try{
       var body=await r.json();
       if(body&&(Array.isArray(body)?body.length:Object.keys(body).length))return body;
     }catch(e){}
-    throw new Error('HTTP 429 — väntar '+(isNaN(ra)?60:ra)+' s');
+    throw new Error('HTTP 429 på '+bucket+' — väntar '+ra+' s');
   }
   if(!r.ok)throw new Error('HTTP '+r.status+' på '+String(path).split('?')[0]);
   return r.json();
@@ -206,7 +226,15 @@ function dlRows(j){
   if(j&&Array.isArray(j.data))return j.data;
   return [];
 }
+/* Refresh-knappen ska inte slösa bort timmens enda force_refetch på ett
+   anrop vi vet blir spärrat. */
+var dlForceAt=0;
+function dlForceAllowed(){
+  return !dlHeld('refetch')&&Date.now()-dlForceAt>55*60*1000;
+}
 async function dlHistory(id,force){
+  if(force&&dlForceAllowed())dlForceAt=Date.now();
+  else force=false;
   var paths=dlCandidates(id,force);
   if(!force&&dlPath&&paths.indexOf(dlPath)>0)paths=[dlPath].concat(paths);
   var lastErr=null;
@@ -337,7 +365,14 @@ async function dlPoll(force){
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
   }catch(e){
-    dlMsg('Could not load Deadlock data for account ID '+CFG.dl+'. ('+e.message+')');
+    /* Har vi redan matcher på skärmen är det bättre att låta dem stå kvar
+       än att byta ut dem mot en felruta vid en tillfällig spärr. */
+    if(dlAll.length){
+      el('dlFresh').textContent='Update failed — '+e.message;
+      el('dlFresh').className='stale';
+    }else{
+      dlMsg('Could not load Deadlock data for account ID '+CFG.dl+'. ('+e.message+')');
+    }
   }
 }
 /* Hjältebild: lokal fil först, API:ets bild som reserv. */
@@ -417,7 +452,8 @@ function dlSchedule(){
   var hot=Date.now()-dlHot<15*60*1000;
   var wait=document.hidden?300000:(hot?30000:120000);
   wait=Math.max(wait,dlMinGap()-(Date.now()-dlLastPoll));
-  if(Date.now()<dlWait)wait=Math.max(wait,dlWait-Date.now());
+  var held=dlHeld('history');
+  if(held)wait=Math.max(wait,held*1000);
   dlTick=setTimeout(function(){dlPoll().then(dlSchedule,dlSchedule);},Math.max(wait,1000));
 }
 
