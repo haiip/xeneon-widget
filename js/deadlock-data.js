@@ -386,7 +386,8 @@ async function dlPoll(force){
 
     /* ny match: visa den under klockan och gå upp i tempo en stund */
     var top=recent[0];
-    if(!dlFirst&&top&&top.match_id!==dlLastMatch){
+    var isNew=!dlFirst&&top&&top.match_id!==dlLastMatch;
+    if(isNew){
       var hh=heroes[top.hero_id]||{name:'Unknown hero',img:''};
       flashMatch(top,hh);
       dlHot=Date.now();
@@ -399,7 +400,7 @@ async function dlPoll(force){
     }
     if(top)dlLastMatch=top.match_id;
     dlFirst=false;
-    prefetchMatch(recent);
+    if(isNew)prefetchMatch(top);
   }catch(e){
     /* Har vi redan matcher på skärmen är det bättre att låta dem stå kvar
        än att byta ut dem mot en felruta vid en tillfällig spärr. */
@@ -575,26 +576,23 @@ function flashMatch(m,hero){
   dlFlashTimer=setTimeout(function(){f.classList.remove('on');},25000);
 }
 
-/* Hämtar hem detaljerna för den nyaste matchen vi inte redan har sparad, så
-   den ligger i cachen innan du öppnar den. En match per poll räcker — du
-   spelar inte fler än så på sju minuter — och det håller oss långt under
-   taket på 3 i timmen. Gamla matcher hämtas inte i förväg; de kostar bara
-   om du faktiskt bläddrar dit. */
-var PREFETCH_MAX_AGE=36*3600*1000;
-async function prefetchMatch(recent){
+/* Förhämtar en enda match: den som just dykt upp i historiken.
+   Förra versionen körde på varje poll och tog nyaste osparade match inom
+   36 timmar. Med nio pollar i timmen och flera osparade matcher åt den upp
+   hela taket på 3 i timmen inom en halvtimme, och sedan var man spärrad när
+   man ville öppna något själv. Nu: bara vid en genuint ny match, bara om vi
+   inte rört budgeten den senaste timmen, och aldrig samma match två gånger. */
+async function prefetchMatch(m){
+  if(!m||!m.match_id)return;
   if(dlHeld('matches'))return;
-  for(var i=0;i<recent.length&&i<5;i++){
-    var m=recent[i];
-    if(!m||!m.match_id)continue;
-    if(m.start_time&&Date.now()-m.start_time*1000>PREFETCH_MAX_AGE)return;
-    if(mcHas(m.match_id))continue;
-    try{
-      var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata',
-                             '/v1/matches/'+m.match_id]);
-      if(j&&dlPlayers(j).length)mcPut(m.match_id,j);
-    }catch(e){}
-    return;                                   /* en per poll, oavsett utfall */
-  }
+  if(mcHas(m.match_id)||mmTried(m.match_id))return;
+  if(mmCalls()>0)return;                      /* spara anropen åt dig */
+  mmSpend();mmMarkTried(m.match_id);
+  try{
+    var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata',
+                           '/v1/matches/'+m.match_id]);
+    if(j&&dlPlayers(j).length)mcPut(m.match_id,j);
+  }catch(e){}
 }
 
 /* Hämtar tätt en kvart efter en ny match, glest annars. */

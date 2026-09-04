@@ -181,6 +181,36 @@ function setDetailBg(url){
   img.onerror=function(){el('dlBg').style.backgroundImage='url(ui/patrons-bg.jpg)';};
   img.src=url;
 }
+
+/* ---- Egen budget för matchdetaljer ----
+   Endpointen kostar 3 anrop i timmen per IP när metadatan inte redan ligger i
+   deras objektlagring, och färska matcher gör den aldrig — de måste hämtas från
+   Steam. Vi håller därför räkningen själva, i localStorage så den överlever
+   omladdning, och sparar minst två anrop åt det du faktiskt öppnar. */
+var MM_KEY='xe_matchbudget',MM_CAP=3,mmData=null;
+function mmLoad(){
+  if(mmData)return mmData;
+  try{mmData=JSON.parse(localStorage.getItem(MM_KEY)||'{}');}catch(e){mmData={};}
+  if(!mmData||typeof mmData!=='object')mmData={};
+  if(!Array.isArray(mmData.calls))mmData.calls=[];
+  if(!Array.isArray(mmData.tried))mmData.tried=[];
+  return mmData;
+}
+function mmSave(){try{localStorage.setItem(MM_KEY,JSON.stringify(mmData));}catch(e){}}
+function mmCalls(){
+  var d=mmLoad(),cut=Date.now()-3600000;
+  d.calls=d.calls.filter(function(t){return t>cut;});
+  return d.calls.length;
+}
+function mmLeft(){return Math.max(0,MM_CAP-mmCalls());}
+function mmSpend(){var d=mmLoad();mmCalls();d.calls.push(Date.now());mmSave();}
+function mmTried(id){return mmLoad().tried.indexOf(String(id))>=0;}
+function mmMarkTried(id){
+  var d=mmLoad();
+  if(d.tried.indexOf(String(id))<0){d.tried.push(String(id));
+    while(d.tried.length>200)d.tried.shift();mmSave();}
+}
+
 /* ---- Cache för matchdetaljer ----
    En avslutad match ändras aldrig, men vi hämtade om den varje gång den
    öppnades — även samma match två gånger i rad, och på nytt efter varje
@@ -269,6 +299,7 @@ async function showMatch(m){
     setDetailBg(mine0?'heroes/bg/'+heroFile(mine0.name)+'.jpg':'ui/patrons-bg.jpg');
     var cached=mcGet(m.match_id),j=cached;
     if(!j){
+      mmSpend();mmMarkTried(m.match_id);
       j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
       if(j&&dlPlayers(j).length)mcPut(m.match_id,j);
     }
@@ -286,7 +317,8 @@ async function showMatch(m){
     head.textContent='Match '+m.match_id+(lab?'  ·  '+lab:'')+
       (m.ranked_display_badge?'  ·  '+rankName(m.ranked_display_badge)+
         (deltaText(m.ranked_delta)?' ('+deltaText(m.ranked_delta)+')':''):'')+
-      (mins?'  ·  '+mins:'')+(when?'  ·  '+when:'')+(cached?'  ·  saved':'');
+      (mins?'  ·  '+mins:'')+(when?'  ·  '+when:'')+
+      (cached?'  ·  saved':'  ·  '+mmLeft()+' left this hour');
     el('mHead').appendChild(head);
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
@@ -369,6 +401,7 @@ async function showMatch(m){
       'och det taket är 3 i timmen.'+
       (saved?' '+saved+(saved===1?' sparad match går':' sparade matcher går')+
         ' fortfarande att titta på ('+info.kb+' kB).':' Inget är sparat än.')+
+      ' Kvar i timmen: '+mmLeft()+'.'+
       (info.note?' Cachen klagar: '+esc(info.note)+'.':''):
       'Could not load match details. ('+esc(e.message)+')')+'</div>';
   }
