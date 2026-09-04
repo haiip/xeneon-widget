@@ -188,7 +188,33 @@ function setDetailBg(url){
    objektlagring, och det taket är 3 anrop i timmen per IP, så det räckte att
    bläddra igenom några gamla matcher för att bli utelåst. Nu sparas de
    permanent i localStorage. */
-var MC_KEY='xe_matchcache',MC_MAX=40,MC_BYTES=2500000,mCache=null;
+var MC_KEY='xe_matchcache',MC_MAX=30,MC_BYTES=2000000,mCache=null,mcNote='';
+
+/* Rå metadata är omkring 2,5 MB per match, mest för att varje spelare bär en
+   tidsserie i p.stats med en mätpunkt var tionde sekund. localStorage har
+   ungefär 5 MB för hela origin, så första skrivningen sprängde kvoten, tystnade
+   i catch-blocket och ingenting blev sparat. Vyerna läser bara sista mätpunkten,
+   så vi sparar en bantad kopia med samma form. */
+function slimPlayer(p){
+  var o={};
+  ['account_id','player_slot','player_team','team','hero_id','kills','deaths',
+   'assists','net_worth','player_damage','hero_damage','damage_dealt',
+   'power_up_buffs'].forEach(function(k){if(p[k]!==undefined)o[k]=p[k];});
+  var items=p.items||p.item_ids;
+  if(Array.isArray(items))o[p.items?'items':'item_ids']=items;
+  if(Array.isArray(p.stats)&&p.stats.length)o.stats=[p.stats[p.stats.length-1]];
+  return o;
+}
+function slimMatch(j){
+  var players=dlPlayers(j).map(slimPlayer);
+  var info=j.match_info||j;
+  var out={match_info:{}};
+  ['match_id','duration_s','start_time','match_outcome','winning_team',
+   'match_mode','game_mode'].forEach(function(k){
+    if(info[k]!==undefined)out.match_info[k]=info[k];});
+  out.match_info.players=players;
+  return out;
+}
 function mcLoad(){
   if(mCache)return mCache;
   try{mCache=JSON.parse(localStorage.getItem(MC_KEY)||'{}');}catch(e){mCache={};}
@@ -204,19 +230,29 @@ function mcGet(id){
 }
 function mcHas(id){return !!mcGet(id);}
 function mcCount(){return Object.keys(mcLoad()).length;}
-function mcPut(id,j){
-  var c=mcLoad();
+function mcPut(id,raw){
+  var c=mcLoad(),j;
+  try{j=slimMatch(raw);}catch(e){mcNote='kunde inte banta matchen';return false;}
   c[String(id)]={t:Date.now(),j:j};
   var keys=mcOldestFirst(c);
   while(keys.length>MC_MAX)delete c[keys.shift()];
   while(keys.length>1&&JSON.stringify(c).length>MC_BYTES)delete c[keys.shift()];
-  try{localStorage.setItem(MC_KEY,JSON.stringify(c));}
-  catch(e){
-    /* kvoten full: släng halva och prova en gång till */
-    var half=Math.ceil(keys.length/2);
-    for(var i=0;i<half&&keys.length>1;i++)delete c[keys.shift()];
-    try{localStorage.setItem(MC_KEY,JSON.stringify(c));}catch(e2){}
+  /* Går det ändå inte in, kasta de äldsta en i taget tills det gör det.
+     Tystnad här var precis felet förra gången. */
+  for(;;){
+    try{localStorage.setItem(MC_KEY,JSON.stringify(c));mcNote='';return true;}
+    catch(e){
+      if(keys.length<=1){delete mCache;mCache=null;
+        mcNote='localStorage är fullt';return false;}
+      delete c[keys.shift()];
+    }
   }
+}
+/* Hur cachen mår, för felrutan. */
+function mcInfo(){
+  var n=mcCount(),kb=0;
+  try{kb=Math.round((localStorage.getItem(MC_KEY)||'').length/1024);}catch(e){}
+  return {n:n,kb:kb,note:mcNote};
 }
 
 async function showMatch(m){
@@ -326,13 +362,14 @@ async function showMatch(m){
       box.appendChild(col);
     });
   }catch(e){
-    var held=dlHeld('matches'),saved=mcCount();
+    var held=dlHeld('matches'),info=mcInfo(),saved=info.n;
     box.innerHTML='<div id="dlMsg">'+(held?
       'Deadlock-API har spärrat matchdetaljer i '+Math.ceil(held/60)+' min till. '+
       'Detaljerna hämtas från Steam för matcher som inte redan ligger i deras lager, '+
       'och det taket är 3 i timmen.'+
-      (saved?' '+saved+(saved===1?' redan öppnad match går':' redan öppnade matcher går')+
-        ' fortfarande att titta på.':''):
+      (saved?' '+saved+(saved===1?' sparad match går':' sparade matcher går')+
+        ' fortfarande att titta på ('+info.kb+' kB).':' Inget är sparat än.')+
+      (info.note?' Cachen klagar: '+esc(info.note)+'.':''):
       'Could not load match details. ('+esc(e.message)+')')+'</div>';
   }
 }
