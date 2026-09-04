@@ -122,13 +122,22 @@ async function dlLoadHeroes(){
   ]);
   dlHeroes={};
   (list||[]).forEach(function(h){
-    var img='';
     var imgs=h.images||{};
-    ['icon_hero_card','minimap_image','icon_image_small','selection_image','portrait'].forEach(function(k){
-      if(!img&&typeof imgs[k]==='string')img=imgs[k];
-    });
-    if(!img)for(var k in imgs){if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){img=imgs[k];break;}}
-    dlHeroes[h.id]={id:h.id,name:h.name||('Hero '+h.id),img:img,raw:h,
+    function pick(keys){
+      for(var i=0;i<keys.length;i++)
+        if(typeof imgs[keys[i]]==='string'&&imgs[keys[i]])return imgs[keys[i]];
+      return '';
+    }
+    /* Korten vill ha helfigur. icon_hero_card är ett hårt ansiktsutsnitt och
+       såg fel ut utsträckt till 132 % bredd — hero_card_gloat och
+       hero_card_critical är poserna korten faktiskt använder. */
+    var art=pick(['hero_card_gloat','hero_card_gloat_webp','hero_card_critical',
+                  'hero_card_critical_webp','top_bar_vertical_image','selection_image']);
+    var icon=pick(['icon_hero_card','icon_hero_card_webp','icon_image_small',
+                   'icon_image_small_webp','minimap_image','portrait']);
+    if(!art&&!icon)for(var k in imgs){
+      if(typeof imgs[k]==='string'&&/\.(png|webp|jpg)/i.test(imgs[k])){icon=imgs[k];break;}}
+    dlHeroes[h.id]={id:h.id,name:h.name||('Hero '+h.id),img:art||icon,icon:icon||art,raw:h,
       playable:!(h.in_development||h.disabled||h.is_disabled)};
   });
   return dlHeroes;
@@ -408,7 +417,7 @@ function heroIcon(hero,cls){
   i.decoding='async';
   i.addEventListener('load',function(){this.classList.add('in');});
   i.className=cls||''; i.alt=''; i.title=hero.name||'';
-  i.dataset.remote=hero.img||'';
+  i.dataset.remote=hero.icon||hero.img||'';
   i.dataset.step='icon';
   i.src='heroes/icon/'+heroFile(hero.name)+'.png';
   i.addEventListener('error',function(){
@@ -420,16 +429,24 @@ function heroIcon(hero,cls){
   });
   return i;
 }
+/* Kortbilden går lokal fil -> API:ets kortpose -> lokal porträttbild.
+   Ett tomt eller trasigt lokalt png utlöser error precis som ett 404, så
+   kedjan täcker båda. */
 function heroImg(hero,cls){
   var i=document.createElement('img');
   i.decoding='async';
   i.addEventListener('load',function(){this.classList.add('in');});
   i.className=cls||''; i.alt=''; i.title=hero.name||'';
   i.dataset.remote=hero.img||'';
+  i.dataset.step='local';
   i.src='heroes/'+heroFile(hero.name)+'.png';
   i.addEventListener('error',function(){
-    if(this.dataset.remote&&this.src!==this.dataset.remote)this.src=this.dataset.remote;
-    else this.style.visibility='hidden';
+    if(this.dataset.step==='local'&&this.dataset.remote){
+      this.dataset.step='remote';this.src=this.dataset.remote;return;}
+    if(this.dataset.step!=='portrait'){
+      this.dataset.step='portrait';
+      this.src='heroes/portrait/'+heroFile(hero.name)+'.png';return;}
+    this.style.visibility='hidden';
   });
   return i;
 }
