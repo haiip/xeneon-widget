@@ -294,6 +294,27 @@
   #dlHead h2{font-size:clamp(20px,6vh,60px);font-weight:800;letter-spacing:-.03em;color:#F0CB93;
              text-shadow:0 2px 20px rgba(0,0,0,.35)}
   #dlForm{font-size:var(--meta);color:var(--ink-dim)}
+  /* min egen rank i rubrikraden */
+  #dlRank{display:none;align-items:center;gap:.4em;font-size:var(--meta);
+        padding:.1em .7em .1em .3em;border-radius:99px;color:#F5DCB4;
+        background:rgba(232,184,114,.14);border:1px solid rgba(232,184,114,.26)}
+  #dlRank.on{display:flex}
+  #dlRank b{font-size:calc(var(--meta) * .8);font-weight:700}
+  /* lägesetiketter på matchkorten */
+  .mmode{display:flex;flex-wrap:wrap;gap:.3em;margin-top:.35em}
+  .chip{display:inline-flex;align-items:center;gap:.3em;
+        font-size:calc(var(--meta) * .62);letter-spacing:.06em;text-transform:uppercase;
+        padding:.1em .55em;border-radius:99px;white-space:nowrap;
+        background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);
+        color:var(--ink-dim)}
+  .chip.ranked{background:rgba(232,184,114,.2);border-color:rgba(232,184,114,.4);color:#F5DCB4}
+  .chip.rank{text-transform:none;letter-spacing:.02em;padding-left:.2em}
+  .chip b.up{color:#7CE0A6} .chip b.down{color:#E88E86}
+  #dlRank b.up{color:#7CE0A6} #dlRank b.down{color:#E88E86}
+  .rankico{width:clamp(14px,2.6vh,26px);height:clamp(14px,2.6vh,26px);object-fit:contain;
+        flex:none;opacity:0;transition:opacity .18s ease}
+  .rankico.in{opacity:1}
+  .rankico.big{width:clamp(20px,3.6vh,38px);height:clamp(20px,3.6vh,38px)}
   #dlForm b{color:var(--ink)}
   #dlStreak{font-size:var(--meta);padding:.15em .8em;border-radius:99px;
             background:rgba(232,184,114,.2);color:#F5DCB4;

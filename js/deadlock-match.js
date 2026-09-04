@@ -246,8 +246,11 @@ async function showMatch(m){
     var mins=m.match_duration_s?Math.round(m.match_duration_s/60)+' min':'';
     var when=m.start_time?new Date(m.start_time*1000).toLocaleString('en-GB',
       {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
-    head.textContent='Match '+m.match_id+(mins?'  ·  '+mins:'')+(when?'  ·  '+when:'')+
-      (cached?'  ·  saved':'');
+    var lab=modeLabel(m);
+    head.textContent='Match '+m.match_id+(lab?'  ·  '+lab:'')+
+      (m.ranked_display_badge?'  ·  '+rankName(m.ranked_display_badge)+
+        (deltaText(m.ranked_delta)?' ('+deltaText(m.ranked_delta)+')':''):'')+
+      (mins?'  ·  '+mins:'')+(when?'  ·  '+when:'')+(cached?'  ·  saved':'');
     el('mHead').appendChild(head);
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;

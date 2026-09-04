@@ -292,6 +292,7 @@ async function dlPoll(force){
   try{
     var heroes={};
     try{heroes=await dlLoadHeroes();}catch(e){heroes={};}
+    try{await dlLoadRanks();}catch(e){}
     dlLastPoll=Date.now();
     var got=await dlHistory(CFG.dl,force);
     var arr=got.arr;
@@ -299,6 +300,7 @@ async function dlPoll(force){
     arr.sort(function(a,b){return (b.start_time||b.match_id||0)-(a.start_time||a.match_id||0);});
     dlAll=arr;                                  /* används av hjältevyn */
     if(!dlName)dlLoadName().then(function(){});
+    dlLoadMyRank().then(paintMyRank);
     renderCareer(arr);
     var recent=arr.slice(0,20);
     var wins=recent.filter(dlWon).length;
@@ -334,6 +336,23 @@ async function dlPoll(force){
       if(m.match_duration_s)parts.push(Math.round(m.match_duration_s/60)+' min');
       sub.innerHTML=esc(parts.slice(0,2).join(' \u00b7 '))+(parts[2]?'<br>'+esc(parts[2]):'');
       st.appendChild(sub);
+
+      /* läge och, för rankade matcher, badgen man spelade på */
+      var chips=document.createElement('div');chips.className='mmode';
+      var lab=modeLabel(m);
+      if(lab)chips.appendChild(Object.assign(document.createElement('span'),
+        {className:'chip '+(isRanked(m)?'ranked':'casual'),textContent:lab}));
+      if(m.ranked_display_badge){
+        var rc=document.createElement('span');rc.className='chip rank';
+        var ri=rankBadge(m.ranked_display_badge);
+        if(ri)rc.appendChild(ri);
+        rc.appendChild(document.createTextNode(rankName(m.ranked_display_badge)));
+        var dl=deltaText(m.ranked_delta);
+        if(dl)rc.appendChild(Object.assign(document.createElement('b'),
+          {className:dl[0]==='+'?'up':'down',textContent:dl}));
+        chips.appendChild(rc);
+      }
+      if(chips.childElementCount)st.appendChild(chips);
       c.appendChild(st);
 
       c.appendChild(heroImg(h,'mhero'));
@@ -429,6 +448,98 @@ function dlWon(m){
 
 /* Liten resultatrad under klockan när en match dykt upp i listan. */
 var dlFlashTimer=null;
+
+/* ---- Matchläge och rank ----
+   match_mode och game_mode har alltid följt med i historiken, vi har bara
+   aldrig läst dem. ranked_display_badge kodar tier i de första siffrorna och
+   subrank i den sista, så 63 = tier 6, subrank 3. */
+var MATCH_MODE={1:'Unranked',2:'Private',3:'Co-op bot',4:'Ranked',
+                5:'Server test',6:'Tutorial',7:'Hero Labs',8:'Placement'};
+var GAME_MODE={1:'',4:'Brawl',5:'Explore NYC',6:'Internal'};
+function modeLabel(m){
+  var g=GAME_MODE[m&&m.game_mode];
+  if(g)return g;                              /* Brawl slår ut rankat/orankat */
+  return MATCH_MODE[m&&m.match_mode]||'';
+}
+function isRanked(m){return m&&m.match_mode===4;}
+
+var dlRanks=null;
+async function dlLoadRanks(){
+  if(dlRanks)return dlRanks;
+  var list=await dlJsonAny(['/v1/assets/ranks',
+    'https://assets.deadlock-api.com/v1/ranks','https://assets.deadlock-api.com/v2/ranks']);
+  var arr=Array.isArray(list)?list:(list&&(list.ranks||list.data))||[];
+  dlRanks={};
+  arr.forEach(function(r){
+    if(r&&typeof r.tier==='number')
+      dlRanks[r.tier]={tier:r.tier,name:r.name||('Tier '+r.tier),
+                       color:r.color||'',images:r.images||{}};
+  });
+  return dlRanks;
+}
+/* badge -> {tier, subrank} */
+function badgeParts(badge){
+  var b=parseInt(badge,10);
+  if(!b||isNaN(b)||b<=0)return null;
+  return {tier:Math.floor(b/10),sub:b%10};
+}
+function rankName(badge){
+  var p=badgeParts(badge);
+  if(!p)return '';
+  var r=dlRanks&&dlRanks[p.tier];
+  var nm=r?r.name:('Tier '+p.tier);
+  return p.sub?nm+' '+p.sub:nm;
+}
+/* Bildnycklarna finns i flera former beroende på klientversion. */
+function rankImgUrl(badge){
+  var p=badgeParts(badge);
+  if(!p)return '';
+  var im=(dlRanks&&dlRanks[p.tier]&&dlRanks[p.tier].images)||{};
+  var tries=p.sub?['small_subrank'+p.sub,'subrank'+p.sub,'large_subrank'+p.sub]:[];
+  tries=tries.concat(['small','large','chalk']);
+  for(var i=0;i<tries.length;i++)if(typeof im[tries[i]]==='string')return im[tries[i]];
+  for(var k in im)if(typeof im[k]==='string'&&/\.(png|webp|jpg)/i.test(im[k]))return im[k];
+  return '';
+}
+function rankBadge(badge,cls){
+  var url=rankImgUrl(badge);
+  if(!url)return null;
+  var i=document.createElement('img');
+  i.className=cls||'rankico';i.alt='';i.decoding='async';i.src=url;
+  i.addEventListener('load',function(){this.classList.add('in');});
+  i.addEventListener('error',function(){this.remove();});
+  return i;
+}
+function deltaText(d){
+  var n=parseInt(d,10);
+  if(!n||isNaN(n))return '';
+  return (n>0?'+':'')+n;
+}
+
+/* Min egen rank, från senaste rankade matchen. */
+var myRank=null;
+async function dlLoadMyRank(){
+  try{
+    var j=await dlJson('/v1/players/'+CFG.dl+'/rank');
+    if(j&&typeof j.badge==='number')myRank=j;
+  }catch(e){}
+  return myRank;
+}
+function paintMyRank(){
+  var box=el('dlRank');
+  if(!box)return;
+  box.innerHTML='';
+  if(!myRank||!myRank.badge){box.classList.remove('on');return;}
+  var ic=rankBadge(myRank.badge,'rankico big');
+  if(ic)box.appendChild(ic);
+  box.appendChild(Object.assign(document.createElement('span'),
+    {textContent:rankName(myRank.badge)}));
+  var d=myRank.last_match&&deltaText(myRank.last_match.player_rank_desired_progress_change);
+  if(d)box.appendChild(Object.assign(document.createElement('b'),
+    {className:d[0]==='+'?'up':'down',textContent:d}));
+  box.classList.add('on');
+}
+
 function flashMatch(m,hero){
   var f=el('dlFlash'),win=dlWon(m);
   f.innerHTML='';
