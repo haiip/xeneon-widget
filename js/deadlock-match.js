@@ -181,6 +181,44 @@ function setDetailBg(url){
   img.onerror=function(){el('dlBg').style.backgroundImage='url(ui/patrons-bg.jpg)';};
   img.src=url;
 }
+/* ---- Cache för matchdetaljer ----
+   En avslutad match ändras aldrig, men vi hämtade om den varje gång den
+   öppnades — även samma match två gånger i rad, och på nytt efter varje
+   omladdning. Metadatan hämtas från Steam när den inte redan ligger i deras
+   objektlagring, och det taket är 3 anrop i timmen per IP, så det räckte att
+   bläddra igenom några gamla matcher för att bli utelåst. Nu sparas de
+   permanent i localStorage. */
+var MC_KEY='xe_matchcache',MC_MAX=40,MC_BYTES=2500000,mCache=null;
+function mcLoad(){
+  if(mCache)return mCache;
+  try{mCache=JSON.parse(localStorage.getItem(MC_KEY)||'{}');}catch(e){mCache={};}
+  if(!mCache||typeof mCache!=='object')mCache={};
+  return mCache;
+}
+function mcOldestFirst(c){
+  return Object.keys(c).sort(function(a,b){return (c[a].t||0)-(c[b].t||0);});
+}
+function mcGet(id){
+  var e=mcLoad()[String(id)];
+  return e&&e.j?e.j:null;
+}
+function mcHas(id){return !!mcGet(id);}
+function mcCount(){return Object.keys(mcLoad()).length;}
+function mcPut(id,j){
+  var c=mcLoad();
+  c[String(id)]={t:Date.now(),j:j};
+  var keys=mcOldestFirst(c);
+  while(keys.length>MC_MAX)delete c[keys.shift()];
+  while(keys.length>1&&JSON.stringify(c).length>MC_BYTES)delete c[keys.shift()];
+  try{localStorage.setItem(MC_KEY,JSON.stringify(c));}
+  catch(e){
+    /* kvoten full: släng halva och prova en gång till */
+    var half=Math.ceil(keys.length/2);
+    for(var i=0;i<half&&keys.length>1;i++)delete c[keys.shift()];
+    try{localStorage.setItem(MC_KEY,JSON.stringify(c));}catch(e2){}
+  }
+}
+
 async function showMatch(m){
   document.body.classList.add('match');
   el('listView').classList.add('off');
@@ -193,7 +231,11 @@ async function showMatch(m){
     try{items=await dlLoadItems();}catch(e){items={};}
     var mine0=heroes[m.hero_id];
     setDetailBg(mine0?'heroes/bg/'+heroFile(mine0.name)+'.jpg':'ui/patrons-bg.jpg');
-    var j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
+    var cached=mcGet(m.match_id),j=cached;
+    if(!j){
+      j=await dlJsonAny(['/v1/matches/'+m.match_id+'/metadata','/v1/matches/'+m.match_id]);
+      if(j&&dlPlayers(j).length)mcPut(m.match_id,j);
+    }
     var players=dlPlayers(j);
     if(!players.length){box.innerHTML='<div id="dlMsg">No player data available for this match.</div>';return;}
     box.innerHTML='';
@@ -204,7 +246,8 @@ async function showMatch(m){
     var mins=m.match_duration_s?Math.round(m.match_duration_s/60)+' min':'';
     var when=m.start_time?new Date(m.start_time*1000).toLocaleString('en-GB',
       {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
-    head.textContent='Match '+m.match_id+(mins?'  ·  '+mins:'')+(when?'  ·  '+when:'');
+    head.textContent='Match '+m.match_id+(mins?'  ·  '+mins:'')+(when?'  ·  '+when:'')+
+      (cached?'  ·  saved':'');
     el('mHead').appendChild(head);
     TEAMS.forEach(function(t,ti){
       var col=document.createElement('div');col.className='team '+t.key;
@@ -280,11 +323,13 @@ async function showMatch(m){
       box.appendChild(col);
     });
   }catch(e){
-    var held=dlHeld('matches');
+    var held=dlHeld('matches'),saved=mcCount();
     box.innerHTML='<div id="dlMsg">'+(held?
       'Deadlock-API har spärrat matchdetaljer i '+Math.ceil(held/60)+' min till. '+
       'Detaljerna hämtas från Steam för matcher som inte redan ligger i deras lager, '+
-      'och det taket är 3 i timmen.':
+      'och det taket är 3 i timmen.'+
+      (saved?' '+saved+(saved===1?' redan öppnad match går':' redan öppnade matcher går')+
+        ' fortfarande att titta på.':''):
       'Could not load match details. ('+esc(e.message)+')')+'</div>';
   }
 }

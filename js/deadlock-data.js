@@ -90,13 +90,16 @@ async function dlJson(path){
     var ra=parseInt(r.headers.get('Retry-After')||'60',10);
     if(isNaN(ra))ra=60;
     dlWaits[bucket]=Date.now()+(ra+2)*1000;
-    /* match-history svarar 429 med den lagrade historiken i kroppen —
-       hellre lite gammal data än ingen alls medan vi väntar ut spärren.
-       force_refetch gör inte det, den svarar med ett fel. */
-    try{
-      var body=await r.json();
-      if(body&&(Array.isArray(body)?body.length:Object.keys(body).length))return body;
-    }catch(e){}
+    /* Bara match-history svarar 429 med den lagrade historiken i kroppen.
+       Övriga endpoints lägger ett felobjekt där, och det såg förut ut som
+       giltig data — matchvyn fick {error:…} och skrev "No player data
+       available" istället för att säga att vi var spärrade. */
+    if(bucket==='history'){
+      try{
+        var body=await r.json();
+        if(Array.isArray(body)&&body.length)return body;
+      }catch(e){}
+    }
     throw new Error('HTTP 429 på '+bucket+' — väntar '+ra+' s');
   }
   if(!r.ok)throw new Error('HTTP '+r.status+' på '+String(path).split('?')[0]);
